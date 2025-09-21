@@ -206,11 +206,61 @@ body {
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .map {
   width: 100%;
-  height: 500px;
+  height: 70vh;
+  min-height: 600px;
+}
+
+/* 지도 라벨 */
+.map-label {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s ease;
+  z-index: 10;
+}
+
+.map-label-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+
+.map-label-content .branch-name {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.map-label-content .address {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* 식당 목록 영역 */
@@ -219,7 +269,7 @@ body {
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-  max-height: 500px;
+  max-height: 80vh;
   overflow-y: auto;
 }
 
@@ -241,10 +291,11 @@ body {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
   border-radius: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  min-height: 120px;
 }
 
 .restaurant-card:hover {
@@ -260,22 +311,25 @@ body {
 }
 
 .restaurant-card-header {
-  padding: 20px;
+  padding: 25px;
   cursor: pointer;
   position: relative;
+  min-height: 100px;
 }
 
 .restaurant-card-details {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
-  background: rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0;
 }
 
 .restaurant-card-details.expanded {
-  max-height: 1000px;
-  padding: 20px;
+  max-height: 2000px;
+  padding: 30px;
+  opacity: 1;
 }
 
 .restaurant-card.selected .restaurant-card-details {
@@ -314,37 +368,52 @@ body {
 .info-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .info-badge.available {
-  background: rgba(76, 175, 80, 0.2);
-  color: #2e7d32;
-  border-color: rgba(76, 175, 80, 0.3);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border-color: #4caf50;
 }
 
 .info-badge.unavailable {
-  background: rgba(244, 67, 54, 0.2);
-  color: #c62828;
-  border-color: rgba(244, 67, 54, 0.3);
+  background: rgba(244, 67, 54, 0.9);
+  color: white;
+  border-color: #f44336;
+}
+
+/* 상태별 특별 스타일 */
+.info-badge.status-operating {
+  background: rgba(76, 175, 80, 0.9) !important;
+  color: white !important;
+  border-color: #4caf50 !important;
+}
+
+.info-badge.status-closed {
+  background: rgba(255, 152, 0, 0.9) !important;
+  color: white !important;
+  border-color: #ff9800 !important;
 }
 
 .restaurant-card.selected .info-badge.available {
-  background: rgba(76, 175, 80, 0.3);
-  color: #4caf50;
-  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.95);
+  color: white;
+  border-color: #4caf50;
+  box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
 }
 
 .restaurant-card.selected .info-badge.unavailable {
-  background: rgba(244, 67, 54, 0.3);
-  color: #f44336;
-  border-color: rgba(244, 67, 54, 0.4);
+  background: rgba(244, 67, 54, 0.95);
+  color: white;
+  border-color: #f44336;
+  box-shadow: 0 3px 6px rgba(244, 67, 54, 0.3);
 }
 
 .expand-indicator {
@@ -400,45 +469,7 @@ body {
   color: #666;
 }
 
-/* 모달 */
-.modal {
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  animation: fadeIn 0.3s ease;
-}
 
-.modal-content {
-  background-color: white;
-  margin: 5% auto;
-  padding: 30px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-  animation: slideIn 0.3s ease;
-}
-
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  position: absolute;
-  top: 15px;
-  right: 20px;
-}
-
-.close:hover {
-  color: #000;
-}
 
 /* 로딩 스피너 */
 .loading-spinner {
@@ -489,19 +520,20 @@ body {
 }
 
 .detail-section {
-  margin-bottom: 15px;
-  padding: 12px;
+  margin-bottom: 20px;
+  padding: 18px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .detail-section h4 {
   color: #667eea;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  margin-bottom: 12px;
+  font-size: 1rem;
   border-bottom: 1px solid rgba(102, 126, 234, 0.3);
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  font-weight: 600;
 }
 
 .restaurant-card.selected .detail-section h4 {
@@ -510,9 +542,10 @@ body {
 }
 
 .detail-section p {
-  margin: 4px 0;
-  font-size: 0.85rem;
+  margin: 6px 0;
+  font-size: 0.95rem;
   color: #666;
+  line-height: 1.5;
 }
 
 .restaurant-card.selected .detail-section p {
@@ -527,38 +560,80 @@ body {
 }
 
 .facility-item {
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 15px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-align: center;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .facility-item.available {
-  background: rgba(76, 175, 80, 0.2);
-  color: #2e7d32;
-  border-color: rgba(76, 175, 80, 0.3);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  border-color: #4caf50;
 }
 
 .facility-item.unavailable {
-  background: rgba(244, 67, 54, 0.2);
-  color: #c62828;
-  border-color: rgba(244, 67, 54, 0.3);
+  background: rgba(244, 67, 54, 0.9);
+  color: white;
+  border-color: #f44336;
 }
 
 .restaurant-card.selected .facility-item.available {
-  background: rgba(76, 175, 80, 0.3);
-  color: #4caf50;
-  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.95);
+  color: white;
+  border-color: #4caf50;
+  box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
 }
 
 .restaurant-card.selected .facility-item.unavailable {
-  background: rgba(244, 67, 54, 0.3);
-  color: #f44336;
-  border-color: rgba(244, 67, 54, 0.4);
+  background: rgba(244, 67, 54, 0.95);
+  color: white;
+  border-color: #f44336;
+  box-shadow: 0 3px 6px rgba(244, 67, 54, 0.3);
+}
+
+/* 예약하기 버튼 */
+.reservation-section {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  z-index: 10;
+}
+
+.reservation-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+  position: relative;
+  z-index: 20;
+}
+
+.reservation-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+  background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+}
+
+.reservation-btn:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 10px rgba(40, 167, 69, 0.3);
+}
+
+/* 카드 상세정보 영역에 상대적 위치 설정 */
+.restaurant-card-details {
+  position: relative;
+  padding-bottom: 60px; /* 예약 버튼을 위한 공간 확보 */
 }
 
 /* 애니메이션 */
@@ -593,6 +668,38 @@ body {
 /* 지도 부드러운 이동을 위한 클래스 */
 .map-smooth-transition {
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 에러 메시지 */
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin: 20px auto;
+  max-width: 700px;
+  text-align: center;
+  border: 1px solid #f5c6cb;
+}
+
+.error-message p {
+  margin: 0 0 10px 0;
+  font-weight: 500;
+}
+
+.retry-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: #c82333;
 }
 
 /* 반응형 디자인 */
