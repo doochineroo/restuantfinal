@@ -1,7 +1,7 @@
 // 지도 관련 유틸리티 함수들
 
 // 지도에 식당 마커 표시
-export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantList) => {
+export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantList, onMarkerClick) => {
   try {
     if (!map || !restaurantList || restaurantList.length === 0) {
       return;
@@ -39,9 +39,45 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
 
         // 마커 클릭 이벤트
         window.kakao.maps.event.addListener(marker, 'click', () => {
+          // 기존 인포윈도우 제거
+          if (window.currentInfoWindow) {
+            window.currentInfoWindow.close();
+            window.currentInfoWindow = null;
+          }
+
           // 선택된 식당으로 지도 중심 이동
           map.setCenter(position);
           map.setLevel(3);
+          
+          // 인포윈도우 표시
+          const infoWindow = new window.kakao.maps.InfoWindow({
+            content: `
+              <div style="padding: 15px; min-width: 250px; text-align: center;">
+                <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #333; font-weight: bold;">
+                  ${restaurant.restaurantName}
+                </h3>
+                ${restaurant.branchName ? `
+                  <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">
+                    ${restaurant.branchName}
+                  </p>
+                ` : ''}
+                <p style="margin: 0 0 8px 0; color: #888; font-size: 13px;">
+                  ${restaurant.roadAddress || '주소 정보 없음'}
+                </p>
+                <p style="margin: 0; color: #667eea; font-size: 12px; font-weight: 600;">
+                  ${restaurant.mainMenu || '메뉴 정보 없음'}
+                </p>
+              </div>
+            `,
+            removable: true
+          });
+          infoWindow.open(map, marker);
+          window.currentInfoWindow = infoWindow;
+          
+          // 카드 자동 선택 콜백 호출
+          if (onMarkerClick) {
+            onMarkerClick(restaurant);
+          }
         });
 
         newMarkers.push(marker);

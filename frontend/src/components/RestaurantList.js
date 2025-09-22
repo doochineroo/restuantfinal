@@ -45,6 +45,7 @@ const RestaurantList = ({
 const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation }) => {
   return (
     <div
+      id={`restaurant-card-${restaurant.id}`}
       className={`restaurant-card ${isExpanded ? 'selected' : ''}`}
     >
       <div 

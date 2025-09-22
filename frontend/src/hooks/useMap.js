@@ -46,9 +46,9 @@ export const useMap = () => {
   }, []);
 
   // 지도에 식당 마커 업데이트
-  const updateMap = useCallback((restaurantList) => {
+  const updateMap = useCallback((restaurantList, onMarkerClick) => {
     if (map && restaurantList && restaurantList.length > 0) {
-      updateMapWithRestaurants(map, markers, setMarkers, restaurantList);
+      updateMapWithRestaurants(map, markers, setMarkers, restaurantList, onMarkerClick);
     }
   }, [map]);
 

@@ -34,10 +34,23 @@ function MainPage() {
     setError
   } = useRestaurantSearch();
 
+  // 마커 클릭 시 카드 자동 선택 핸들러
+  const handleMarkerClick = (restaurant) => {
+    // 해당 식당 카드 자동 선택
+    setSelectedRestaurant(restaurant);
+    setExpandedCard(restaurant.id);
+    
+    // 카드가 보이도록 스크롤 (선택사항)
+    const cardElement = document.getElementById(`restaurant-card-${restaurant.id}`);
+    if (cardElement) {
+      cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   // 지도가 초기화되면 마커 업데이트
   React.useEffect(() => {
     if (map && filteredRestaurants.length > 0) {
-      updateMap(filteredRestaurants);
+      updateMap(filteredRestaurants, handleMarkerClick);
     }
   }, [map, filteredRestaurants, updateMap]);
 
