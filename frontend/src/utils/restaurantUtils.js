@@ -26,8 +26,8 @@ export const getStatusValue = (restaurant) => {
 // 운영중인 식당만 필터링하는 함수
 export const filterOperatingRestaurants = (restaurantList) => {
   return restaurantList.filter(restaurant => {
-    // lat, lng 값이 있고 status가 NORMAL인 경우만 표시
-    return restaurant.lat && restaurant.lng && restaurant.status === 'NORMAL';
+    // status가 NORMAL인 경우만 표시 (좌표는 선택사항)
+    return restaurant.status === 'NORMAL';
   });
 };
 

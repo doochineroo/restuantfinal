@@ -17,6 +17,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:aws": "set PUBLIC_URL=https://dpt8rhufx9b4x.cloudfront.net&& react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

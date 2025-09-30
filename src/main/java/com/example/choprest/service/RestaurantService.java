@@ -14,8 +14,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -44,33 +46,72 @@ public class RestaurantService {
         List<Restaurant> cachedRestaurants = restaurantRepository
                 .findByRestaurantNameContainingIgnoreCaseOrBranchNameContainingIgnoreCase(keyword, keyword);
         
-        if (!cachedRestaurants.isEmpty()) {
-            log.info("Found {} cached restaurants in database", cachedRestaurants.size());
-            return cachedRestaurants;
+        // 지역명으로도 검색해서 추가
+        List<Restaurant> regionRestaurants = restaurantRepository
+                .findByRegionNameContainingIgnoreCase(keyword);
+        
+        // 중복 제거하면서 합치기
+        Set<Restaurant> uniqueRestaurants = new HashSet<>(cachedRestaurants);
+        uniqueRestaurants.addAll(regionRestaurants);
+        List<Restaurant> allCachedRestaurants = new ArrayList<>(uniqueRestaurants);
+        
+        if (!allCachedRestaurants.isEmpty()) {
+            log.info("Found {} cached restaurants in database", allCachedRestaurants.size());
+            return allCachedRestaurants;
         }
         
-        // 데이터베이스에 없으면 CSV에서 로드
+        // 데이터베이스에 없으면 CSV에서 로드하고 키워드로 필터링
+        log.info("No cached data found, loading from CSV and filtering with keyword: '{}'", keyword);
+        
         List<Restaurant> allRestaurants = loadRestaurantsFromCsv();
+        log.info("Loaded {} restaurants from CSV", allRestaurants.size());
         
-        // 키워드로 필터링 (식당명 또는 지점명에 포함)
-        List<Restaurant> filteredRestaurants = allRestaurants.stream()
-                .filter(restaurant -> 
-                    (restaurant.getRestaurantName() != null && 
-                     restaurant.getRestaurantName().toLowerCase().contains(keyword.toLowerCase())) ||
-                    (restaurant.getBranchName() != null && 
-                     restaurant.getBranchName().toLowerCase().contains(keyword.toLowerCase()))
-                )
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        
-        // 각 식당에 대해 위치 정보 업데이트 및 데이터베이스 저장
-        List<Restaurant> savedRestaurants = new ArrayList<>();
-        for (Restaurant restaurant : filteredRestaurants) {
-            Restaurant updatedRestaurant = updateLocationInfoAndSave(restaurant);
-            if (updatedRestaurant != null) {
-                savedRestaurants.add(updatedRestaurant);
+        // 키워드로 필터링 (식당명, 지점명, 지역명에 포함)
+        List<Restaurant> filteredRestaurants = new ArrayList<>();
+        for (Restaurant restaurant : allRestaurants) {
+            boolean matches = false;
+            
+            // 식당명 검색
+            if (restaurant.getRestaurantName() != null && 
+                restaurant.getRestaurantName().toLowerCase().contains(keyword.toLowerCase())) {
+                log.info("Match found in restaurant name: {}", restaurant.getRestaurantName());
+                matches = true;
+            }
+            
+            // 지점명 검색
+            if (restaurant.getBranchName() != null && 
+                restaurant.getBranchName().toLowerCase().contains(keyword.toLowerCase())) {
+                log.info("Match found in branch name: {}", restaurant.getBranchName());
+                matches = true;
+            }
+            
+            // 지역명 검색
+            if (restaurant.getRegionName() != null && 
+                restaurant.getRegionName().toLowerCase().contains(keyword.toLowerCase())) {
+                log.info("Match found in region name: {}", restaurant.getRegionName());
+                matches = true;
+            }
+            
+            if (matches) {
+                filteredRestaurants.add(restaurant);
             }
         }
         
+        log.info("Found {} restaurants matching keyword '{}' in CSV", filteredRestaurants.size(), keyword);
+        
+        // 필터링된 결과를 데이터베이스에 저장 (위치 정보 없이)
+        List<Restaurant> savedRestaurants = new ArrayList<>();
+        for (Restaurant restaurant : filteredRestaurants) {
+            try {
+                Restaurant savedRestaurant = restaurantRepository.save(restaurant);
+                savedRestaurants.add(savedRestaurant);
+                log.info("Saved restaurant to database: {}", savedRestaurant.getRestaurantName());
+            } catch (Exception e) {
+                log.error("Error saving restaurant {}: {}", restaurant.getRestaurantName(), e.getMessage());
+            }
+        }
+        
+        log.info("Returning {} restaurants from CSV search", savedRestaurants.size());
         return savedRestaurants;
     }
     
@@ -85,16 +126,16 @@ public class RestaurantService {
      * 모든 식당 조회 (데이터베이스 캐시 우선)
      */
     public List<Restaurant> getAllRestaurants() {
-        // 먼저 데이터베이스에서 위치 정보가 있는 식당들 조회
-        List<Restaurant> cachedRestaurants = restaurantRepository.findByLatIsNotNullAndLngIsNotNullAndRoadAddressIsNotNull();
+        // 데이터베이스에서 모든 식당 조회
+        List<Restaurant> allRestaurants = restaurantRepository.findAll();
         
-        if (!cachedRestaurants.isEmpty()) {
-            log.info("Found {} cached restaurants in database", cachedRestaurants.size());
-            return cachedRestaurants;
+        if (!allRestaurants.isEmpty()) {
+            log.info("Found {} restaurants in database", allRestaurants.size());
+            return allRestaurants;
         }
         
-        // 데이터베이스에 없으면 CSV에서 로드
-        log.info("No cached restaurants found, loading from CSV");
+        // 데이터베이스가 비어있으면 CSV에서 로드 (API 호출 없이)
+        log.info("No restaurants in database, loading from CSV without API calls");
         return loadRestaurantsFromCsv();
     }
     
@@ -342,26 +383,35 @@ public class RestaurantService {
      * Kakao Local API를 사용하여 위도/경도/도로명 주소 업데이트
      */
     private void updateLocationInfo(Restaurant restaurant) {
-            try {
-                final String searchQuery = restaurant.getRestaurantName() +
-                        (restaurant.getBranchName() != null && !restaurant.getBranchName().isEmpty()
-                                ? " " + restaurant.getBranchName() : "");
+        try {
+            final String searchQuery = restaurant.getRestaurantName() +
+                    (restaurant.getBranchName() != null && !restaurant.getBranchName().isEmpty()
+                            ? " " + restaurant.getBranchName() : "");
 
-                log.info("Updating location info for: {}", searchQuery);
+            log.info("Updating location info for: {}", searchQuery);
+            log.info("Using Kakao API key: {}", kakaoApiKey != null ? kakaoApiKey.substring(0, 8) + "..." : "NULL");
 
-                KakaoApiResponse response = webClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .scheme("https")
-                                .host("dapi.kakao.com")
-                                .path("/v2/local/search/keyword.json")
-                                .queryParam("query", searchQuery)
-                                .queryParam("size", "1")
-                                .queryParam("category_group_code", "FD6") // 음식점 카테고리
-                                .build())
-                        .header("Authorization", "KakaoAK " + kakaoApiKey)
-                        .retrieve()
-                        .bodyToMono(KakaoApiResponse.class)
-                        .block();
+            // API 호출 제한을 위한 지연 시간 추가 (0.5초)
+            Thread.sleep(500);
+
+            String apiUrl = "https://dapi.kakao.com/v2/local/search/keyword.json?query=" + 
+                           java.net.URLEncoder.encode(searchQuery, "UTF-8") + 
+                           "&size=1&category_group_code=FD6";
+            log.info("API URL: {}", apiUrl);
+
+            KakaoApiResponse response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("dapi.kakao.com")
+                            .path("/v2/local/search/keyword.json")
+                            .queryParam("query", searchQuery)
+                            .queryParam("size", "1")
+                            .queryParam("category_group_code", "FD6") // 음식점 카테고리
+                            .build())
+                    .header("Authorization", "KakaoAK " + kakaoApiKey)
+                    .retrieve()
+                    .bodyToMono(KakaoApiResponse.class)
+                    .block();
 
                 log.info("Kakao API response for '{}': {}", searchQuery, response);
 
@@ -394,7 +444,7 @@ public class RestaurantService {
                 }
 
             } catch (Exception e) {
-                log.error("Error updating location info for {}: {}", restaurant.getRestaurantName(), e.getMessage());
+                log.error("Error updating location info for {}: {}", restaurant.getRestaurantName(), e.getMessage(), e);
                 // 에러 발생 시 기본값 설정
                 restaurant.setLat(null);
                 restaurant.setLng(null);
@@ -783,5 +833,29 @@ public class RestaurantService {
                 this.totalCount = totalCount;
             }
         }
+    }
+    
+    /**
+     * 키워드로 식당 삭제
+     */
+    public int deleteRestaurantsByKeyword(String keyword) {
+        log.info("Deleting restaurants with keyword: {}", keyword);
+        
+        List<Restaurant> restaurants = restaurantRepository
+                .findByRestaurantNameContainingIgnoreCaseOrBranchNameContainingIgnoreCase(keyword, keyword);
+        
+        if (restaurants.isEmpty()) {
+            log.info("No restaurants found to delete for keyword: {}", keyword);
+            return 0;
+        }
+        
+        log.info("Found {} restaurants to delete for keyword: {}", restaurants.size(), keyword);
+        
+        for (Restaurant restaurant : restaurants) {
+            restaurantRepository.delete(restaurant);
+        }
+        
+        log.info("Successfully deleted {} restaurants for keyword: {}", restaurants.size(), keyword);
+        return restaurants.size();
     }
 }

@@ -14,7 +14,7 @@ import java.util.Optional;
 @RequestMapping("/api/restaurants")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*") // CORS 설정 (개발용)
+@CrossOrigin(origins = "*") // CORS 설정
 public class RestaurantController {
     
     private final RestaurantService restaurantService;
@@ -123,6 +123,28 @@ public class RestaurantController {
         } catch (Exception e) {
             log.error("Error retrieving all restaurants: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * 키워드로 식당 삭제 (개발/테스트용)
+     * DELETE /api/restaurants?keyword=검색어
+     */
+    @DeleteMapping
+    public ResponseEntity<String> deleteRestaurantsByKeyword(@RequestParam String keyword) {
+        log.info("Delete request received for keyword: {}", keyword);
+        
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Keyword is required");
+        }
+        
+        try {
+            int deletedCount = restaurantService.deleteRestaurantsByKeyword(keyword.trim());
+            log.info("Deleted {} restaurants for keyword: {}", deletedCount, keyword);
+            return ResponseEntity.ok("Deleted " + deletedCount + " restaurants for keyword: " + keyword);
+        } catch (Exception e) {
+            log.error("Error deleting restaurants for keyword {}: {}", keyword, e.getMessage());
+            return ResponseEntity.internalServerError().body("Error deleting restaurants: " + e.getMessage());
         }
     }
     
