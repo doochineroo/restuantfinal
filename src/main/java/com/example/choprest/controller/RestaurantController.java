@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class RestaurantController {
     
     private final RestaurantService restaurantService;
+    private final WebClient webClient;
     
     /**
      * 키워드로 식당 검색
@@ -146,6 +149,66 @@ public class RestaurantController {
             log.error("Error deleting restaurants for keyword {}: {}", keyword, e.getMessage());
             return ResponseEntity.internalServerError().body("Error deleting restaurants: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 카카오 API 프록시 - 장소 검색
+     * GET /api/restaurants/kakao/search?query=검색어
+     */
+    @GetMapping("/kakao/search")
+    public Mono<ResponseEntity<String>> searchKakaoPlaces(@RequestParam(required = false) String query) {
+        log.info("Kakao API proxy request for query: {}", query);
+        
+        if (query == null || query.trim().isEmpty()) {
+            log.warn("Query parameter is missing or empty");
+            return Mono.just(ResponseEntity.badRequest().body("{\"error\":\"Query parameter is required\"}"));
+        }
+        
+        try {
+            String kakaoApiKey = "KakaoAK 0daaba62d376e0a4633352753a28827c"; // REST API 키
+            
+            return webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("dapi.kakao.com")
+                            .path("/v2/local/search/keyword.json")
+                            .queryParam("query", query)
+                            .queryParam("category_group_code", "FD6") // 음식점 카테고리
+                            .queryParam("size", "15") // 최대 15개 결과
+                            .build())
+                    .header("Authorization", kakaoApiKey)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .map(ResponseEntity::ok)
+                    .doOnSuccess(response -> log.info("Kakao API response received for query: {}", query))
+                    .doOnError(error -> log.error("Kakao API error for query {}: {}", query, error.getMessage()))
+                    .onErrorReturn(ResponseEntity.internalServerError().body("{\"error\":\"Kakao API call failed\"}"));
+                    
+        } catch (Exception e) {
+            log.error("Error calling Kakao API for query {}: {}", query, e.getMessage(), e);
+            return Mono.just(ResponseEntity.internalServerError().body("{\"error\":\"Error calling Kakao API: " + e.getMessage() + "\"}"));
+        }
+    }
+    
+    /**
+     * 카카오 API 프록시 테스트용 - 간단한 응답
+     * GET /api/restaurants/kakao/test?query=검색어
+     */
+    @GetMapping("/kakao/test")
+    public ResponseEntity<String> testKakaoProxy(@RequestParam(required = false) String query) {
+        log.info("Kakao API test request for query: {}", query);
+        
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("{\"error\":\"Query parameter is required\"}");
+        }
+        
+        // 간단한 테스트 응답
+        String testResponse = String.format(
+            "{\"test\":\"success\",\"query\":\"%s\",\"message\":\"카카오 API 프록시 테스트 성공\"}", 
+            query
+        );
+        
+        return ResponseEntity.ok(testResponse);
     }
     
 }
