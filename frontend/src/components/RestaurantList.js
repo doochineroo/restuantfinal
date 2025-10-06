@@ -7,7 +7,8 @@ const RestaurantList = ({
   activeFilterTab, 
   expandedCard, 
   onCardClick, 
-  onReservation 
+  onReservation,
+  onDetailView 
 }) => {
   return (
     <div className="restaurant-list-section">
@@ -34,6 +35,7 @@ const RestaurantList = ({
               isExpanded={expandedCard === restaurant.id}
               onCardClick={onCardClick}
               onReservation={onReservation}
+              onDetailView={onDetailView}
             />
           ))
         )}
@@ -42,7 +44,19 @@ const RestaurantList = ({
   );
 };
 
-const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation }) => {
+const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, onDetailView }) => {
+  // 카드 렌더링 시 데이터 로그
+  console.log('카드 렌더링:', {
+    id: restaurant.id,
+    name: restaurant.restaurantName,
+    branch: restaurant.branchName,
+    region: restaurant.regionName,
+    parking: restaurant.parking,
+    wifi: restaurant.wifi,
+    mainMenu: restaurant.mainMenu,
+    address: restaurant.roadAddress
+  });
+  
   return (
     <div
       id={`restaurant-card-${restaurant.id}`}
@@ -52,7 +66,9 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation }) 
         className="restaurant-card-header"
         onClick={() => onCardClick(restaurant.id)}
       >
-        <div className="restaurant-name">{restaurant.restaurantName}</div>
+        <div className="restaurant-name-container">
+          <div className="restaurant-name">{restaurant.restaurantName}</div>
+        </div>
         {restaurant.branchName && (
           <div className="restaurant-branch">{restaurant.branchName}</div>
         )}
@@ -77,9 +93,7 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation }) 
             배달 {getKoreanValue(restaurant.delivery)}
           </span>
         </div>
-        <div className="restaurant-main-menu">
-          {restaurant.mainMenu || '메뉴 정보 없음'}
-        </div>
+       
         {restaurant.roadAddress ? (
           <div className="restaurant-location">{restaurant.roadAddress}</div>
         ) : (
@@ -94,51 +108,26 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation }) 
         className={`restaurant-card-details ${isExpanded ? 'expanded' : ''}`}
       >
         <div className="detail-section">
-          <h4>위치 정보</h4>
-          <p><strong>지역:</strong> {restaurant.regionName || '정보 없음'}</p>
-          {restaurant.roadAddress && (
-            <p><strong>주소:</strong> {restaurant.roadAddress}</p>
-          )}
-          {restaurant.areaInfo && (
-            <p><strong>상세지역:</strong> {restaurant.areaInfo}</p>
-          )}
-        </div>
-
-        <div className="detail-section">
-          <h4>메뉴 정보</h4>
-          <p><strong>주요 메뉴:</strong> {restaurant.mainMenu || '정보 없음'}</p>
-          <p><strong>다국어 메뉴:</strong> {getKoreanValue(restaurant.multilingualMenu)}</p>
+          <h4>상세 주소</h4>
+          <p><strong>주소:</strong> {restaurant.roadAddress || '주소 정보 없음'}</p>
         </div>
 
         <div className="detail-section">
           <h4>운영 정보</h4>
-          <p><strong>영업시간:</strong> {restaurant.openingHours || '정보 없음'}</p>
-          <p><strong>휴무일:</strong> {restaurant.holidayInfo || '정보 없음'}</p>
-          <p><strong>상태:</strong> {getStatusValue(restaurant)}</p>
+          <p><strong>영업시간:</strong> {restaurant.openingHours || '정보없음'}</p>
+          <p><strong>휴무일:</strong> {restaurant.holidayInfo || '정보없음'}</p>
         </div>
 
-        <div className="detail-section">
-          <h4>편의시설</h4>
-          <div className="facility-grid">
-            <span className={`facility-item ${getKoreanValue(restaurant.parking) === '가능' ? 'available' : 'unavailable'}`}>
-              주차 {getKoreanValue(restaurant.parking)}
-            </span>
-            <span className={`facility-item ${getKoreanValue(restaurant.wifi) === '가능' ? 'available' : 'unavailable'}`}>
-              WiFi {getKoreanValue(restaurant.wifi)}
-            </span>
-            <span className={`facility-item ${getKoreanValue(restaurant.kidsZone) === '가능' ? 'available' : 'unavailable'}`}>
-              키즈존 {getKoreanValue(restaurant.kidsZone)}
-            </span>
-            <span className={`facility-item ${getKoreanValue(restaurant.delivery) === '가능' ? 'available' : 'unavailable'}`}>
-              배달 {getKoreanValue(restaurant.delivery)}
-            </span>
-            <span className={`facility-item ${getKoreanValue(restaurant.smartOrder) === '가능' ? 'available' : 'unavailable'}`}>
-              스마트오더 {getKoreanValue(restaurant.smartOrder)}
-            </span>
-          </div>
-        </div>
-
-        <div className="reservation-section">
+        <div className="card-buttons">
+          <button 
+            className="detail-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDetailView(restaurant);
+            }}
+          >
+            상세보기
+          </button>
           <button 
             className="reservation-btn"
             onClick={(e) => onReservation(restaurant, e)}

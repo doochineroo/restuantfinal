@@ -29,7 +29,35 @@ public class RestaurantService {
     
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
-
+    
+    
+    /**
+     * 애플리케이션 시작 시 CSV 데이터 로드
+     */
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    public void initializeData() {
+        try {
+            long count = restaurantRepository.count();
+            log.info("Current restaurant count in database: {}", count);
+            
+            if (count == 0) {
+                log.info("Database is empty, loading restaurants from CSV...");
+                List<Restaurant> restaurants = loadRestaurantsFromCsv();
+                
+                if (!restaurants.isEmpty()) {
+                    List<Restaurant> savedRestaurants = restaurantRepository.saveAll(restaurants);
+                    log.info("Successfully loaded {} restaurants from CSV to database", savedRestaurants.size());
+                } else {
+                    log.warn("No restaurants loaded from CSV file");
+                }
+            } else {
+                log.info("Database already contains {} restaurants, skipping CSV load", count);
+            }
+        } catch (Exception e) {
+            log.error("Error initializing restaurant data: {}", e.getMessage(), e);
+        }
+    }
+    
     @Value("${kakao.api.url}")
     private String kakaoApiUrl;
 
@@ -57,6 +85,7 @@ public class RestaurantService {
         
         if (!allCachedRestaurants.isEmpty()) {
             log.info("Found {} cached restaurants in database", allCachedRestaurants.size());
+            // 좌표 유무와 상관없이 모든 식당 반환 (Controller에서 좌표 없는 식당을 카카오 API로 업데이트)
             return allCachedRestaurants;
         }
         
@@ -112,6 +141,8 @@ public class RestaurantService {
         }
         
         log.info("Returning {} restaurants from CSV search", savedRestaurants.size());
+        
+        // 좌표 유무와 상관없이 모든 식당 반환 (Controller에서 좌표 없는 식당을 카카오 API로 업데이트)
         return savedRestaurants;
     }
     
@@ -131,12 +162,19 @@ public class RestaurantService {
         
         if (!allRestaurants.isEmpty()) {
             log.info("Found {} restaurants in database", allRestaurants.size());
-            return allRestaurants;
+            // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+            List<Restaurant> operatingRestaurants = filterOperatingRestaurants(allRestaurants);
+            log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
+            return operatingRestaurants;
         }
         
         // 데이터베이스가 비어있으면 CSV에서 로드 (API 호출 없이)
         log.info("No restaurants in database, loading from CSV without API calls");
-        return loadRestaurantsFromCsv();
+        List<Restaurant> csvRestaurants = loadRestaurantsFromCsv();
+        // CSV에서 로드한 데이터도 필터링
+        List<Restaurant> operatingRestaurants = filterOperatingRestaurants(csvRestaurants);
+        log.info("Filtered to {} operating restaurants from CSV (with location info)", operatingRestaurants.size());
+        return operatingRestaurants;
     }
     
     /**
@@ -150,7 +188,10 @@ public class RestaurantService {
         
         if (!cachedRestaurants.isEmpty()) {
             log.info("Found {} cached restaurants in database for region: {}", cachedRestaurants.size(), regionName);
-            return cachedRestaurants;
+            // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+            List<Restaurant> operatingRestaurants = filterOperatingRestaurants(cachedRestaurants);
+            log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
+            return operatingRestaurants;
         }
         
         // 데이터베이스에 없으면 CSV에서 로드
@@ -173,7 +214,10 @@ public class RestaurantService {
             }
         }
         
-        return savedRestaurants;
+        // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+        List<Restaurant> operatingRestaurants = filterOperatingRestaurants(savedRestaurants);
+        log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
+        return operatingRestaurants;
     }
     
     /**
@@ -188,7 +232,10 @@ public class RestaurantService {
         
         if (!cachedRestaurants.isEmpty()) {
             log.info("Found {} cached restaurants in database", cachedRestaurants.size());
-            return cachedRestaurants;
+            // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+            List<Restaurant> operatingRestaurants = filterOperatingRestaurants(cachedRestaurants);
+            log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
+            return operatingRestaurants;
         }
         
         // 데이터베이스에 없으면 CSV에서 로드
@@ -213,7 +260,10 @@ public class RestaurantService {
             }
         }
         
-        return savedRestaurants;
+        // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+        List<Restaurant> operatingRestaurants = filterOperatingRestaurants(savedRestaurants);
+        log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
+        return operatingRestaurants;
     }
     
     /**
@@ -413,44 +463,50 @@ public class RestaurantService {
                     .bodyToMono(KakaoApiResponse.class)
                     .block();
 
-                log.info("Kakao API response for '{}': {}", searchQuery, response);
+            log.info("Kakao API response for '{}': {}", searchQuery, response);
 
-                if (response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()) {
-                    KakaoApiResponse.Document document = response.getDocuments().get(0);
+            if (response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()) {
+                KakaoApiResponse.Document document = response.getDocuments().get(0);
 
-                    // 위도/경도 업데이트
-                    restaurant.setLat(Double.parseDouble(document.getY()));
-                    restaurant.setLng(Double.parseDouble(document.getX()));
+                // 위도/경도 업데이트
+                restaurant.setLat(Double.parseDouble(document.getY()));
+                restaurant.setLng(Double.parseDouble(document.getX()));
 
-                    // 먼저 검색 결과에서 직접 도로명 주소 확인
-                    String address = document.getRoadAddressName();
-                    if (address == null || address.trim().isEmpty()) {
-                        // 검색 결과에 도로명 주소가 없으면 Reverse Geocoding API 사용
-                        address = getDetailedAddressFromCoordinates(restaurant.getLat(), restaurant.getLng());
-                    } else {
-                        // 검색 결과의 주소를 더 상세하게 구성
-                        address = buildDetailedAddress(document.getRoadAddressName(), document.getAddressName());
-                    }
-                    restaurant.setRoadAddress(address);
-
-                    log.info("Updated location info for {}: lat={}, lng={}, address={}",
-                            searchQuery, restaurant.getLat(), restaurant.getLng(), restaurant.getRoadAddress());
-                } else {
-                    log.warn("No location data found for: {}", searchQuery);
-                    // 위치 정보를 찾을 수 없는 경우 기본값 설정
-                    restaurant.setLat(null);
-                    restaurant.setLng(null);
-                    restaurant.setRoadAddress(null);
+                // 전화번호 업데이트 (카카오 API에서 제공하는 경우)
+                if (document.getPhone() != null && !document.getPhone().trim().isEmpty()) {
+                    restaurant.setPhoneNumber(document.getPhone());
+                    log.info("Updated phone number for {}: {}", searchQuery, document.getPhone());
                 }
 
-            } catch (Exception e) {
-                log.error("Error updating location info for {}: {}", restaurant.getRestaurantName(), e.getMessage(), e);
-                // 에러 발생 시 기본값 설정
+                // 먼저 검색 결과에서 직접 도로명 주소 확인
+                String address = document.getRoadAddressName();
+                if (address == null || address.trim().isEmpty()) {
+                    // 검색 결과에 도로명 주소가 없으면 Reverse Geocoding API 사용
+                    address = getDetailedAddressFromCoordinates(restaurant.getLat(), restaurant.getLng());
+                } else {
+                    // 검색 결과의 주소를 더 상세하게 구성
+                    address = buildDetailedAddress(document.getRoadAddressName(), document.getAddressName());
+                }
+                restaurant.setRoadAddress(address);
+
+                log.info("Updated location info for {}: lat={}, lng={}, address={}, phone={}",
+                        searchQuery, restaurant.getLat(), restaurant.getLng(), restaurant.getRoadAddress(), restaurant.getPhoneNumber());
+            } else {
+                log.warn("No location data found for: {}", searchQuery);
+                // 위치 정보를 찾을 수 없는 경우 기본값 설정
                 restaurant.setLat(null);
                 restaurant.setLng(null);
                 restaurant.setRoadAddress(null);
             }
+
+        } catch (Exception e) {
+            log.error("Error updating location info for {}: {}", restaurant.getRestaurantName(), e.getMessage(), e);
+            // 에러 발생 시 기본값 설정
+            restaurant.setLat(null);
+            restaurant.setLng(null);
+            restaurant.setRoadAddress(null);
         }
+    }
 
     /**
      * 상세한 주소 정보 구성
@@ -539,6 +595,8 @@ public class RestaurantService {
             private String roadAddressName; // 도로명 주소
             @JsonProperty("address_name")
             private String addressName; // 지번 주소
+            @JsonProperty("phone")
+            private String phone; // 전화번호
             
             public String getX() {
                 return x;
@@ -570,6 +628,14 @@ public class RestaurantService {
             
             public void setAddressName(String addressName) {
                 this.addressName = addressName;
+            }
+            
+            public String getPhone() {
+                return phone;
+            }
+            
+            public void setPhone(String phone) {
+                this.phone = phone;
             }
         }
     }
@@ -858,4 +924,28 @@ public class RestaurantService {
         log.info("Successfully deleted {} restaurants for keyword: {}", restaurants.size(), keyword);
         return restaurants.size();
     }
+    
+    /**
+     * 식당 정보 업데이트 (좌표 및 주소)
+     */
+    public Restaurant updateRestaurant(Restaurant restaurant) {
+        log.info("Updating restaurant: {} with coordinates lat={}, lng={}", 
+            restaurant.getRestaurantName(), restaurant.getLat(), restaurant.getLng());
+        return restaurantRepository.save(restaurant);
+    }
+    
+    /**
+     * 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
+     */
+    private List<Restaurant> filterOperatingRestaurants(List<Restaurant> restaurants) {
+        return restaurants.stream()
+                .filter(restaurant -> 
+                    restaurant.getLat() != null && 
+                    restaurant.getLng() != null && 
+                    restaurant.getRoadAddress() != null && 
+                    !restaurant.getRoadAddress().trim().isEmpty()
+                )
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
+    
 }

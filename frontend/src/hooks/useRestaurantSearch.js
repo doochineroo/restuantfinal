@@ -11,19 +11,12 @@ export const useRestaurantSearch = () => {
   const [regions, setRegions] = useState([]);
 
   const getApiUrl = () => {
-    const hostname = window.location.hostname;
-    
-    // 로컬 개발 환경
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8080/api';
-    }
-    
-    // 프로덕션 환경 - 직접 HTTP 호출 (Mixed Content 허용 필요)
+    // 항상 EC2 백엔드 직접 호출
     return 'http://ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com:8080/api';
   };
 
   
-  // 통합검색 처리 (백엔드 API 호출)
+  // 백엔드 DB 검색 (좌표가 없는 식당들은 실시간 카카오 API로 자동 업데이트)
   const handleSearch = async (searchKeyword) => {
     if (!searchKeyword.trim()) {
       alert('검색어를 입력해주세요.');
@@ -33,55 +26,82 @@ export const useRestaurantSearch = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('검색 시작:', searchKeyword);
+      console.log('🔍 백엔드 DB 검색 시작 (좌표 없으면 카카오 API로 자동 업데이트):', searchKeyword);
       
-      // 백엔드 API 호출
-      const apiUrl = getApiUrl();
-      const fullUrl = `${apiUrl}/restaurants?keyword=${encodeURIComponent(searchKeyword)}`;
-      console.log('API 요청 URL:', fullUrl);
+      // 백엔드 API 호출 (좌표가 없는 식당들은 자동으로 카카오 API 호출하여 업데이트)
+      const proxyUrl = `https://dpt8rhufx9b4x.cloudfront.net/api/restaurants?keyword=${encodeURIComponent(searchKeyword)}`;
+      console.log('백엔드 API 요청 URL:', proxyUrl);
       
-      const response = await axios.get(fullUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        timeout: 30000 // 30초 타임아웃
+      const response = await axios.get(proxyUrl, {
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        timeout: 30000 // 모든 식당 좌표 업데이트를 위해 타임아웃 증가
       });
       
-      console.log('API 응답 상태:', response.status);
-      console.log('API 응답 헤더:', response.headers);
-      console.log('API 응답 데이터:', response.data);
-      console.log('API 응답 타입:', typeof response.data);
+      console.log('백엔드 API 응답 상태:', response.status);
+      const restaurants = Array.isArray(response.data) ? response.data : [];
+      console.log('📊 백엔드에서 받은 식당 (좌표 업데이트 완료):', restaurants.length, '개');
       
-      // 응답이 HTML인지 확인
-      if (typeof response.data === 'string' && response.data.includes('<html')) {
-        console.error('HTML 응답을 받았습니다. API 엔드포인트를 확인하세요.');
-        throw new Error('API 서버에서 HTML을 반환했습니다. 엔드포인트를 확인하세요.');
+      // 데이터 변환 및 좌표 정보 확인
+      const processedRestaurants = restaurants.map((restaurant) => {
+        // 좌표 정보 로깅
+        if (restaurant.lat && restaurant.lng) {
+          console.log(`✅ 식당 "${restaurant.restaurantName}" - 좌표 있음: lat=${restaurant.lat}, lng=${restaurant.lng}, address=${restaurant.roadAddress}`);
+        } else {
+          console.log(`⚠️ 식당 "${restaurant.restaurantName}" - 좌표 없음 (API 호출 실패)`);
+        }
+        
+        return {
+          ...restaurant,
+          dataSource: '백엔드DB',
+          // 좌표가 문자열인 경우 숫자로 변환
+          lat: restaurant.lat ? parseFloat(restaurant.lat) : null,
+          lng: restaurant.lng ? parseFloat(restaurant.lng) : null
+        };
+      });
+      
+      // 좌표 정보 통계
+      const restaurantsWithCoordinates = processedRestaurants.filter(r => r.lat !== null && r.lng !== null);
+      const restaurantsWithoutCoordinates = processedRestaurants.filter(r => r.lat === null || r.lng === null);
+      
+      console.log('📍 좌표 정보 통계:');
+      console.log('  - 좌표 있음:', restaurantsWithCoordinates.length, '개');
+      console.log('  - 좌표 없음:', restaurantsWithoutCoordinates.length, '개');
+      
+      if (restaurantsWithoutCoordinates.length > 0) {
+        console.log('⚠️ 좌표가 없는 식당들 (카카오 API 검색 실패):');
+        restaurantsWithoutCoordinates.slice(0, 3).forEach((restaurant, index) => {
+          console.log(`  ${index + 1}. ${restaurant.restaurantName}`);
+        });
       }
       
-      const allResults = response.data || [];
+      // 각 식당 데이터 상세 확인 (처음 5개만)
+      processedRestaurants.slice(0, 5).forEach((restaurant, index) => {
+        console.log(`[${index + 1}] 식당:`, {
+          name: restaurant.restaurantName,
+          branch: restaurant.branchName,
+          region: restaurant.regionName,
+          address: restaurant.roadAddress,
+          lat: restaurant.lat,
+          lng: restaurant.lng,
+          phone: restaurant.phoneNumber,
+          status: restaurant.status
+        });
+      });
       
-      // 운영중인 식당만 필터링
-      const operatingRestaurants = filterOperatingRestaurants(allResults);
-      
-      console.log('전체 검색 결과:', allResults.length);
-      console.log('운영중인 식당:', operatingRestaurants.length);
-      
-      setRestaurants(operatingRestaurants);
-      setFilteredRestaurants(operatingRestaurants);
+      setRestaurants(processedRestaurants);
+      setFilteredRestaurants(processedRestaurants);
       setHasSearched(true);
       
       // 지역 목록 추출
-      const uniqueRegions = [...new Set(operatingRestaurants.map(restaurant => restaurant.regionName).filter(Boolean))];
+      const uniqueRegions = [...new Set(processedRestaurants.map(restaurant => restaurant.regionName).filter(Boolean))];
       setRegions(uniqueRegions.sort());
       
     } catch (error) {
-      console.error('검색 실패:', error);
+      console.error('❌ 검색 실패:', error);
       
       let errorMessage = '검색 중 오류가 발생했습니다.';
       
       if (error.response) {
-        // 서버에서 응답을 받았지만 에러 상태
         console.error('응답 상태:', error.response.status);
         console.error('응답 데이터:', error.response.data);
         
@@ -93,11 +113,9 @@ export const useRestaurantSearch = () => {
           errorMessage = '네트워크 연결을 확인하세요.';
         }
       } else if (error.request) {
-        // 요청을 보냈지만 응답을 받지 못함
         console.error('요청 실패:', error.request);
         errorMessage = '서버에 연결할 수 없습니다. 네트워크를 확인하세요.';
       } else {
-        // 기타 오류
         console.error('오류 메시지:', error.message);
         errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
       }

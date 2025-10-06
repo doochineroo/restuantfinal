@@ -9,12 +9,7 @@ export const getKoreanValue = (value) => {
 
 // 상태 값을 한국어로 변환
 export const getStatusValue = (restaurant) => {
-  // lat, lng 값이 없으면 운영중지예상
-  if (!restaurant.lat || !restaurant.lng) {
-    return '운영중지예상';
-  }
-  
-  // NORMAL이면 운영중
+  // NORMAL이면 운영중 (좌표 여부와 관계없이)
   if (restaurant.status === 'NORMAL') {
     return '운영중';
   }

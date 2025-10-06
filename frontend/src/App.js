@@ -6,6 +6,7 @@ import SearchSection from './components/SearchSection';
 import FilterTabs from './components/FilterTabs';
 import MapSection from './components/MapSection';
 import RestaurantList from './components/RestaurantList';
+import RestaurantDetailModal from './components/RestaurantDetailModal';
 import { useRestaurantSearch } from './hooks/useRestaurantSearch';
 import { useMap } from './hooks/useMap';
 
@@ -16,6 +17,8 @@ function MainPage() {
   const [expandedCard, setExpandedCard] = useState(null);
   const [activeFilterTab, setActiveFilterTab] = useState('전체');
   const [selectedServices, setSelectedServices] = useState([]);
+  const [modalRestaurant, setModalRestaurant] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { map, updateMap, showSelectedMarker, clearMarkers, isMapLoading, mapError } = useMap();
 
@@ -33,6 +36,11 @@ function MainPage() {
     filterByServiceType,
     setError
   } = useRestaurantSearch();
+
+  // 🔍 디버깅: 부모 컴포넌트 상태 확인
+  console.log('🏠 App.js - hasSearched:', hasSearched);
+  console.log('🏠 App.js - filteredRestaurants:', filteredRestaurants);
+  console.log('🏠 App.js - filteredRestaurants.length:', filteredRestaurants?.length);
 
   // 마커 클릭 시 카드 자동 선택 핸들러
   const handleMarkerClick = (restaurant) => {
@@ -130,15 +138,29 @@ function MainPage() {
     // 선택된 식당도 함께 업데이트
     if (!isCurrentlyExpanded) {
       const restaurant = filteredRestaurants.find(r => r.id === restaurantId);
-      if (restaurant) {
+      if (restaurant && restaurant.lat && restaurant.lng) {
+        console.log('카드 선택됨:', restaurant.restaurantName);
         setSelectedRestaurant(restaurant);
-        // 선택된 식당의 마커만 표시
-        showSelectedMarker(restaurant, setSelectedRestaurant);
+        
+        // 1. 기존 마커 모두 제거
+        clearMarkers();
+        
+        // 2. 선택된 식당의 마커만 표시 (지도 중심 이동 포함)
+        setTimeout(() => {
+          showSelectedMarker(restaurant, setSelectedRestaurant);
+        }, 100);
       }
     } else {
+      console.log('카드 선택 해제');
       setSelectedRestaurant(null);
-      // 필터링된 마커 다시 표시
-      updateMap(filteredRestaurants);
+      
+      // 1. 기존 마커 제거
+      clearMarkers();
+      
+      // 2. 모든 필터링된 식당 마커 다시 표시
+      setTimeout(() => {
+        updateMap(filteredRestaurants, handleMarkerClick);
+      }, 100);
     }
   };
 
@@ -151,6 +173,22 @@ function MainPage() {
       console.error('예약 페이지 이동 오류:', error);
       alert('예약 페이지로 이동하는데 실패했습니다.');
     }
+  };
+
+  // 상세정보 모달 핸들러
+  const handleDetailView = (restaurant) => {
+    setModalRestaurant(restaurant);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setModalRestaurant(null);
+  };
+
+  const handleModalReservation = (restaurant) => {
+    handleReservation(restaurant, { stopPropagation: () => {} });
+    handleCloseModal();
   };
 
   return (
@@ -192,6 +230,7 @@ function MainPage() {
           expandedCard={expandedCard}
           onCardClick={toggleCardExpansion}
           onReservation={handleReservation}
+          onDetailView={handleDetailView}
         />
       </div>
 
@@ -201,6 +240,14 @@ function MainPage() {
           <p>처리 중...</p>
         </div>
       )}
+
+      {/* 상세정보 모달 */}
+      <RestaurantDetailModal
+        restaurant={modalRestaurant}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onReservation={handleModalReservation}
+      />
     </div>
   );
 }

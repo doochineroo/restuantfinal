@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Restaurant {
-    
     @Id
     private Long id;
     
@@ -41,10 +40,10 @@ public class Restaurant {
     @Column(name = "restroom_info")
     private String restroomInfo;
     
-    @Column(name = "holiday_info")
+    @Column(name = "holiday_info", length = 1000)
     private String holidayInfo;
     
-    @Column(name = "opening_hours")
+    @Column(name = "opening_hours", length = 1000)
     private String openingHours;
     
     @Column(name = "delivery")
@@ -53,10 +52,10 @@ public class Restaurant {
     @Column(name = "online_reservation")
     private String onlineReservation;
     
-    @Column(name = "homepage_url")
+    @Column(name = "homepage_url", length = 500)
     private String homepageUrl;
     
-    @Column(name = "landmark_name")
+    @Column(name = "landmark_name", length = 500)
     private String landmarkName;
     
     @Column(name = "landmark_lat")
@@ -71,16 +70,16 @@ public class Restaurant {
     @Column(name = "smart_order")
     private String smartOrder;
     
-    @Column(name = "main_menu")
+    @Column(name = "main_menu", length = 1000)
     private String mainMenu;
     
     @Column(name = "status")
     private String status;
     
-    @Column(name = "hashtags")
+    @Column(name = "hashtags", length = 1000)
     private String hashtags;
     
-    @Column(name = "area_info")
+    @Column(name = "area_info", length = 2000)
     private String areaInfo;
     
     @Column(name = "lat")
@@ -89,7 +88,13 @@ public class Restaurant {
     @Column(name = "lng")
     private Double lng;
     
-    @Column(name = "road_address")
+    @Column(name = "road_address", length = 500)
     private String roadAddress;
+    
+    @Column(name = "phone_number", length = 50)
+    private String phoneNumber;
+    
+    @Column(name = "category", length = 200)
+    private String category;
 }
 
