@@ -120,6 +120,17 @@ const FilterTabs = ({
             </div>
           )}
         </div>
+
+        {/* 필터 초기화 버튼 */}
+        {(activeFilterTab !== '전체' || selectedServices.length > 0) && (
+          <button 
+            className="filter-reset-btn"
+            onClick={() => onFilterChange('전체', 'all')}
+            title="필터 초기화"
+          >
+            초기화 ✕
+          </button>
+        )}
       </div>
     </div>
   );

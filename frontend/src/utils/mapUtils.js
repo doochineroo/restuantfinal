@@ -7,8 +7,14 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
       return;
     }
 
-    // 기존 마커와 인포윈도우 제거
-    markers.forEach(marker => marker.setMap(null));
+    // 기존 마커와 인포윈도우 제거 (더 확실하게)
+    if (markers && markers.length > 0) {
+      markers.forEach(marker => {
+        if (marker && typeof marker.setMap === 'function') {
+          marker.setMap(null);
+        }
+      });
+    }
     const newMarkers = [];
 
     // 현재 인포윈도우 제거
@@ -110,8 +116,14 @@ export const showSelectedRestaurantMarker = (map, markers, setMarkers, restauran
       return;
     }
 
-    // 기존 마커와 인포윈도우 모두 제거
-    markers.forEach(marker => marker.setMap(null));
+    // 기존 마커와 인포윈도우 모두 제거 (더 확실하게)
+    if (markers && markers.length > 0) {
+      markers.forEach(marker => {
+        if (marker && typeof marker.setMap === 'function') {
+          marker.setMap(null);
+        }
+      });
+    }
     const newMarkers = [];
 
     // 기존 인포윈도우 제거
@@ -182,8 +194,25 @@ export const clearMapMarkers = (map, markers, setMarkers) => {
   try {
     if (!map) return;
     
-    // 기존 마커 모두 제거
-    markers.forEach(marker => marker.setMap(null));
+    // 기존 마커 모두 제거 (더 확실하게)
+    if (markers && markers.length > 0) {
+      markers.forEach(marker => {
+        if (marker && typeof marker.setMap === 'function') {
+          marker.setMap(null);
+        }
+      });
+    }
+    
+    // 전역 마커 배열도 확인 (혹시 모를 경우 대비)
+    if (window.kakaoMarkers && Array.isArray(window.kakaoMarkers)) {
+      window.kakaoMarkers.forEach(marker => {
+        if (marker && typeof marker.setMap === 'function') {
+          marker.setMap(null);
+        }
+      });
+      window.kakaoMarkers = [];
+    }
+    
     setMarkers([]);
     
     // 현재 인포윈도우 제거
@@ -192,15 +221,21 @@ export const clearMapMarkers = (map, markers, setMarkers) => {
       window.currentInfoWindow = null;
     }
     
-    // DOM에서 인포윈도우 제거
-    const infoWindows = document.querySelectorAll('.kakao-maps-info-window');
-    infoWindows.forEach(infoWindow => {
-      if (infoWindow.parentNode) {
-        infoWindow.parentNode.removeChild(infoWindow);
+    // DOM에서 남아있는 모든 마커 이미지 제거
+    const markerImages = document.querySelectorAll('.kakao-maps-marker, .kakao-maps-custom-overlay');
+    markerImages.forEach(img => {
+      if (img && img.parentNode) {
+        img.parentNode.removeChild(img);
       }
     });
     
-    console.log('지도 마커와 인포윈도우 제거 완료');
+    // DOM에서 인포윈도우 제거
+    const infoWindows = document.querySelectorAll('.kakao-maps-info-window');
+    infoWindows.forEach(infoWindow => {
+      if (infoWindow && infoWindow.parentNode) {
+        infoWindow.parentNode.removeChild(infoWindow);
+      }
+    });
   } catch (error) {
     console.error('지도 마커 제거 오류:', error);
   }

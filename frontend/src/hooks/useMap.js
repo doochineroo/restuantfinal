@@ -28,13 +28,10 @@ export const useMap = () => {
           const mapInstance = new window.kakao.maps.Map(mapContainer, mapOption);
           setMap(mapInstance);
           setIsMapLoading(false);
-          console.log('지도 초기화 완료');
         } else {
-          console.log('지도 컨테이너를 찾을 수 없습니다');
           setTimeout(initMap, 500);
         }
       } catch (error) {
-        console.error('지도 초기화 오류:', error);
         setMapError('지도를 불러오는데 실패했습니다.');
         setIsMapLoading(false);
       }

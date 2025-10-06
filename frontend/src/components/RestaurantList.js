@@ -45,18 +45,6 @@ const RestaurantList = ({
 };
 
 const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, onDetailView }) => {
-  // 카드 렌더링 시 데이터 로그
-  console.log('카드 렌더링:', {
-    id: restaurant.id,
-    name: restaurant.restaurantName,
-    branch: restaurant.branchName,
-    region: restaurant.regionName,
-    parking: restaurant.parking,
-    wifi: restaurant.wifi,
-    mainMenu: restaurant.mainMenu,
-    address: restaurant.roadAddress
-  });
-  
   return (
     <div
       id={`restaurant-card-${restaurant.id}`}

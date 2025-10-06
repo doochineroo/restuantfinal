@@ -1,8 +1,25 @@
-/* 예약 페이지 스타일 */
+/* 예약 페이지 - 캐치테이블 스타일 (메인 페이지와 통일) */
+
+/* 커스텀 커서 적용 */
 .reservation-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #f8f9fa;
   padding: 20px;
+  cursor: url('./cursor_basic.png'), auto;
+}
+
+/* 예약 페이지의 클릭 가능한 모든 요소 */
+.reservation-page button,
+.reservation-page input[type="button"],
+.reservation-page input[type="submit"],
+.reservation-page select {
+  cursor: url('./cursor_basic.png'), pointer !important;
+}
+
+/* 예약 페이지 로딩 중 */
+.reservation-page button:disabled,
+.submit-btn:disabled {
+  cursor: url('./cursor_loading.png'), wait !important;
 }
 
 .reservation-container {
@@ -10,30 +27,35 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  gap: 20px;
   align-items: start;
 }
 
+/* 식당 정보 카드 */
 .restaurant-info-card {
   background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 20px;
 }
 
 .restaurant-info-card h2 {
-  color: #333;
-  margin-bottom: 10px;
-  font-size: 1.8rem;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.5px;
+  cursor: default;
 }
 
 .restaurant-info-card h3 {
-  color: #666;
+  color: #6c757d;
   margin-bottom: 20px;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: default;
 }
 
 .restaurant-details {
@@ -42,8 +64,9 @@
 
 .restaurant-details p {
   margin-bottom: 12px;
-  font-size: 0.95rem;
-  color: #555;
+  font-size: 0.9rem;
+  color: #495057;
+  cursor: default;
 }
 
 .restaurant-details strong {
@@ -51,27 +74,30 @@
   font-weight: 600;
 }
 
+/* 예약 폼 카드 */
 .reservation-form-card {
   background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .reservation-form-card h2 {
-  color: #333;
-  margin-bottom: 25px;
-  font-size: 1.8rem;
+  color: #1a1a1a;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 15px;
+  border-bottom: 2px solid #f1f3f5;
+  padding-bottom: 16px;
+  letter-spacing: -0.5px;
+  cursor: default;
 }
 
 .reservation-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .form-group {
@@ -83,24 +109,31 @@
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px;
 }
 
 .form-group label {
   font-weight: 600;
-  color: #333;
-  font-size: 0.95rem;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: default;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: 12px 15px;
-  border: 2px solid #e1e5e9;
+  padding: 12px 16px;
+  border: 1px solid #dee2e6;
   border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
   background: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
+  cursor: text;
+}
+
+.form-group select {
+  cursor: pointer;
 }
 
 .form-group input:focus,
@@ -111,36 +144,48 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: #adb5bd;
+}
+
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
-  font-family: inherit;
 }
 
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #adb5bd;
+}
+
+/* 폼 액션 버튼 */
 .form-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 30px;
+  gap: 12px;
+  margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #e1e5e9;
+  border-top: 1px solid #f1f3f5;
 }
 
 .cancel-btn,
 .submit-btn {
   flex: 1;
-  padding: 15px 25px;
+  padding: 14px 24px;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
 }
 
 .cancel-btn {
   background: #f8f9fa;
-  color: #666;
-  border: 2px solid #e1e5e9;
+  color: #495057;
+  border: 1px solid #dee2e6;
 }
 
 .cancel-btn:hover {
@@ -148,14 +193,23 @@
   border-color: #adb5bd;
 }
 
+.cancel-btn:active {
+  transform: scale(0.98);
+}
+
 .submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
 }
 
 .submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .submit-btn:disabled {
@@ -164,120 +218,178 @@
   transform: none;
 }
 
+/* 에러 메시지 */
 .error-message {
   text-align: center;
   background: white;
-  border-radius: 15px;
+  border-radius: 12px;
   padding: 50px 30px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   max-width: 500px;
   margin: 50px auto;
 }
 
 .error-message h2 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: default;
 }
 
 .error-message p {
-  color: #666;
-  margin-bottom: 25px;
-  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+  cursor: default;
 }
 
 .back-btn {
-  padding: 12px 25px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 24px;
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
 }
 
 .back-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.back-btn:active {
+  transform: translateY(0);
+}
+
+/* 입력 검증 스타일 */
+.form-group input:invalid:not(:placeholder-shown),
+.form-group select:invalid:not(:placeholder-shown),
+.form-group textarea:invalid:not(:placeholder-shown) {
+  border-color: #f03e3e;
+}
+
+.form-group input:valid:not(:placeholder-shown),
+.form-group select:valid:not(:placeholder-shown),
+.form-group textarea:valid:not(:placeholder-shown) {
+  border-color: #51cf66;
+}
+
+/* 로딩 애니메이션 */
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+  }
+  50% { 
+    opacity: 0.6; 
+  }
+}
+
+.submit-btn:disabled {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
+  .reservation-page {
+    padding: 12px;
+  }
+
   .reservation-container {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
   }
   
   .restaurant-info-card {
     position: static;
+    padding: 20px;
+  }
+
+  .restaurant-info-card h2 {
+    font-size: 1.3rem;
+  }
+
+  .restaurant-info-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .restaurant-details p {
+    font-size: 0.85rem;
+  }
+
+  .reservation-form-card {
+    padding: 20px;
+  }
+
+  .reservation-form-card h2 {
+    font-size: 1.3rem;
   }
   
   .form-row {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 18px;
   }
-  
-  .reservation-page {
-    padding: 10px;
-  }
-  
-  .restaurant-info-card,
-  .reservation-form-card {
-    padding: 20px;
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 11px 14px;
+    font-size: 14px;
   }
   
   .form-actions {
     flex-direction: column;
+    gap: 10px;
   }
   
   .cancel-btn,
   .submit-btn {
     width: 100%;
+    padding: 12px 20px;
+  }
+
+  .error-message {
+    padding: 40px 20px;
+    margin: 30px auto;
+  }
+
+  .error-message h2 {
+    font-size: 1.2rem;
+  }
+
+  .error-message p {
+    font-size: 0.9rem;
   }
 }
 
-/* 로딩 애니메이션 */
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-.submit-btn:disabled {
-  animation: pulse 1.5s infinite;
-}
-
-/* 입력 필드 에러 상태 */
-.form-group input:invalid,
-.form-group select:invalid,
-.form-group textarea:invalid {
-  border-color: #dc3545;
-}
-
-.form-group input:valid,
-.form-group select:valid,
-.form-group textarea:valid {
-  border-color: #28a745;
-}
-
-/* 스크롤바 스타일링 */
+/* 스크롤바 스타일 */
 .reservation-page::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .reservation-page::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: transparent;
 }
 
 .reservation-page::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: #dee2e6;
+  border-radius: 3px;
 }
 
 .reservation-page::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #ced4da;
 }
 
+/* 애니메이션 부드럽게 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -431,31 +431,34 @@ public class RestaurantService {
 
     /**
      * Kakao Local API를 사용하여 위도/경도/도로명 주소 업데이트
+     * 전략: 1) 식당명 + 지역명 -> 2) 결과가 여러개면 식당명 + 지점명 + 지역명
      */
     private void updateLocationInfo(Restaurant restaurant) {
         try {
-            final String searchQuery = restaurant.getRestaurantName() +
-                    (restaurant.getBranchName() != null && !restaurant.getBranchName().isEmpty()
-                            ? " " + restaurant.getBranchName() : "");
+            // 1단계: 식당명 + 지역명으로 검색
+            final String firstSearchQuery = restaurant.getRestaurantName() +
+                    (restaurant.getRegionName() != null && !restaurant.getRegionName().isEmpty()
+                            ? " " + restaurant.getRegionName() : "");
 
-            log.info("Updating location info for: {}", searchQuery);
+            log.info("1st search attempt: {}", firstSearchQuery);
             log.info("Using Kakao API key: {}", kakaoApiKey != null ? kakaoApiKey.substring(0, 8) + "..." : "NULL");
 
             // API 호출 제한을 위한 지연 시간 추가 (0.5초)
             Thread.sleep(500);
 
             String apiUrl = "https://dapi.kakao.com/v2/local/search/keyword.json?query=" + 
-                           java.net.URLEncoder.encode(searchQuery, "UTF-8") + 
-                           "&size=1&category_group_code=FD6";
+                           java.net.URLEncoder.encode(firstSearchQuery, "UTF-8") + 
+                           "&size=5&category_group_code=FD6";
             log.info("API URL: {}", apiUrl);
 
+            // 첫 번째 검색: size=5로 여러 결과 확인
             KakaoApiResponse response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .scheme("https")
                             .host("dapi.kakao.com")
                             .path("/v2/local/search/keyword.json")
-                            .queryParam("query", searchQuery)
-                            .queryParam("size", "1")
+                            .queryParam("query", firstSearchQuery)
+                            .queryParam("size", "5")
                             .queryParam("category_group_code", "FD6") // 음식점 카테고리
                             .build())
                     .header("Authorization", "KakaoAK " + kakaoApiKey)
@@ -463,7 +466,39 @@ public class RestaurantService {
                     .bodyToMono(KakaoApiResponse.class)
                     .block();
 
-            log.info("Kakao API response for '{}': {}", searchQuery, response);
+            log.info("Kakao API response for '{}': found {} results", firstSearchQuery, 
+                    response != null && response.getDocuments() != null ? response.getDocuments().size() : 0);
+
+            // 2단계: 결과가 여러 개면 지점명 추가하여 재검색
+            if (response != null && response.getDocuments() != null && response.getDocuments().size() > 1) {
+                if (restaurant.getBranchName() != null && !restaurant.getBranchName().isEmpty()) {
+                    final String detailedQuery = restaurant.getRestaurantName() + " " + 
+                                         restaurant.getBranchName() + " " + 
+                                         (restaurant.getRegionName() != null ? restaurant.getRegionName() : "");
+                    log.info("Multiple results found. 2nd search with branch name: {}", detailedQuery);
+                    
+                    Thread.sleep(500);
+                    
+                    response = webClient.get()
+                            .uri(uriBuilder -> uriBuilder
+                                    .scheme("https")
+                                    .host("dapi.kakao.com")
+                                    .path("/v2/local/search/keyword.json")
+                                    .queryParam("query", detailedQuery)
+                                    .queryParam("size", "1")
+                                    .queryParam("category_group_code", "FD6")
+                                    .build())
+                            .header("Authorization", "KakaoAK " + kakaoApiKey)
+                            .retrieve()
+                            .bodyToMono(KakaoApiResponse.class)
+                            .block();
+                    
+                    log.info("2nd search result for '{}': found {} results", detailedQuery,
+                            response != null && response.getDocuments() != null ? response.getDocuments().size() : 0);
+                }
+            }
+
+            log.info("Final Kakao API response: {}", response);
 
             if (response != null && response.getDocuments() != null && !response.getDocuments().isEmpty()) {
                 KakaoApiResponse.Document document = response.getDocuments().get(0);
@@ -475,7 +510,7 @@ public class RestaurantService {
                 // 전화번호 업데이트 (카카오 API에서 제공하는 경우)
                 if (document.getPhone() != null && !document.getPhone().trim().isEmpty()) {
                     restaurant.setPhoneNumber(document.getPhone());
-                    log.info("Updated phone number for {}: {}", searchQuery, document.getPhone());
+                    log.info("Updated phone number for {}: {}", firstSearchQuery, document.getPhone());
                 }
 
                 // 먼저 검색 결과에서 직접 도로명 주소 확인
@@ -490,21 +525,25 @@ public class RestaurantService {
                 restaurant.setRoadAddress(address);
 
                 log.info("Updated location info for {}: lat={}, lng={}, address={}, phone={}",
-                        searchQuery, restaurant.getLat(), restaurant.getLng(), restaurant.getRoadAddress(), restaurant.getPhoneNumber());
+                        firstSearchQuery, restaurant.getLat(), restaurant.getLng(), restaurant.getRoadAddress(), restaurant.getPhoneNumber());
             } else {
-                log.warn("No location data found for: {}", searchQuery);
-                // 위치 정보를 찾을 수 없는 경우 기본값 설정
+                log.warn("No location data found for: {}", firstSearchQuery);
+                // 위치 정보를 찾을 수 없는 경우 기본값 설정 및 상태 변경
                 restaurant.setLat(null);
                 restaurant.setLng(null);
                 restaurant.setRoadAddress(null);
+                restaurant.setStatus("PENDING"); // 보류 상태로 변경
+                log.info("Set status to PENDING for {}", restaurant.getRestaurantName());
             }
 
         } catch (Exception e) {
             log.error("Error updating location info for {}: {}", restaurant.getRestaurantName(), e.getMessage(), e);
-            // 에러 발생 시 기본값 설정
+            // 에러 발생 시 기본값 설정 및 상태 변경
             restaurant.setLat(null);
             restaurant.setLng(null);
             restaurant.setRoadAddress(null);
+            restaurant.setStatus("PENDING"); // 보류 상태로 변경
+            log.info("Set status to PENDING for {} due to error", restaurant.getRestaurantName());
         }
     }
 

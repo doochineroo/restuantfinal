@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const MapSection = ({ selectedRestaurant, isMapLoading, mapError }) => {
+  const [isMapOpen, setIsMapOpen] = useState(true);
+
   return (
     <div className="map-section">
-      <div id="map" className="map">
+      {/* 모바일 토글 버튼 */}
+      <button 
+        className="map-toggle-btn" 
+        onClick={() => setIsMapOpen(!isMapOpen)}
+      >
+        {isMapOpen ? '지도 숨기기 ▲' : '지도 보기 ▼'}
+      </button>
+
+      <div id="map" className={`map ${isMapOpen ? 'map-open' : 'map-closed'}`}>
         {isMapLoading && (
           <div className="map-loading">
             <div className="loading-spinner">
@@ -18,7 +28,7 @@ const MapSection = ({ selectedRestaurant, isMapLoading, mapError }) => {
           </div>
         )}
       </div>
-      {selectedRestaurant && (
+      {selectedRestaurant && isMapOpen && (
         <div className="map-label">
           <div className="map-label-content">
             <h3>{selectedRestaurant.restaurantName}</h3>

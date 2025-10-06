@@ -78,15 +78,21 @@ public class RestaurantController {
                 for (Restaurant restaurant : prioritizedList) {
                     try {
                         updateSingleRestaurantCoordinates(restaurant);
-                        updatedRestaurants.add(restaurant);
+                        
+                        // 좌표를 성공적으로 찾은 경우에만 리스트에 추가
+                        if (restaurant.getLat() != null && restaurant.getLng() != null) {
+                            updatedRestaurants.add(restaurant);
+                            log.info("✅ Added restaurant with coordinates: {}", restaurant.getRestaurantName());
+                        } else {
+                            log.warn("❌ Skipping restaurant without coordinates: {}", restaurant.getRestaurantName());
+                        }
                         
                         // API 호출 제한 방지를 위한 짧은 딜레이
                         Thread.sleep(100); // 100ms 딜레이
                     } catch (Exception e) {
                         log.error("Error updating coordinates for restaurant {}: {}", 
                             restaurant.getRestaurantName(), e.getMessage());
-                        // 좌표 업데이트 실패해도 원본 데이터는 포함
-                        updatedRestaurants.add(restaurant);
+                        // 좌표를 못 찾은 식당은 리스트에서 제외
                     }
                 }
             }

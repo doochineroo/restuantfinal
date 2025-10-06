@@ -10,6 +10,11 @@ import RestaurantDetailModal from './components/RestaurantDetailModal';
 import { useRestaurantSearch } from './hooks/useRestaurantSearch';
 import { useMap } from './hooks/useMap';
 
+// public 폴더의 커서 이미지 경로
+// JS에서 사용하려면 이렇게 참조하세요:
+// const cursorPath = process.env.PUBLIC_URL + '/cursor_basic.png';
+// 또는 그냥: const cursorPath = '/cursor_basic.png';
+
 // 메인 페이지 컴포넌트
 function MainPage() {
   const navigate = useNavigate();
@@ -37,11 +42,6 @@ function MainPage() {
     setError
   } = useRestaurantSearch();
 
-  // 🔍 디버깅: 부모 컴포넌트 상태 확인
-  console.log('🏠 App.js - hasSearched:', hasSearched);
-  console.log('🏠 App.js - filteredRestaurants:', filteredRestaurants);
-  console.log('🏠 App.js - filteredRestaurants.length:', filteredRestaurants?.length);
-
   // 마커 클릭 시 카드 자동 선택 핸들러
   const handleMarkerClick = (restaurant) => {
     // 해당 식당 카드 자동 선택
@@ -55,10 +55,14 @@ function MainPage() {
     }
   };
 
-  // 지도가 초기화되면 마커 업데이트
+  // 지도가 초기화되면 마커 업데이트 (좌표가 있는 식당만)
   React.useEffect(() => {
     if (map && filteredRestaurants.length > 0) {
-      updateMap(filteredRestaurants, handleMarkerClick);
+      // lat, lng가 있는 식당만 지도에 표시
+      const restaurantsWithCoords = filteredRestaurants.filter(
+        restaurant => restaurant.lat && restaurant.lng
+      );
+      updateMap(restaurantsWithCoords, handleMarkerClick);
     }
   }, [map, filteredRestaurants, updateMap]);
 
@@ -139,7 +143,6 @@ function MainPage() {
     if (!isCurrentlyExpanded) {
       const restaurant = filteredRestaurants.find(r => r.id === restaurantId);
       if (restaurant && restaurant.lat && restaurant.lng) {
-        console.log('카드 선택됨:', restaurant.restaurantName);
         setSelectedRestaurant(restaurant);
         
         // 1. 기존 마커 모두 제거
@@ -151,7 +154,6 @@ function MainPage() {
         }, 100);
       }
     } else {
-      console.log('카드 선택 해제');
       setSelectedRestaurant(null);
       
       // 1. 기존 마커 제거
