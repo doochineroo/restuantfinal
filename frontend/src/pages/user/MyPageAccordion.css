@@ -1,0 +1,187 @@
+/* MyPageAccordion.css - 아코디언 스타일 마이페이지 */
+
+.my-page-accordion {
+  min-height: 100vh;
+  background: #f2f2f7;
+  padding-bottom: 100px;
+}
+
+.my-page-container {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0;
+  background: #f2f2f7;
+}
+
+.page-header {
+  background: white;
+  padding: 60px 20px 30px 20px;
+  margin-bottom: 0;
+  text-align: center;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: #000;
+  letter-spacing: -0.5px;
+}
+
+.page-header p {
+  font-size: 16px;
+  margin: 0;
+  color: #8e8e93;
+  font-weight: 400;
+}
+
+.accordion-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.accordion-section {
+  background: white;
+  border-radius: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  border: none;
+  box-shadow: none;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.accordion-section:last-child {
+  border-bottom: none;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: none;
+}
+
+.accordion-header:active {
+  background: #f2f2f7;
+}
+
+.accordion-section.expanded .accordion-header {
+  background: white;
+  color: #000;
+  border-bottom: none;
+}
+
+.section-info {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.section-icon {
+  display: none;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #000;
+  transition: color 0.2s ease;
+}
+
+.section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s ease;
+}
+
+.toggle-icon {
+  font-size: 14px;
+  color: #8e8e93;
+  transition: all 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.accordion-section.expanded .toggle-icon {
+  color: #007aff;
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  background: white;
+}
+
+.accordion-content.expanded {
+  max-height: 2000px;
+  padding: 0 24px 24px 24px;
+}
+
+.content-wrapper {
+  padding-top: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .my-page-container {
+    padding: 15px;
+  }
+  
+  .page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .accordion-header {
+    padding: 15px 20px;
+  }
+  
+  .section-icon {
+    font-size: 1.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .accordion-content.expanded {
+    padding: 0 20px 20px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .accordion-header {
+    padding: 12px 15px;
+  }
+  
+  .section-info {
+    gap: 10px;
+  }
+  
+  .section-icon {
+    font-size: 1.3rem;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+  }
+  
+  .accordion-content.expanded {
+    padding: 0 15px 15px 15px;
+  }
+}

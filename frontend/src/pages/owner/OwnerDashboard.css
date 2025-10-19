@@ -1,0 +1,3489 @@
+/**
+ * Owner 대시보드 스타일 (어두운 컴팩트 스타일)
+ */
+
+/* 전체 레이아웃 */
+.owner-dashboard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  cursor: default;
+  color: #ffffff; /* 기본 텍스트 색상 - 흰색 */
+  z-index: 1000;
+}
+
+/* 어두운 배경의 요소들 - 흰색 텍스트 */
+.owner-dashboard .dashboard-sidebar,
+.owner-dashboard .dashboard-main,
+.owner-dashboard .info-section,
+.owner-dashboard .restaurant-details,
+.owner-dashboard .content-section {
+  color: #ffffff !important;
+}
+
+/* 사이드바 모든 텍스트 요소 - 강제 흰색 */
+.owner-dashboard .dashboard-sidebar,
+.owner-dashboard .dashboard-sidebar * {
+  color: #ffffff !important;
+}
+
+.owner-dashboard .dashboard-sidebar h1,
+.owner-dashboard .dashboard-sidebar h2,
+.owner-dashboard .dashboard-sidebar h3,
+.owner-dashboard .dashboard-sidebar h4,
+.owner-dashboard .dashboard-sidebar h5,
+.owner-dashboard .dashboard-sidebar h6,
+.owner-dashboard .dashboard-sidebar p,
+.owner-dashboard .dashboard-sidebar span,
+.owner-dashboard .dashboard-sidebar div,
+.owner-dashboard .dashboard-sidebar label,
+.owner-dashboard .dashboard-sidebar button {
+  color: #ffffff !important;
+}
+
+/* 사이드바 메뉴 아이템들 */
+.owner-dashboard .sidebar-menu,
+.owner-dashboard .sidebar-menu *,
+.owner-dashboard .menu-item,
+.owner-dashboard .menu-item * {
+  color: #ffffff !important;
+}
+
+.owner-dashboard .info-section h2,
+.owner-dashboard .info-section h3,
+.owner-dashboard .info-section h4,
+.owner-dashboard .info-section h5,
+.owner-dashboard .info-section h6,
+.owner-dashboard .info-section p,
+.owner-dashboard .info-section span,
+.owner-dashboard .info-section div,
+.owner-dashboard .info-section label {
+  color: #ffffff !important;
+}
+
+/* 밝은 배경의 요소들 - 검정색 텍스트 */
+.owner-dashboard .info-item p,
+.owner-dashboard .info-item input,
+.owner-dashboard .info-item select,
+.owner-dashboard .info-item textarea {
+  color: #000000 !important;
+}
+
+/* 미리보기 카드 - 밝은 배경이므로 검정색 텍스트 */
+.owner-dashboard .preview-card,
+.owner-dashboard .preview-card h1,
+.owner-dashboard .preview-card h2,
+.owner-dashboard .preview-card h3,
+.owner-dashboard .preview-card h4,
+.owner-dashboard .preview-card h5,
+.owner-dashboard .preview-card h6,
+.owner-dashboard .preview-card p,
+.owner-dashboard .preview-card span,
+.owner-dashboard .preview-card div,
+.owner-dashboard .preview-card label {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+/* 미리보기 카드 내부 모든 요소 */
+.owner-dashboard .preview-card * {
+  color: #000000 !important;
+}
+
+/* 특별한 회색 텍스트 */
+.owner-dashboard .restaurant-details .restaurant-branch {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.owner-dashboard .info-item label {
+  color: #b0b0b0 !important;
+}
+
+.owner-dashboard * {
+  cursor: default;
+}
+
+.owner-dashboard button,
+.owner-dashboard a,
+.owner-dashboard input[type="checkbox"],
+.owner-dashboard select {
+  cursor: pointer;
+}
+
+/* 로딩 & 에러 */
+.loading, .error-message {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #b0b0b0;
+}
+
+/* ========== 왼쪽 사이드바 ========== */
+.owner-dashboard .dashboard-sidebar {
+  width: 200px;
+  height: 100vh;
+  background: #2c2c2c;
+  color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .sidebar-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.owner-dashboard .logo-icon {
+  display: none;
+}
+
+.owner-dashboard .logo-text {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* 사이드바 네비게이션 */
+.owner-dashboard .sidebar-nav {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.owner-dashboard .nav-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin: 1px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #b0b0b0;
+  font-size: 15px;
+  font-weight: 400;
+  border-left: 2px solid transparent;
+  line-height: 1.3;
+}
+
+.owner-dashboard .nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e0e0e0;
+}
+
+.owner-dashboard .nav-item.active {
+  background: rgba(255, 90, 95, 0.15);
+  color: white;
+}
+
+.owner-dashboard .nav-icon {
+  display: none;
+}
+
+.owner-dashboard .nav-text {
+  flex: 1;
+  letter-spacing: 0.3px;
+}
+
+.owner-dashboard .badge {
+  background: #ff5a5f;
+  color: white;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* 사이드바 하단 */
+.owner-dashboard .sidebar-footer {
+  padding: 6px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.owner-dashboard .restaurant-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.owner-dashboard .restaurant-avatar {
+  display: none;
+}
+
+.owner-dashboard .restaurant-details {
+  flex: 1;
+}
+
+.owner-dashboard .restaurant-details .restaurant-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+}
+
+.owner-dashboard .restaurant-details .restaurant-branch {
+  margin: 0;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.3;
+}
+
+/* ========== 메인 컨텐츠 ========== */
+.owner-dashboard .dashboard-main {
+  flex: 1;
+  height: 100vh;
+  overflow: hidden;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 상단 헤더 */
+.owner-dashboard .dashboard-top-header {
+  background: #2c2c2c;
+  padding: 10px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.owner-dashboard .header-left h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .breadcrumb {
+  display: none;
+}
+
+.owner-dashboard .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.owner-dashboard .header-icon-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.owner-dashboard .header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.owner-dashboard .notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ff5a5f;
+  color: white;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 8px;
+  min-width: 14px;
+  text-align: center;
+}
+
+.owner-dashboard .edit-btn, 
+.owner-dashboard .save-btn, 
+.owner-dashboard .cancel-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .edit-btn {
+  background: #ff5a5f;
+  color: white;
+}
+
+.owner-dashboard .edit-btn:hover {
+  background: #e04c51;
+}
+
+.owner-dashboard .edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.owner-dashboard .save-btn {
+  background: #00a699;
+  color: white;
+}
+
+.owner-dashboard .save-btn:hover:not(:disabled) {
+  background: #008b80;
+}
+
+.owner-dashboard .save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.owner-dashboard .cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.owner-dashboard .cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ========== 통계 섹션 ========== */
+.owner-dashboard .stats-section {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.owner-dashboard .stat-card {
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.owner-dashboard .stat-icon {
+  display: none;
+}
+
+.owner-dashboard .stat-info {
+  flex: 1;
+}
+
+.owner-dashboard .stat-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: #b0b0b0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .stat-value {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+}
+
+.owner-dashboard .stat-change {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #b0b0b0;
+  margin-top: 4px;
+}
+
+.owner-dashboard .stat-change.positive {
+  background: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.owner-dashboard .stat-change.negative {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+/* ========== 차트 & 활동 섹션 ========== */
+.owner-dashboard .dashboard-content {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+}
+
+.owner-dashboard .chart-section, 
+.owner-dashboard .activity-section {
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .period-select {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.owner-dashboard .view-all-btn {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .view-all-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 차트 플레이스홀더 */
+.owner-dashboard .chart-placeholder {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 120px;
+  padding: 10px 0;
+  gap: 8px;
+}
+
+.owner-dashboard .chart-bar {
+  flex: 1;
+  background: var(--color, #ff5a5f);
+  border-radius: 3px 3px 0 0;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.owner-dashboard .chart-bar:hover {
+  opacity: 1;
+}
+
+.owner-dashboard .chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.owner-dashboard .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #b0b0b0;
+}
+
+.owner-dashboard .legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.owner-dashboard .legend-dot.visitors {
+  background: #ff5a5f;
+}
+
+.owner-dashboard .legend-dot.reservations {
+  background: #00a699;
+}
+
+/* 활동 리스트 */
+.owner-dashboard .activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-dashboard .activity-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .activity-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.owner-dashboard .activity-icon {
+  display: none;
+}
+
+.owner-dashboard .activity-content {
+  flex: 1;
+}
+
+.owner-dashboard .activity-title {
+  margin: 0 0 2px 0;
+  font-size: 12px;
+  color: white;
+  font-weight: 500;
+}
+
+.owner-dashboard .activity-time {
+  margin: 0;
+  font-size: 10px;
+  color: #808080;
+}
+
+/* ========== 그리드 섹션 (예약/리뷰) ========== */
+.owner-dashboard .dashboard-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.owner-dashboard .grid-section {
+  background: #2c2c2c;
+  padding: 12px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .table-container {
+  overflow-x: auto;
+}
+
+.owner-dashboard .data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.owner-dashboard .data-table th {
+  text-align: left;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  font-weight: 600;
+  color: #b0b0b0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .data-table td {
+  padding: 12px 14px;
+  font-size: 15px;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.owner-dashboard .empty-row {
+  text-align: center;
+  padding: 30px 10px !important;
+  color: #808080;
+}
+
+.owner-dashboard .empty-state-small {
+  text-align: center;
+  padding: 30px 16px;
+  color: #808080;
+}
+
+.owner-dashboard .empty-state-small p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.owner-dashboard .review-list {
+  min-height: 80px;
+}
+
+/* ========== 매장 정보 섹션 ========== */
+.owner-dashboard .info-section {
+  margin: 12px;
+  background: #2c2c2c;
+  padding: 16px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .info-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.owner-dashboard .info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.owner-dashboard .info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.owner-dashboard .info-item label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .info-item p {
+  margin: 0;
+  font-size: 16px;
+  color: white;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.owner-dashboard .info-item input,
+.owner-dashboard .info-item select,
+.owner-dashboard .info-item textarea {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.owner-dashboard .info-item input:focus,
+.owner-dashboard .info-item select:focus,
+.owner-dashboard .info-item textarea:focus {
+  border-color: #ff5a5f;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(255, 90, 95, 0.1);
+}
+
+.owner-dashboard .info-item textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ========== 컨텐츠 섹션 ========== */
+.owner-dashboard .content-section {
+  padding: 16px;
+  min-height: calc(100vh - 60px);
+}
+
+.owner-dashboard .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.owner-dashboard .empty-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+  opacity: 0.2;
+}
+
+.owner-dashboard .empty-state h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .empty-state p {
+  margin: 0;
+  font-size: 16px;
+  color: #808080;
+}
+
+/* ========== 상단 서브 메뉴 (가로 탭) ========== */
+.owner-dashboard .top-sub-menu {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  background: #1a1a1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.owner-dashboard .sub-menu-item {
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  color: #b0b0b0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.owner-dashboard .sub-menu-item:hover {
+  color: #e0e0e0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.owner-dashboard .sub-menu-item.active {
+  color: #ff5a5f;
+  border-bottom-color: #ff5a5f;
+  background: rgba(255, 90, 95, 0.1);
+}
+
+/* ========== 컨텐츠 래퍼 ========== */
+.owner-dashboard .content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* ========== 미리보기 섹션 ========== */
+.owner-dashboard .preview-section {
+  padding: 16px;
+}
+
+.owner-dashboard .preview-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .preview-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.owner-dashboard .preview-card {
+  background: #2c2c2c;
+  border-radius: 3px;
+  padding: 20px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.owner-dashboard .preview-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  color: white;
+}
+
+.owner-dashboard .preview-header p {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #b0b0b0;
+}
+
+.owner-dashboard .preview-body p {
+  margin: 8px 0;
+  font-size: 13px;
+  color: white;
+  line-height: 1.6;
+}
+
+/* ========== 예약 관리 섹션 ========== */
+.owner-dashboard .reservation-list-section {
+  padding: 16px;
+}
+
+.owner-dashboard .filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.owner-dashboard .filter-select,
+.owner-dashboard .sort-select {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 13px;
+}
+
+.owner-dashboard .reservation-table th,
+.owner-dashboard .reservation-table td {
+  text-align: center;
+}
+
+.owner-dashboard .reservation-table tr.status-approved {
+  background: rgba(33, 150, 243, 0.1);
+}
+
+.owner-dashboard .reservation-table tr.status-rejected {
+  background: rgba(158, 158, 158, 0.1);
+}
+
+.owner-dashboard .reservation-table tr.status-pending {
+  background: rgba(244, 67, 54, 0.1);
+}
+
+/* ========== 방문자 관리 섹션 ========== */
+.owner-dashboard .blacklist-section,
+.owner-dashboard .regulars-section,
+.owner-dashboard .visits-section {
+  padding: 16px;
+}
+
+.owner-dashboard .blacklist-section h2,
+.owner-dashboard .regulars-section h2,
+.owner-dashboard .visits-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========== 상점 관리 섹션 ========== */
+.owner-dashboard .marketing-stats-section,
+.owner-dashboard .conversion-section,
+.owner-dashboard .reviews-management-section {
+  padding: 16px;
+}
+
+.owner-dashboard .marketing-stats-section h2,
+.owner-dashboard .conversion-section h2,
+.owner-dashboard .reviews-management-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 리뷰 관리 테이블 */
+.owner-dashboard .reviews-table .review-content {
+  text-align: left;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-dashboard .reply-btn,
+.owner-dashboard .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .reply-btn {
+  background: #00a699;
+  color: white;
+}
+
+.owner-dashboard .reply-btn:hover {
+  background: #008b80;
+}
+
+.owner-dashboard .delete-btn {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+.owner-dashboard .delete-btn:hover {
+  background: rgba(220, 53, 69, 0.3);
+}
+
+/* 댓글 입력 폼 */
+.owner-dashboard .reply-form-section {
+  background: #2c2c2c;
+  padding: 16px;
+  border-radius: 3px;
+  margin-top: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .reply-form-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .reply-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+.owner-dashboard .reply-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.owner-dashboard .submit-reply-btn,
+.owner-dashboard .cancel-reply-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .submit-reply-btn {
+  background: #ff5a5f;
+  color: white;
+}
+
+.owner-dashboard .submit-reply-btn:hover {
+  background: #e04c51;
+}
+
+.owner-dashboard .cancel-reply-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.owner-dashboard .cancel-reply-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ========== 설정 섹션 ========== */
+.owner-dashboard .auto-settings-section,
+.owner-dashboard .general-settings-section {
+  padding: 16px;
+}
+
+.owner-dashboard .auto-settings-section h2,
+.owner-dashboard .general-settings-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-dashboard .setting-item {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.owner-dashboard .setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.owner-dashboard .setting-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========== 통계 섹션 ========== */
+.owner-dashboard .overview-stats-section,
+.owner-dashboard .monthly-stats-section {
+  padding: 16px;
+}
+
+.owner-dashboard .overview-stats-section h2,
+.owner-dashboard .monthly-stats-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.owner-dashboard .chart-placeholder {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 200px;
+  padding: 10px 0;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+.owner-dashboard .chart-bar {
+  flex: 1;
+  background: var(--color, #ff5a5f);
+  border-radius: 3px 3px 0 0;
+  transition: all 0.2s;
+  opacity: 0.8;
+  min-height: 20px;
+}
+
+.owner-dashboard .chart-bar:hover {
+  opacity: 1;
+}
+
+.owner-dashboard .chart-labels {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  font-size: 10px;
+  color: #808080;
+  text-align: center;
+}
+
+.owner-dashboard .chart-labels span {
+  flex: 1;
+}
+
+/* 비교 섹션 */
+.owner-dashboard .comparison-section {
+  background: #2c2c2c;
+  padding: 16px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 20px;
+}
+
+.owner-dashboard .comparison-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 20px;
+}
+
+.owner-dashboard .comparison-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-dashboard .comparison-item .label {
+  font-size: 11px;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-dashboard .comparison-item .value {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.owner-dashboard .comparison-arrow {
+  font-size: 24px;
+  color: #ff5a5f;
+  font-weight: bold;
+}
+
+/* ========== 공지사항 섹션 ========== */
+.owner-dashboard .notice-section,
+.owner-dashboard .event-section {
+  padding: 16px;
+}
+
+.owner-dashboard .notice-section h2,
+.owner-dashboard .event-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.owner-dashboard .add-btn {
+  float: right;
+  padding: 6px 14px;
+  background: #ff5a5f;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.owner-dashboard .add-btn:hover {
+  background: #e04c51;
+}
+
+/* ========== 캘린더 & 기타 섹션 ========== */
+.owner-dashboard .calendar-section {
+  padding: 16px;
+}
+
+.owner-dashboard .calendar-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .owner-dashboard .stats-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .owner-dashboard .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .owner-dashboard .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard .dashboard-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+
+  .owner-dashboard .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .owner-dashboard .stats-section,
+  .owner-dashboard .info-grid,
+  .owner-dashboard .dashboard-content,
+  .owner-dashboard .dashboard-grid,
+  .owner-dashboard .stats-cards {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .owner-dashboard .chart-placeholder {
+    height: 100px;
+  }
+
+  .owner-dashboard .top-sub-menu {
+    overflow-x: auto;
+  }
+}
+
+/* ========== 50/50 Split Layout (가게 관리) ========== */
+.owner-dashboard .split-layout {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.owner-dashboard .split-left,
+.owner-dashboard .split-right {
+  flex: 1;
+  overflow-y: auto;
+  background: #2c2c2c;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.owner-dashboard .split-left h2,
+.owner-dashboard .split-right h2 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 좌측 기본 정보 스타일은 기존 info-grid 사용 */
+
+/* ========== 우측 미리보기 모달 스타일 (실제 사용자 화면) ========== */
+.owner-dashboard .preview-modal-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 10px;
+}
+
+.owner-dashboard .preview-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.owner-dashboard .preview-modal-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #e9ecef;
+  position: relative;
+  background: white;
+}
+
+.owner-dashboard .preview-modal-header h2 {
+  margin: 0 0 6px 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.owner-dashboard .preview-modal-header h3 {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.owner-dashboard .preview-modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #f8f9fa;
+  border: none;
+  font-size: 1.3rem;
+  color: #868e96;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.owner-dashboard .preview-modal-close-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* 이미지 갤러리 */
+.owner-dashboard .preview-image-gallery {
+  background: #f8f9fa;
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.owner-dashboard .preview-main-image {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.owner-dashboard .preview-main-image img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.owner-dashboard .preview-menu-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.owner-dashboard .preview-menu-images img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.owner-dashboard .preview-modal-body {
+  padding: 20px 24px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.owner-dashboard .preview-detail-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border: none;
+}
+
+.owner-dashboard .preview-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.owner-dashboard .preview-detail-section h4 {
+  margin: 0 0 12px 0;
+  color: #495057;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  padding: 0;
+}
+
+.owner-dashboard .preview-detail-section p {
+  margin: 6px 0;
+  color: #495057;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.owner-dashboard .preview-detail-section strong {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.owner-dashboard .preview-facility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.owner-dashboard .preview-facility-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.owner-dashboard .preview-facility-item.available {
+  background: #e7f5ff;
+  color: #1971c2;
+}
+
+.owner-dashboard .preview-facility-item.unavailable {
+  background: #f8f9fa;
+  color: #868e96;
+}
+
+.owner-dashboard .preview-modal-footer {
+  padding: 16px 24px 24px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: white;
+}
+
+.owner-dashboard .preview-modal-cancel-btn,
+.owner-dashboard .preview-modal-reservation-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.owner-dashboard .preview-modal-cancel-btn {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.owner-dashboard .preview-modal-cancel-btn:hover {
+  background: #e9ecef;
+}
+
+.owner-dashboard .preview-modal-reservation-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.owner-dashboard .preview-modal-reservation-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* ========== 이미지 업로드 섹션 ========== */
+.owner-dashboard .image-upload-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .image-upload-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .image-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.owner-dashboard .image-upload-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-dashboard .image-upload-item.main-image {
+  grid-column: 1 / -1;
+}
+
+.owner-dashboard .image-upload-item > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b0b0b0;
+  margin-bottom: 4px;
+}
+
+.owner-dashboard .image-upload-box {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 30px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-dashboard .image-upload-box:hover {
+  border-color: #00a699;
+  background: rgba(0, 166, 153, 0.1);
+}
+
+.owner-dashboard .upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #b0b0b0;
+}
+
+.owner-dashboard .upload-icon {
+  font-size: 32px;
+}
+
+.owner-dashboard .upload-placeholder span:last-child {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.owner-dashboard .image-preview {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.owner-dashboard .image-preview img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.owner-dashboard .image-upload-item.main-image .image-preview img {
+  height: 200px;
+}
+
+.owner-dashboard .remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 90, 95, 0.9);
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .remove-image-btn:hover {
+  background: #ff5a5f;
+  transform: scale(1.1);
+}
+
+/* ========== 상세 분석 섹션 ========== */
+.owner-dashboard .detailed-stats-section {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.owner-dashboard .detailed-stats-section h2 {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+/* 분석 카드 */
+.owner-dashboard .analysis-card {
+  background: #2c2c2c;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.owner-dashboard .analysis-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .analysis-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .analysis-period {
+  font-size: 12px;
+  color: #b0b0b0;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+/* 2열 그리드 */
+.owner-dashboard .analysis-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* 세로 막대 차트 */
+.owner-dashboard .chart-container {
+  padding: 20px 10px;
+}
+
+.owner-dashboard .bar-chart {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 250px;
+  gap: 8px;
+}
+
+.owner-dashboard .bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-dashboard .bar-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00a699;
+}
+
+.owner-dashboard .bar-wrapper {
+  width: 100%;
+  height: 180px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+.owner-dashboard .bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #00a699 0%, #008b80 100%);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s ease;
+  box-shadow: 0 -4px 12px rgba(0, 166, 153, 0.3);
+}
+
+.owner-dashboard .bar-label {
+  font-size: 12px;
+  color: #b0b0b0;
+  font-weight: 600;
+}
+
+/* 가로 막대 차트 */
+.owner-dashboard .bar-chart.horizontal {
+  flex-direction: column;
+  height: auto;
+  gap: 12px;
+}
+
+.owner-dashboard .bar-item-horizontal {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+  gap: 12px;
+}
+
+.owner-dashboard .bar-label-left {
+  font-size: 13px;
+  color: #e0e0e0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.owner-dashboard .bar-wrapper-horizontal {
+  height: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.owner-dashboard .bar-fill-horizontal {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  transition: width 0.5s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.owner-dashboard .bar-value-right {
+  font-size: 13px;
+  color: #00a699;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* 원형 차트 */
+.owner-dashboard .pie-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+}
+
+.owner-dashboard .pie-chart {
+  width: 180px;
+  height: 180px;
+}
+
+.owner-dashboard .pie-svg {
+  width: 100%;
+  height: 100%;
+  transform: scale(1);
+}
+
+.owner-dashboard .pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.owner-dashboard .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.owner-dashboard .legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .legend-label {
+  flex: 1;
+  font-size: 13px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.owner-dashboard .legend-value {
+  font-size: 14px;
+  color: white;
+  font-weight: 700;
+}
+
+/* 성별 통계 */
+.owner-dashboard .gender-stats {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+}
+
+.owner-dashboard .gender-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.owner-dashboard .gender-item.male {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(102, 126, 234, 0.05) 100%);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.owner-dashboard .gender-item.female {
+  background: linear-gradient(135deg, rgba(255, 90, 95, 0.15) 0%, rgba(255, 90, 95, 0.05) 100%);
+  border: 2px solid rgba(255, 90, 95, 0.3);
+}
+
+.owner-dashboard .gender-icon {
+  font-size: 48px;
+}
+
+.owner-dashboard .gender-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-dashboard .gender-label {
+  font-size: 14px;
+  color: #b0b0b0;
+  font-weight: 600;
+}
+
+.owner-dashboard .gender-value {
+  font-size: 32px;
+  color: white;
+  font-weight: 700;
+}
+
+.owner-dashboard .gender-count {
+  font-size: 13px;
+  color: #00a699;
+  font-weight: 600;
+}
+
+/* 연령대 통계 */
+.owner-dashboard .age-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  padding: 10px;
+}
+
+.owner-dashboard .age-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s;
+}
+
+.owner-dashboard .age-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.owner-dashboard .age-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.owner-dashboard .age-label {
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+.owner-dashboard .age-percent {
+  font-size: 18px;
+  color: white;
+  font-weight: 700;
+}
+
+.owner-dashboard .age-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.owner-dashboard .age-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.owner-dashboard .age-count {
+  font-size: 13px;
+  color: #00a699;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 메뉴 랭킹 */
+.owner-dashboard .menu-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-dashboard .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: all 0.3s;
+}
+
+.owner-dashboard .menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(4px);
+}
+
+.owner-dashboard .menu-rank {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.owner-dashboard .menu-item:nth-child(1) .menu-rank {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #1a1a1a;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.owner-dashboard .menu-item:nth-child(2) .menu-rank {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+  color: #1a1a1a;
+}
+
+.owner-dashboard .menu-item:nth-child(3) .menu-rank {
+  background: linear-gradient(135deg, #cd7f32 0%, #daa06d 100%);
+  color: white;
+}
+
+.owner-dashboard .menu-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.owner-dashboard .menu-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .menu-details {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.owner-dashboard .menu-orders {
+  color: #b0b0b0;
+}
+
+.owner-dashboard .menu-revenue {
+  color: #00a699;
+  font-weight: 600;
+}
+
+.owner-dashboard .menu-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.owner-dashboard .menu-trend.up {
+  color: #51cf66;
+  background: rgba(81, 207, 102, 0.1);
+}
+
+.owner-dashboard .menu-trend.down {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.owner-dashboard .menu-trend.same {
+  color: #b0b0b0;
+  background: rgba(176, 176, 176, 0.1);
+}
+
+.owner-dashboard .trend-value {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ========== 메뉴 관리 섹션 (50/50 레이아웃 적용) ========== */
+.owner-dashboard .menu-management-section,
+.owner-dashboard .details-section,
+.owner-dashboard .events-section {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* split-left 내부의 section-header-with-button */
+.owner-dashboard .split-left .section-header-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .section-header-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.owner-dashboard .section-header-with-button h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.owner-dashboard .add-menu-btn,
+.owner-dashboard .add-event-btn {
+  padding: 10px 20px;
+  background: #00a699;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .add-menu-btn:hover,
+.owner-dashboard .add-event-btn:hover {
+  background: #008b80;
+  transform: translateY(-1px);
+}
+
+/* 메뉴 리스트 */
+.owner-dashboard .menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.owner-dashboard .menu-card {
+  display: flex;
+  gap: 16px;
+  background: #2c2c2c;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s;
+}
+
+.owner-dashboard .menu-card:hover {
+  background: #333;
+  transform: translateX(4px);
+}
+
+.owner-dashboard .menu-card-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.owner-dashboard .menu-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-dashboard .menu-placeholder {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.owner-dashboard .menu-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-dashboard .menu-card-content h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .menu-description {
+  font-size: 14px;
+  color: #b0b0b0;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.owner-dashboard .menu-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: auto;
+}
+
+.owner-dashboard .menu-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #00a699;
+}
+
+.owner-dashboard .menu-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.owner-dashboard .menu-status.available {
+  background: rgba(81, 207, 102, 0.2);
+  color: #51cf66;
+}
+
+.owner-dashboard .menu-status.unavailable {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+.owner-dashboard .menu-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+
+.owner-dashboard .edit-menu-btn,
+.owner-dashboard .delete-menu-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.owner-dashboard .edit-menu-btn {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.owner-dashboard .edit-menu-btn:hover {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+.owner-dashboard .delete-menu-btn {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+.owner-dashboard .delete-menu-btn:hover {
+  background: rgba(255, 107, 107, 0.3);
+}
+
+/* 빈 상태 */
+.owner-dashboard .add-first-menu-btn,
+.owner-dashboard .add-first-event-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #00a699;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .add-first-menu-btn:hover,
+.owner-dashboard .add-first-event-btn:hover {
+  background: #008b80;
+}
+
+/* ========== 세부사항 섹션 ========== */
+.owner-dashboard .details-section h2 {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.owner-dashboard .details-form {
+  background: #2c2c2c;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.owner-dashboard .detail-group {
+  margin-bottom: 24px;
+}
+
+.owner-dashboard .detail-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.owner-dashboard .detail-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.owner-dashboard .detail-group textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.owner-dashboard .detail-group textarea:focus {
+  outline: none;
+  border-color: #00a699;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.owner-dashboard .detail-group textarea::placeholder {
+  color: #6c757d;
+}
+
+.owner-dashboard .checkbox-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.owner-dashboard .checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.owner-dashboard .checkbox-group input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.owner-dashboard .detail-actions {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.owner-dashboard .save-detail-btn {
+  padding: 12px 32px;
+  background: #00a699;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .save-detail-btn:hover {
+  background: #008b80;
+  transform: translateY(-1px);
+}
+
+/* ========== 이벤트 섹션 ========== */
+.owner-dashboard .events-section h2 {
+  margin: 0;
+}
+
+.owner-dashboard .events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.owner-dashboard .event-card {
+  background: #2c2c2c;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.owner-dashboard .event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.owner-dashboard .event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.owner-dashboard .event-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.owner-dashboard .event-badge.active {
+  background: rgba(81, 207, 102, 0.2);
+  color: #51cf66;
+}
+
+.owner-dashboard .event-badge.scheduled {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+.owner-dashboard .event-badge.ended {
+  background: rgba(128, 128, 128, 0.2);
+  color: #808080;
+}
+
+.owner-dashboard .event-menu button {
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.owner-dashboard .event-menu button:hover {
+  color: white;
+}
+
+.owner-dashboard .event-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.owner-dashboard .event-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-dashboard .event-content {
+  padding: 16px;
+}
+
+.owner-dashboard .event-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+
+.owner-dashboard .event-description {
+  font-size: 13px;
+  color: #b0b0b0;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.owner-dashboard .event-period {
+  font-size: 12px;
+  color: #808080;
+  margin-bottom: 12px;
+}
+
+.owner-dashboard .discount-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #ff5a5f 0%, #ff7e82 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* events-list는 split-left 내부에서 사용 */
+.owner-dashboard .events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ========== 미리보기 섹션 스타일 ========== */
+
+/* 빈 미리보기 상태 */
+.owner-dashboard .empty-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+/* 메뉴 미리보기 */
+.owner-dashboard .preview-menu-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.owner-dashboard .preview-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.owner-dashboard .preview-menu-item {
+  background: #f8f9fa;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.owner-dashboard .preview-menu-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.owner-dashboard .preview-menu-image {
+  width: 100%;
+  height: 150px;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.owner-dashboard .preview-menu-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-dashboard .preview-menu-placeholder {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.owner-dashboard .preview-menu-info {
+  padding: 12px;
+}
+
+.owner-dashboard .preview-menu-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.owner-dashboard .preview-menu-info p {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.owner-dashboard .preview-menu-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+/* 세부사항 미리보기 */
+.owner-dashboard .preview-details-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.owner-dashboard .preview-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.owner-dashboard .preview-details-section {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.owner-dashboard .preview-details-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #495057;
+}
+
+.owner-dashboard .preview-details-section p {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.owner-dashboard .preview-payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-dashboard .payment-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #e7f5ff;
+  color: #1971c2;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 이벤트 미리보기 */
+.owner-dashboard .preview-events-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.owner-dashboard .preview-events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.owner-dashboard .preview-event-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.owner-dashboard .preview-event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.owner-dashboard .preview-event-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: #e9ecef;
+}
+
+.owner-dashboard .preview-event-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-dashboard .preview-event-content {
+  padding: 16px;
+}
+
+.owner-dashboard .preview-event-badge-wrapper {
+  margin-bottom: 12px;
+}
+
+.owner-dashboard .preview-event-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.owner-dashboard .preview-event-badge.active {
+  background: #d3f9d8;
+  color: #2f9e44;
+}
+
+.owner-dashboard .preview-event-badge.scheduled {
+  background: #e7f5ff;
+  color: #1971c2;
+}
+
+.owner-dashboard .preview-event-badge.ended {
+  background: #f1f3f5;
+  color: #868e96;
+}
+
+.owner-dashboard .preview-event-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.owner-dashboard .preview-event-content p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #6c757d;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.owner-dashboard .preview-event-period {
+  font-size: 12px;
+  color: #868e96;
+  margin-bottom: 12px;
+}
+
+.owner-dashboard .preview-event-discount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff6b6b;
+}
+
+/* ========== 모달 스타일 ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-dialog {
+  background: #2c2c2c;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header-custom {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header-custom h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modal-body-custom {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="date"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #00a699;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.review-info {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.review-info p {
+  margin: 0 0 8px 0;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.review-info .review-content-preview {
+  color: #b0b0b0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.modal-footer-custom {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-cancel,
+.btn-submit {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #b0b0b0;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.btn-submit {
+  background: #00a699;
+  color: white;
+}
+
+.btn-submit:hover {
+  background: #008b80;
+  transform: translateY(-1px);
+}
+
+/* 이벤트 메뉴 드롭다운 */
+.event-menu-dropdown {
+  position: relative;
+}
+
+.event-menu-btn {
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.event-menu-btn:hover {
+  color: white;
+}
+
+.event-menu-dropdown:hover .event-dropdown-content {
+  display: block;
+}
+
+.event-dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  min-width: 100px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.event-dropdown-content button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.event-dropdown-content button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.event-dropdown-content button:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.event-dropdown-content button:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+/* 반응형 - Split Layout */
+@media (max-width: 1200px) {
+  .owner-dashboard .split-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .owner-dashboard .split-left,
+  .owner-dashboard .split-right {
+    flex: none;
+    width: 100%;
+  }
+
+  .owner-dashboard .analysis-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-dashboard .age-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard .bar-chart {
+    height: 200px;
+  }
+
+  .owner-dashboard .bar-wrapper {
+    height: 150px;
+  }
+
+  .owner-dashboard .gender-stats {
+    flex-direction: column;
+  }
+
+  .owner-dashboard .age-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== 예약 관리 스타일 ========== */
+.reservation-list-section {
+  padding: 20px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #2c2c2c;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #357abd;
+}
+
+.reservation-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #2c2c2c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reservation-table th {
+  background: #3c3c3c;
+  color: #e0e0e0;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #444;
+}
+
+.reservation-table td {
+  padding: 12px;
+  border-bottom: 1px solid #444;
+  color: #e0e0e0;
+}
+
+.reservation-table tr:hover {
+  background: #3c3c3c;
+}
+
+.reservation-user {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-approved {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-approve {
+  padding: 6px 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.btn-approve:hover {
+  background: #218838;
+}
+
+.btn-reject {
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.btn-reject:hover {
+  background: #c82333;
+}
+
+.rejection-reason {
+  font-size: 11px;
+  color: #b0b0b0;
+  margin-top: 4px;
+}
+
+/* 예약 통계 스타일 */
+.reservation-stats-section {
+  padding: 20px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: #2c2c2c;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #444;
+}
+
+.stat-info h3 {
+  color: #e0e0e0;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #4a90e2;
+  margin: 0 0 8px 0;
+}
+
+.stat-change {
+  font-size: 12px;
+  color: #b0b0b0;
+}
+
+.reservation-chart {
+  background: #2c2c2c;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #444;
+  margin-bottom: 20px;
+}
+
+.reservation-chart h3 {
+  color: #e0e0e0;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.empty-chart {
+  text-align: center;
+  padding: 40px;
+  color: #b0b0b0;
+}
+
+.reservation-list-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-reservation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #3c3c3c;
+  border-radius: 6px;
+  border: 1px solid #444;
+}
+
+.mini-reservation-info {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.mini-reservation-info span {
+  font-size: 12px;
+  color: #e0e0e0;
+}
+
+.reservation-date {
+  font-weight: 600;
+  color: #4a90e2 !important;
+}
+
+.mini-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ========== 리뷰 관리 스타일 ========== */
+.owner-comment-display {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 166, 153, 0.1);
+  border-radius: 6px;
+}
+
+.owner-comment-display strong {
+  color: #00a699;
+  font-size: 13px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.owner-comment-display p {
+  margin: 0;
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.owner-comment-date {
+  font-size: 11px;
+  color: #b0b0b0;
+  margin-top: 4px;
+}
+
+.replied-badge {
+  padding: 4px 8px;
+  background: rgba(0, 166, 153, 0.2);
+  color: #00a699;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.review-text {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* 새로운 통계 스타일 */
+.keywords-section {
+  margin-top: 30px;
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.keywords-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.keyword-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: #333;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.keyword-item:hover {
+  background: #3a3a3a;
+}
+
+.keyword-rank {
+  font-weight: bold;
+  color: #007bff;
+  min-width: 30px;
+}
+
+.keyword-text {
+  flex: 1;
+  color: #fff;
+  font-weight: 500;
+}
+
+.keyword-count {
+  color: #ccc;
+  font-size: 14px;
+}
+
+.conversion-overview {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.conversion-main-stat {
+  text-align: center;
+  background: #2a2a2a;
+  padding: 30px;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.conversion-main-stat h3 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 18px;
+}
+
+.conversion-rate-large {
+  font-size: 48px;
+  font-weight: bold;
+  color: #00a699;
+  margin: 10px 0;
+}
+
+.conversion-main-stat p {
+  color: #ccc;
+  margin: 0;
+}
+
+.conversion-funnel {
+  flex: 1;
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.funnel-step {
+  margin-bottom: 20px;
+}
+
+.funnel-label {
+  display: block;
+  color: #fff;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.funnel-value {
+  color: #00a699;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.funnel-bar {
+  height: 20px;
+  background: #00a699;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.funnel-arrow {
+  text-align: center;
+  color: #ccc;
+  font-size: 24px;
+  margin: 10px 0;
+}
+
+.conversion-tips {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.conversion-tips h3 {
+  margin: 0 0 15px 0;
+  color: #fff;
+}
+
+.conversion-tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.conversion-tips li {
+  color: #ccc;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.visit-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.visit-charts .chart-section {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.visit-charts .chart-section h3 {
+  margin: 0 0 20px 0;
+  color: #fff;
+  font-size: 16px;
+}
+
+/* 상세보기 버튼 스타일 */
+.btn-detail {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 8px;
+}
+
+.btn-detail:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,402 @@
+/* OwnerReservationDetailModal.css - Owner 예약 상세 모달 스타일 */
+
+.owner-reservation-detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.owner-reservation-detail-modal {
+  background: #1a1a1a;
+  border-radius: 0;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #00a699 0%, #008b80 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 탭 네비게이션 */
+.tab-navigation {
+  display: flex;
+  background: #2c2c2c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-item {
+  flex: 1;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  color: #b0b0b0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.tab-item.active {
+  color: #00a699;
+  border-bottom-color: #00a699;
+  background: rgba(0, 166, 153, 0.1);
+}
+
+/* 탭 콘텐츠 */
+.tab-content {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 정보 그리드 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item .value {
+  font-size: 14px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+/* 상태 배지 */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 80px;
+}
+
+.status-badge.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.status-badge.approved {
+  background: rgba(0, 166, 153, 0.2);
+  color: #00a699;
+  border: 1px solid rgba(0, 166, 153, 0.3);
+}
+
+.status-badge.rejected {
+  background: rgba(255, 90, 95, 0.2);
+  color: #ff5a5f;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+}
+
+.status-badge.cancelled {
+  background: rgba(255, 90, 95, 0.2);
+  color: #ff5a5f;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+}
+
+.status-badge.completed {
+  background: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.visit-status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 80px;
+}
+
+.visit-status-badge.visited {
+  background: rgba(0, 166, 153, 0.2);
+  color: #00a699;
+  border: 1px solid rgba(0, 166, 153, 0.3);
+}
+
+.visit-status-badge.no-show {
+  background: rgba(255, 90, 95, 0.2);
+  color: #ff5a5f;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+}
+
+.visit-status-badge.cancelled {
+  background: rgba(255, 90, 95, 0.2);
+  color: #ff5a5f;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+}
+
+.visit-status-badge.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+/* 특별 요청사항 */
+.special-requests {
+  background: #2c2c2c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.special-requests h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+}
+
+.special-requests p {
+  margin: 0;
+  font-size: 14px;
+  color: #000000;
+  line-height: 1.5;
+}
+
+/* 거절/블랙리스트/노쇼 사유 */
+.rejection-reason,
+.blacklist-reason,
+.no-show-reason {
+  background: #2c2c2c;
+  border: 1px solid rgba(255, 90, 95, 0.3);
+  border-radius: 0;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.rejection-reason h4,
+.blacklist-reason h4,
+.no-show-reason h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff5a5f;
+}
+
+.rejection-reason p,
+.blacklist-reason p,
+.no-show-reason p {
+  margin: 0;
+  font-size: 14px;
+  color: #e0e0e0;
+  line-height: 1.5;
+}
+
+/* 액션 그룹 */
+.action-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.action-group h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 버튼 스타일 */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-width: 100px;
+}
+
+.btn-primary {
+  background: #00a699;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #008b80;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #000;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* 모달 액션 */
+.modal-actions {
+  padding: 20px 24px;
+  background: #2c2c2c;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .owner-reservation-detail-modal {
+    margin: 10px;
+    max-height: 95vh;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .tab-navigation {
+    flex-direction: column;
+  }
+
+  .tab-item {
+    padding: 12px 16px;
+    text-align: left;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .owner-reservation-detail-modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    padding: 16px 20px;
+    flex-direction: column;
+  }
+}

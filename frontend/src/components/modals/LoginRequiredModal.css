@@ -1,0 +1,122 @@
+.login-required-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.login-required-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-required-modal-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.login-required-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.login-required-modal-body {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.login-required-modal-body p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.login-required-modal-body p:last-child {
+  margin-bottom: 0;
+  font-weight: 500;
+  color: #333;
+}
+
+.login-required-modal-footer {
+  padding: 16px 24px 24px 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.login-required-modal-cancel,
+.login-required-modal-confirm {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.login-required-modal-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.login-required-modal-cancel:hover {
+  background-color: #e8e8e8;
+}
+
+.login-required-modal-confirm {
+  background-color: #007bff;
+  color: white;
+}
+
+.login-required-modal-confirm:hover {
+  background-color: #0056b3;
+}
+
+.login-required-modal-confirm:active {
+  transform: translateY(1px);
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+  .login-required-modal {
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+  
+  .login-required-modal-footer {
+    flex-direction: column;
+  }
+  
+  .login-required-modal-cancel,
+  .login-required-modal-confirm {
+    width: 100%;
+  }
+}

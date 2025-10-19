@@ -1,0 +1,384 @@
+/* SearchPage 스타일 - 아이패드 세로형 통일 */
+
+.search-page {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 - 아이패드 세로형 */
+.common-header {
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+  text-align: center;
+}
+
+.common-header h1 {
+  font-size: 1.75rem;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #667eea;
+  cursor: default;
+}
+
+.common-header p {
+  color: #666;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* 검색 섹션 */
+.search-section {
+  margin: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.common-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 25px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.common-input:focus {
+  border-color: #667eea;
+}
+
+/* 인기 검색어 섹션 */
+.popular-keywords-section {
+  margin: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.keywords-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.keyword-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.keyword-item:hover {
+  background: #e9ecef;
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+.keyword-rank {
+  background: #667eea;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.keyword-text {
+  flex: 1;
+  font-weight: 500;
+  color: #495057;
+}
+
+.keyword-count {
+  background: #e9ecef;
+  color: #6c757d;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+/* 에러 메시지 */
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #dc3545;
+  margin: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.retry-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-btn:hover {
+  background-color: #c82333;
+}
+
+/* 로딩 상태 */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+  margin: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 반응형 디자인 - 창 크기에 따른 자동 조절 */
+@media (max-width: 1200px) {
+  .search-main {
+    padding: 0;
+  }
+  
+  .common-header {
+    padding: 18px;
+  }
+  
+  .search-section {
+    margin: 18px;
+    padding: 18px;
+  }
+  
+  .popular-keywords-section {
+    margin: 18px;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .common-header {
+    padding: 16px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .search-section {
+    margin: 16px;
+    padding: 16px;
+  }
+  
+  .popular-keywords-section {
+    margin: 16px;
+    padding: 16px;
+  }
+  
+  .keywords-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .search-main {
+    padding: 0;
+  }
+  
+  .common-header {
+    padding: 15px;
+    min-height: 60px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.4rem;
+  }
+  
+  .common-header p {
+    font-size: 0.9rem;
+  }
+  
+  .search-section {
+    margin: 15px;
+    padding: 15px;
+  }
+  
+  .search-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .common-input {
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    min-height: 44px;
+  }
+  
+  .popular-keywords-section {
+    margin: 15px;
+    padding: 15px;
+  }
+  
+  .keywords-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .keyword-item {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .common-header {
+    padding: 10px;
+    min-height: 50px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .search-section {
+    margin: 10px;
+    padding: 10px;
+  }
+  
+  .common-input {
+    min-height: 40px;
+    font-size: 16px;
+  }
+  
+  .popular-keywords-section {
+    margin: 10px;
+    padding: 10px;
+  }
+  
+  .keyword-item {
+    padding: 8px 10px;
+  }
+  
+  .keyword-rank {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+  
+  .keyword-text {
+    font-size: 0.9rem;
+  }
+  
+  .keyword-count {
+    font-size: 0.7rem;
+  }
+}
+
+/* 최소 크기 보장 */
+@media (max-width: 320px) {
+  .common-header {
+    padding: 8px;
+    min-height: 45px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.1rem;
+  }
+  
+  .search-section {
+    margin: 8px;
+    padding: 8px;
+  }
+  
+  .common-input {
+    min-height: 36px;
+    font-size: 14px;
+  }
+  
+  .popular-keywords-section {
+    margin: 8px;
+    padding: 8px;
+  }
+  
+  .keyword-item {
+    padding: 6px 8px;
+  }
+  
+  .keyword-rank {
+    font-size: 0.6rem;
+    padding: 2px 4px;
+  }
+  
+  .keyword-text {
+    font-size: 0.8rem;
+  }
+  
+  .keyword-count {
+    font-size: 0.6rem;
+  }
+}

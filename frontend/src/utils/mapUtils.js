@@ -54,10 +54,15 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
           // 선택된 식당으로 지도 중심 이동 (부드러운 애니메이션)
           map.panTo(position);
           
-          // 줌 레벨 조정
+          // 줌 레벨 조정 (더 확실하게)
           setTimeout(() => {
             map.setLevel(3);
           }, 300);
+          
+          // 추가 확대 보장
+          setTimeout(() => {
+            map.setLevel(2);
+          }, 600);
           
           // 인포윈도우 표시
           const infoWindow = new window.kakao.maps.InfoWindow({
@@ -153,10 +158,15 @@ export const showSelectedRestaurantMarker = (map, markers, setMarkers, restauran
     // 선택된 식당으로 지도 중심 이동 (부드러운 애니메이션)
     map.panTo(position);
     
-    // 줌 레벨 조정
+    // 줌 레벨 조정 (더 확실하게)
     setTimeout(() => {
-      map.setLevel(4);
+      map.setLevel(3); // 더 확대된 레벨로 설정
     }, 300);
+    
+    // 추가 확대 보장
+    setTimeout(() => {
+      map.setLevel(2); // 최대 확대
+    }, 600);
 
     // 인포윈도우 표시
     const infoWindow = new window.kakao.maps.InfoWindow({

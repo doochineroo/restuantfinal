@@ -47,7 +47,7 @@ export const useMap = () => {
     if (map && restaurantList && restaurantList.length > 0) {
       updateMapWithRestaurants(map, markers, setMarkers, restaurantList, onMarkerClick);
     }
-  }, [map]);
+  }, [map]); // markers 의존성 제거
 
   // 선택된 식당 마커 표시
   const showSelectedMarker = (restaurant, setSelectedRestaurant) => {

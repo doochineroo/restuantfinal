@@ -31,6 +31,41 @@ export const loadKakaoMapAPI = () => {
         return;
       }
 
+      // 카카오 지도 API가 로드되지 않은 경우 동적으로 로드
+      if (!window.kakao) {
+        const script = document.createElement('script');
+        script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=4338d5e19b8efcb2bf2d96333a91e07d&autoload=false';
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+          console.log('카카오 지도 스크립트 로드 완료');
+          if (window.kakao && window.kakao.maps) {
+            window.kakao.maps.load(() => {
+              isLoaded = true;
+              isLoading = false;
+              console.log('카카오 지도 API 초기화 완료');
+              innerResolve(window.kakao);
+            });
+          } else {
+            isLoading = false;
+            const error = new Error('카카오 지도 API 초기화 실패');
+            console.error('카카오 지도 API 초기화 실패');
+            innerReject(error);
+          }
+        };
+        
+        script.onerror = (error) => {
+          isLoading = false;
+          const errorMsg = new Error('카카오 지도 API 스크립트 로드 실패');
+          console.error('카카오 지도 API 스크립트 로드 실패:', error);
+          innerReject(errorMsg);
+        };
+        
+        document.head.appendChild(script);
+        return;
+      }
+
       // 폴링으로 로드 완료 대기
       let attempts = 0;
       const maxAttempts = 100; // 10초 대기 (100ms * 100)

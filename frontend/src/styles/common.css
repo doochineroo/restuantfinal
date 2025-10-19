@@ -1,0 +1,634 @@
+/**
+ * 공통 스타일 - 전체 앱 통일
+ */
+
+/* ========== 기본 리셋 ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 하단 네비게이션을 위한 패딩 - 네비게이션바 높이에 맞춰 조정 */
+  padding-bottom: 80px;
+  /* 커스텀 커서 */
+  cursor: auto;
+}
+
+.App {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 커서 스타일 ========== */
+/* 클릭 가능한 모든 요소에 포인터 커서 */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+.restaurant-card,
+.filter-main-btn,
+.filter-dropdown-btn,
+.filter-dropdown-item,
+.search-btn,
+.reservation-btn,
+.detail-btn,
+.card-buttons button,
+.modal-close-btn,
+.modal-cancel-btn,
+.modal-reservation-btn,
+.retry-btn,
+.back-btn,
+.cancel-btn,
+.submit-btn,
+.map-toggle-btn,
+.expand-indicator {
+  cursor: pointer !important;
+}
+
+/* 로딩 중 커서 */
+.loading-spinner,
+.loading-spinner *,
+button:disabled,
+.submit-btn:disabled,
+[disabled] {
+  cursor: wait !important;
+}
+
+/* ========== 헤더 공통 스타일 ========== */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+/* ========== 로딩 스타일 ========== */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-spinner {
+  font-size: 24px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== 공통 버튼 스타일 ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  min-height: 44px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none !important;
+}
+
+.btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* 버튼 크기 변형 */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  min-height: 36px;
+  border-radius: 20px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+  min-height: 52px;
+  border-radius: 30px;
+}
+
+.btn-xl {
+  padding: 20px 40px;
+  font-size: 18px;
+  min-height: 60px;
+  border-radius: 35px;
+}
+
+/* 버튼 색상 변형 */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #5a6268;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  border: none;
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #e0a800;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-info {
+  background: #17a2b8;
+  color: white;
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2);
+}
+
+.btn-info:hover:not(:disabled) {
+  background: #138496;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.btn-light {
+  background: #f8f9fa;
+  color: #212529;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-light:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  color: #6c757d;
+  border: 2px solid #6c757d;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: #6c757d;
+  color: white;
+}
+
+/* 공통 헤더 스타일 - 중복 제거됨 */
+
+/* 공통 카드 스타일 */
+.common-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.common-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* 공통 입력 필드 스타일 */
+.common-input {
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+  min-height: 48px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.common-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.common-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 공통 Select/콤보박스 스타일 */
+.common-select {
+  width: 100%;
+  padding: 14px 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+  min-height: 48px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding-right: 48px;
+}
+
+.common-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.common-select:hover {
+  border-color: #ced4da;
+}
+
+.common-select:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Select 옵션 스타일 */
+.common-select option {
+  padding: 8px 12px;
+  background: white;
+  color: #333;
+  font-size: 15px;
+}
+
+.common-select option:hover {
+  background: #f8f9fa;
+}
+
+.common-select option:checked {
+  background: #667eea;
+  color: white;
+}
+
+/* 드롭다운 컨테이너 */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.dropdown-container .common-select {
+  width: 100%;
+}
+
+/* 커스텀 드롭다운 */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-toggle {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 25px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #fff;
+  min-height: 44px;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.custom-dropdown-toggle:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.custom-dropdown-toggle:hover {
+  border-color: #ced4da;
+}
+
+.custom-dropdown-arrow {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.custom-dropdown.open .custom-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.custom-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.custom-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.custom-dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.custom-dropdown-item.selected {
+  background: #667eea;
+  color: white;
+}
+
+.custom-dropdown-item.selected:hover {
+  background: #5568d3;
+}
+
+/* 공통 섹션 스타일 */
+.common-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e9ecef;
+}
+
+.common-section h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+.common-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+  
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+  
+  .btn-lg {
+    padding: 14px 28px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+  
+  .common-header {
+    padding: 15px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .common-card {
+    padding: 20px;
+  }
+  
+  .common-section {
+    padding: 20px;
+  }
+  
+  .common-input {
+    padding: 10px 14px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+  
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 30px;
+  }
+  
+  .btn-lg {
+    padding: 12px 24px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  
+  .common-header {
+    padding: 10px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .common-card {
+    padding: 16px;
+  }
+  
+  .common-section {
+    padding: 16px;
+  }
+  
+  .common-input {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+}
+
+/* 최소 크기 보장 */
+@media (max-width: 320px) {
+  .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+  
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 10px;
+    min-height: 28px;
+  }
+  
+  .btn-lg {
+    padding: 10px 20px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .common-header {
+    padding: 8px;
+  }
+  
+  .common-header h1 {
+    font-size: 1.1rem;
+  }
+  
+  .common-card {
+    padding: 12px;
+  }
+  
+  .common-section {
+    padding: 12px;
+  }
+  
+  .common-input {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-height: 32px;
+  }
+}

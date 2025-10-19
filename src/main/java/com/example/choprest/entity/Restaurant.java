@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Restaurant {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     @Column(name = "restaurant_name")
@@ -96,5 +97,11 @@ public class Restaurant {
     
     @Column(name = "category", length = 200)
     private String category;
+    
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+    
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
 }
 

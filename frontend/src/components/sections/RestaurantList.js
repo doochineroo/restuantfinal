@@ -1,5 +1,5 @@
 import React from 'react';
-import { getKoreanValue, getStatusValue } from '../utils/restaurantUtils';
+import { getKoreanValue, getStatusValue } from '../../utils/restaurantUtils';
 
 const RestaurantList = ({ 
   hasSearched, 
@@ -55,38 +55,23 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, on
         onClick={() => onCardClick(restaurant.id)}
       >
         <div className="restaurant-name-container">
-          <div className="restaurant-name">{restaurant.restaurantName}</div>
+          <div className="restaurant-name">
+            {restaurant.restaurantName}
+            {restaurant.regionName && (
+              <span className="restaurant-region"> ({restaurant.regionName})</span>
+            )}
+          </div>
+          {restaurant.branchName && (
+            <div className="restaurant-branch">{restaurant.branchName}</div>
+          )}
         </div>
-        {restaurant.branchName && (
-          <div className="restaurant-branch">{restaurant.branchName}</div>
-        )}
-        <div className="restaurant-info">
-          <span className={`info-badge ${
-            getStatusValue(restaurant) === '운영중' ? 'status-operating' : 
-            getStatusValue(restaurant) === '운영중지예상' ? 'status-closed' : 
-            'unavailable'
-          }`}>
-            {getStatusValue(restaurant)}
-          </span>
-          <span className={`info-badge ${getKoreanValue(restaurant.parking) === '가능' ? 'available' : 'unavailable'}`}>
-            주차 {getKoreanValue(restaurant.parking)}
-          </span>
-          <span className={`info-badge ${getKoreanValue(restaurant.wifi) === '가능' ? 'available' : 'unavailable'}`}>
-            WiFi {getKoreanValue(restaurant.wifi)}
-          </span>
-          <span className={`info-badge ${getKoreanValue(restaurant.kidsZone) === '가능' ? 'available' : 'unavailable'}`}>
-            키즈존 {getKoreanValue(restaurant.kidsZone)}
-          </span>
-          <span className={`info-badge ${getKoreanValue(restaurant.delivery) === '가능' ? 'available' : 'unavailable'}`}>
-            배달 {getKoreanValue(restaurant.delivery)}
-          </span>
-        </div>
-       
+        
         {restaurant.roadAddress ? (
           <div className="restaurant-location">{restaurant.roadAddress}</div>
         ) : (
-          <div className="restaurant-location no-location">...</div>
+          <div className="restaurant-location no-location">위치 정보 없음</div>
         )}
+        
         <div className="expand-indicator">
           {isExpanded ? '▲' : '▼'}
         </div>
@@ -96,19 +81,33 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, on
         className={`restaurant-card-details ${isExpanded ? 'expanded' : ''}`}
       >
         <div className="detail-section">
-          <h4>상세 주소</h4>
-          <p><strong>주소:</strong> {restaurant.roadAddress || '주소 정보 없음'}</p>
-        </div>
-
-        <div className="detail-section">
-          <h4>운영 정보</h4>
+          <p><strong>전화번호:</strong> {restaurant.phoneNumber || '정보없음'}</p>
           <p><strong>영업시간:</strong> {restaurant.openingHours || '정보없음'}</p>
           <p><strong>휴무일:</strong> {restaurant.holidayInfo || '정보없음'}</p>
         </div>
 
+        <div className="detail-section">
+          <h4>편의시설</h4>
+          <div className="facility-badges">
+          
+            <span className={`info-badge ${getKoreanValue(restaurant.parking) === '가능' ? 'available' : 'unavailable'}`}>
+              주차 {getKoreanValue(restaurant.parking)}
+            </span>
+            <span className={`info-badge ${getKoreanValue(restaurant.wifi) === '가능' ? 'available' : 'unavailable'}`}>
+              WiFi {getKoreanValue(restaurant.wifi)}
+            </span>
+            <span className={`info-badge ${getKoreanValue(restaurant.kidsZone) === '가능' ? 'available' : 'unavailable'}`}>
+              키즈존 {getKoreanValue(restaurant.kidsZone)}
+            </span>
+            <span className={`info-badge ${getKoreanValue(restaurant.delivery) === '가능' ? 'available' : 'unavailable'}`}>
+              배달 {getKoreanValue(restaurant.delivery)}
+            </span>
+          </div>
+        </div>
+
         <div className="card-buttons">
           <button 
-            className="detail-btn"
+            className="btn btn-outline-primary btn-sm"
             onClick={(e) => {
               e.stopPropagation();
               onDetailView(restaurant);
@@ -117,7 +116,7 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, on
             상세보기
           </button>
           <button 
-            className="reservation-btn"
+            className="btn btn-success btn-sm"
             onClick={(e) => onReservation(restaurant, e)}
           >
             예약하기

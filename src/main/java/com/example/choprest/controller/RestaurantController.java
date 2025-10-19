@@ -23,6 +23,24 @@ public class RestaurantController {
     private final RestaurantService restaurantService;
     private final WebClient webClient;
     
+    // 카카오 API 키 배열 (로테이션용) - 3개 키로 429 오류 방지
+    private final String[] KAKAO_API_KEYS = {
+        "0daaba62d376e0a4633352753a28827c",  // REST API 키 1
+        "56a153a339ec3e4e1f0fbd87bafcc0d1",  // REST API 키 2
+        "d712769a072b1868812aa282ce367ae7"   // REST API 키 3
+    };
+    private int currentApiKeyIndex = 0;
+    
+    /**
+     * 다음 API 키를 가져오는 메서드 (로테이션)
+     */
+    private String getNextApiKey() {
+        String apiKey = KAKAO_API_KEYS[currentApiKeyIndex];
+        currentApiKeyIndex = (currentApiKeyIndex + 1) % KAKAO_API_KEYS.length;
+        log.debug("Using API key index: {} (total: {})", currentApiKeyIndex, KAKAO_API_KEYS.length);
+        return "KakaoAK " + apiKey;
+    }
+    
     /**
      * 키워드로 식당 검색 (카카오 API로 좌표 보완)
      * GET /api/restaurants?keyword=검색어
@@ -74,25 +92,35 @@ public class RestaurantController {
                 
                 log.info("Processing {} restaurants for real-time coordinate update (no limit)", prioritizedList.size());
                 
-                // 실시간으로 좌표 업데이트 (동기 처리) - 모든 식당 처리
+                // 실시간으로 좌표 업데이트 (동기 처리) - 좌표가 없는 식당만 처리
                 for (Restaurant restaurant : prioritizedList) {
                     try {
-                        updateSingleRestaurantCoordinates(restaurant);
-                        
-                        // 좌표를 성공적으로 찾은 경우에만 리스트에 추가
-                        if (restaurant.getLat() != null && restaurant.getLng() != null) {
+                        // 이미 좌표가 있는 식당은 API 호출하지 않고 바로 추가
+                        if (restaurant.getLat() != null && restaurant.getLng() != null && 
+                            restaurant.getRoadAddress() != null && !restaurant.getRoadAddress().trim().isEmpty()) {
                             updatedRestaurants.add(restaurant);
-                            log.info("✅ Added restaurant with coordinates: {}", restaurant.getRestaurantName());
-                        } else {
-                            log.warn("❌ Skipping restaurant without coordinates: {}", restaurant.getRestaurantName());
+                            log.info("✅ Restaurant already has coordinates: {}", restaurant.getRestaurantName());
+                            continue;
                         }
                         
-                        // API 호출 제한 방지를 위한 짧은 딜레이
-                        Thread.sleep(100); // 100ms 딜레이
+                        // 좌표가 없는 식당만 API 호출
+                        updateSingleRestaurantCoordinates(restaurant);
+                        
+                        // 좌표가 있든 없든 모든 매장을 리스트에 추가 (새로 등록된 매장 포함)
+                        updatedRestaurants.add(restaurant);
+                        if (restaurant.getLat() != null && restaurant.getLng() != null) {
+                            log.info("✅ Added restaurant with coordinates: {}", restaurant.getRestaurantName());
+                        } else {
+                            log.info("✅ Added restaurant without coordinates (newly registered): {}", restaurant.getRestaurantName());
+                        }
+                        
+                        // API 키 로테이션으로 딜레이 단축 (429 에러 방지)
+                        Thread.sleep(1000); // 1초 딜레이로 429 에러 확률 감소
                     } catch (Exception e) {
                         log.error("Error updating coordinates for restaurant {}: {}", 
                             restaurant.getRestaurantName(), e.getMessage());
-                        // 좌표를 못 찾은 식당은 리스트에서 제외
+                        // 좌표를 못 찾은 식당도 리스트에 추가 (새로 등록된 매장일 수 있음)
+                        updatedRestaurants.add(restaurant);
                     }
                 }
             }
@@ -116,7 +144,14 @@ public class RestaurantController {
      */
     private void updateSingleRestaurantCoordinates(Restaurant restaurant) {
         try {
-            final String kakaoApiKey = "KakaoAK 0daaba62d376e0a4633352753a28827c";
+            // 이미 좌표가 있는 식당은 API 호출하지 않음
+            if (restaurant.getLat() != null && restaurant.getLng() != null && 
+                restaurant.getRoadAddress() != null && !restaurant.getRoadAddress().trim().isEmpty()) {
+                log.info("Restaurant {} already has coordinates, skipping API call", restaurant.getRestaurantName());
+                return;
+            }
+            
+            final String kakaoApiKey = getNextApiKey(); // 로테이션 API 키
             
             // 검색 방식 1: 식당명 + 지점명
             String query1 = restaurant.getRestaurantName();
@@ -208,8 +243,8 @@ public class RestaurantController {
                     log.warn("⚠️ Error searching with query '{}': {}", searchQuery, e.getMessage());
                 }
                 
-                // API 호출 간 짧은 딜레이
-                Thread.sleep(50);
+                // API 키 로테이션으로 딜레이 단축 (429 에러 방지)
+                Thread.sleep(500); // 0.5초 딜레이로 429 에러 확률 감소
             }
             
             if (!found) {
@@ -292,6 +327,33 @@ public class RestaurantController {
     }
     
     /**
+     * 가게 ID로 가게 이름 조회 (예약용)
+     * GET /api/restaurants/{id}/name
+     */
+    @GetMapping("/{id}/name")
+    public ResponseEntity<String> getRestaurantNameById(@PathVariable Long id) {
+        log.info("Restaurant name request received for id: {}", id);
+        
+        try {
+            Optional<Restaurant> restaurant = restaurantService.getRestaurantById(id);
+            if (restaurant.isPresent()) {
+                String restaurantName = restaurant.get().getRestaurantName();
+                if (restaurant.get().getBranchName() != null && !restaurant.get().getBranchName().trim().isEmpty()) {
+                    restaurantName += " " + restaurant.get().getBranchName();
+                }
+                log.info("Restaurant name found: {}", restaurantName);
+                return ResponseEntity.ok(restaurantName);
+            } else {
+                log.warn("Restaurant not found for id: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving restaurant name with id {}: {}", id, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
      * 모든 식당 조회 (개발/테스트용)
      * GET /api/restaurants/all
      */
@@ -345,7 +407,7 @@ public class RestaurantController {
         }
         
         try {
-            String kakaoApiKey = "KakaoAK 0daaba62d376e0a4633352753a28827c"; // REST API 키
+            String kakaoApiKey = getNextApiKey(); // 로테이션 API 키
             
             return webClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -389,6 +451,39 @@ public class RestaurantController {
         );
         
         return ResponseEntity.ok(testResponse);
+    }
+    
+    /**
+     * 식당 정보 업데이트
+     * PUT /api/restaurants/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Restaurant> updateRestaurant(@PathVariable Long id, @RequestBody Restaurant restaurant) {
+        log.info("Restaurant update request received for id: {}", id);
+        
+        try {
+            // ID가 일치하는지 확인
+            if (!id.equals(restaurant.getId())) {
+                log.warn("ID mismatch: path variable {} vs request body {}", id, restaurant.getId());
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // 식당이 존재하는지 확인
+            Optional<Restaurant> existingRestaurant = restaurantService.getRestaurantById(id);
+            if (!existingRestaurant.isPresent()) {
+                log.warn("Restaurant not found for id: {}", id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 식당 정보 업데이트
+            Restaurant updatedRestaurant = restaurantService.updateRestaurant(restaurant);
+            log.info("Restaurant updated successfully: {}", updatedRestaurant.getRestaurantName());
+            
+            return ResponseEntity.ok(updatedRestaurant);
+        } catch (Exception e) {
+            log.error("Error updating restaurant with id {}: {}", id, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
     
     

@@ -66,22 +66,63 @@ public class RestaurantService {
     
     /**
      * 키워드로 식당 검색 및 Kakao API로 위도/경도/도로명 주소 업데이트
+     * 지역명이 포함된 경우 해당 지역의 식당을 우선적으로 반환
      */
     public List<Restaurant> searchRestaurants(String keyword) {
         log.info("Searching restaurants with keyword: {}", keyword);
         
-        // 먼저 데이터베이스에서 검색 (캐시된 데이터)
+        // 키워드에서 지역명과 식당명을 분리
+        String[] keywordParts = keyword.trim().split("\\s+");
+        String restaurantKeyword = keyword;
+        String regionKeyword = null;
+        
+        // 키워드가 여러 단어로 구성된 경우, 지역명 추출 시도
+        if (keywordParts.length > 1) {
+            // 마지막 단어가 지역명일 가능성이 높음 (예: "맥도날드 강남")
+            String lastWord = keywordParts[keywordParts.length - 1];
+            
+            // 데이터베이스에서 해당 단어가 지역명으로 존재하는지 확인
+            List<Restaurant> regionCheck = restaurantRepository.findByRegionNameContainingIgnoreCase(lastWord);
+            if (!regionCheck.isEmpty()) {
+                regionKeyword = lastWord;
+                restaurantKeyword = keyword.substring(0, keyword.lastIndexOf(lastWord)).trim();
+                log.info("Detected region keyword: '{}', restaurant keyword: '{}'", regionKeyword, restaurantKeyword);
+            }
+        }
+        
+        List<Restaurant> allCachedRestaurants = new ArrayList<>();
+        
+        if (regionKeyword != null && !restaurantKeyword.isEmpty()) {
+            // 지역명과 식당명이 모두 있는 경우: 해당 지역의 해당 식당만 검색
+            log.info("Searching for restaurant '{}' in region '{}'", restaurantKeyword, regionKeyword);
+            
+            final String finalRestaurantKeyword = restaurantKeyword; // final 변수로 만들기
+            List<Restaurant> regionRestaurants = restaurantRepository.findByRegionNameContainingIgnoreCase(regionKeyword);
+            List<Restaurant> filteredRestaurants = regionRestaurants.stream()
+                .filter(restaurant -> 
+                    (restaurant.getRestaurantName() != null && 
+                     restaurant.getRestaurantName().toLowerCase().contains(finalRestaurantKeyword.toLowerCase())) ||
+                    (restaurant.getBranchName() != null && 
+                     restaurant.getBranchName().toLowerCase().contains(finalRestaurantKeyword.toLowerCase()))
+                )
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+            
+            allCachedRestaurants.addAll(filteredRestaurants);
+            log.info("Found {} restaurants matching '{}' in region '{}'", filteredRestaurants.size(), restaurantKeyword, regionKeyword);
+            
+        } else {
+            // 기존 방식: 식당명, 지점명, 지역명으로 각각 검색
         List<Restaurant> cachedRestaurants = restaurantRepository
                 .findByRestaurantNameContainingIgnoreCaseOrBranchNameContainingIgnoreCase(keyword, keyword);
         
-        // 지역명으로도 검색해서 추가
         List<Restaurant> regionRestaurants = restaurantRepository
                 .findByRegionNameContainingIgnoreCase(keyword);
         
         // 중복 제거하면서 합치기
         Set<Restaurant> uniqueRestaurants = new HashSet<>(cachedRestaurants);
         uniqueRestaurants.addAll(regionRestaurants);
-        List<Restaurant> allCachedRestaurants = new ArrayList<>(uniqueRestaurants);
+            allCachedRestaurants.addAll(uniqueRestaurants);
+        }
         
         if (!allCachedRestaurants.isEmpty()) {
             log.info("Found {} cached restaurants in database", allCachedRestaurants.size());
@@ -95,8 +136,37 @@ public class RestaurantService {
         List<Restaurant> allRestaurants = loadRestaurantsFromCsv();
         log.info("Loaded {} restaurants from CSV", allRestaurants.size());
         
-        // 키워드로 필터링 (식당명, 지점명, 지역명에 포함)
+        // 키워드로 필터링 (지역명이 포함된 경우 우선 처리)
         List<Restaurant> filteredRestaurants = new ArrayList<>();
+        
+        if (regionKeyword != null && !restaurantKeyword.isEmpty()) {
+            // 지역명과 식당명이 모두 있는 경우: 해당 지역의 해당 식당만 검색
+            log.info("Filtering CSV for restaurant '{}' in region '{}'", restaurantKeyword, regionKeyword);
+            
+            final String finalRestaurantKeyword = restaurantKeyword; // final 변수로 만들기
+            final String finalRegionKeyword = regionKeyword; // final 변수로 만들기
+            
+            for (Restaurant restaurant : allRestaurants) {
+                boolean regionMatches = restaurant.getRegionName() != null && 
+                    restaurant.getRegionName().toLowerCase().contains(finalRegionKeyword.toLowerCase());
+                
+                boolean restaurantMatches = false;
+                if (restaurant.getRestaurantName() != null && 
+                    restaurant.getRestaurantName().toLowerCase().contains(finalRestaurantKeyword.toLowerCase())) {
+                    restaurantMatches = true;
+                }
+                if (restaurant.getBranchName() != null && 
+                    restaurant.getBranchName().toLowerCase().contains(finalRestaurantKeyword.toLowerCase())) {
+                    restaurantMatches = true;
+                }
+                
+                if (regionMatches && restaurantMatches) {
+                    filteredRestaurants.add(restaurant);
+                    log.info("CSV match found: {} in region {}", restaurant.getRestaurantName(), restaurant.getRegionName());
+                }
+            }
+        } else {
+            // 기존 방식: 식당명, 지점명, 지역명에 포함되는 모든 식당 검색
         for (Restaurant restaurant : allRestaurants) {
             boolean matches = false;
             
@@ -123,6 +193,7 @@ public class RestaurantService {
             
             if (matches) {
                 filteredRestaurants.add(restaurant);
+                }
             }
         }
         

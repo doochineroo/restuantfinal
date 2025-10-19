@@ -1,11 +1,29 @@
-/* 예약 페이지 - 캐치테이블 스타일 (메인 페이지와 통일) */
+/* 예약 페이지 - 모던한 디자인 */
 
 /* 커스텀 커서 적용 */
 .reservation-page {
   min-height: 100vh;
-  background-color: #f8f9fa;
-  padding: 20px;
-  cursor: url('./cursor_basic.png'), auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  color: #1a1a1a !important;
+}
+
+/* 배경 패턴 */
+.reservation-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 /* 예약 페이지의 클릭 가능한 모든 요소 */
@@ -13,254 +31,575 @@
 .reservation-page input[type="button"],
 .reservation-page input[type="submit"],
 .reservation-page select {
-  cursor: url('./cursor_basic.png'), pointer !important;
+  cursor: pointer !important;
+}
+
+/* 모든 텍스트 요소에 명확한 색상 설정 */
+.reservation-page h1,
+.reservation-page h2,
+.reservation-page h3,
+.reservation-page p,
+.reservation-page span,
+.reservation-page div {
+  color: #1a1a1a !important;
 }
 
 /* 예약 페이지 로딩 중 */
 .reservation-page button:disabled,
 .submit-btn:disabled {
-  cursor: url('./cursor_loading.png'), wait !important;
+  cursor: wait !important;
 }
 
 .reservation-container {
-  max-width: 1000px;
+  flex: 1;
+  max-width: 1200px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 30px;
   align-items: start;
+  padding: 30px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 /* 식당 정보 카드 */
 .restaurant-info-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   position: sticky;
-  top: 20px;
+  top: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.restaurant-info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 12px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .restaurant-info-card h2 {
   color: #1a1a1a;
   margin-bottom: 8px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.8px;
   cursor: default;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .restaurant-info-card h3 {
   color: #6c757d;
-  margin-bottom: 20px;
-  font-size: 1rem;
+  margin-bottom: 24px;
+  font-size: 1.1rem;
   font-weight: 500;
   cursor: default;
 }
 
 .restaurant-details {
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .restaurant-details p {
-  margin-bottom: 12px;
-  font-size: 0.9rem;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
   color: #495057;
   cursor: default;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
+
 
 .restaurant-details strong {
   color: #667eea;
-  font-weight: 600;
+  font-weight: 700;
+  min-width: 80px;
 }
 
 /* 예약 폼 카드 */
 .reservation-form-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.reservation-form-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 12px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* 폼 헤더 */
+.form-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.form-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 20px;
+  color: white;
+  animation: float 3s ease-in-out infinite;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.form-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 .reservation-form-card h2 {
   color: #1a1a1a;
-  margin-bottom: 24px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-  border-bottom: 2px solid #f1f3f5;
-  padding-bottom: 16px;
-  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.8px;
   cursor: default;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.form-subtitle {
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  cursor: default;
+}
+
+/* 사용자 정보 알림 */
+.user-info-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.user-info-notice.success {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+  border-color: rgba(40, 167, 69, 0.3);
+}
+
+.user-info-notice.info {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.notice-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notice-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.user-info-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: default;
+  flex: 1;
+}
+
+.user-info-notice.success p {
+  color: #28a745;
+}
+
+.user-info-notice.info p {
+  color: #ffc107;
+}
+
+.user-info-notice a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.user-info-notice a:hover {
+  text-decoration: underline;
+  color: #5a67d8;
 }
 
 .reservation-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 32px;
 }
+
+/* 폼 섹션 */
+.form-section {
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  background: rgba(248, 249, 250, 0.8);
+  border-color: rgba(102, 126, 234, 0.2);
+}
+
+.section-title {
+  color: #1a1a1a;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
 }
 
-.form-group label {
-  font-weight: 600;
-  color: #495057;
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #1a1a1a !important;
   font-size: 0.9rem;
   cursor: default;
+  margin-bottom: 4px;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 12px 16px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+.label-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.label-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.required {
+  color: #e74c3c;
+  font-weight: 800;
+}
+
+/* 입력 래퍼 */
+.input-wrapper,
+.select-wrapper,
+.textarea-wrapper {
+  position: relative;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
   font-size: 0.95rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   background: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
   cursor: text;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  color: #1a1a1a !important;
 }
 
-.form-group select {
+.form-select {
   cursor: pointer;
+  appearance: none;
+  padding-right: 50px;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.select-arrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select-arrow svg {
+  width: 12px;
+  height: 12px;
+}
+
+.select-wrapper:hover .select-arrow {
+  color: #667eea;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.1),
+    0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-1px);
 }
 
-.form-group input:hover,
-.form-group select:hover,
-.form-group textarea:hover {
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover {
   border-color: #adb5bd;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.form-group textarea {
+.form-textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
+  line-height: 1.6;
 }
 
-.form-group input::placeholder,
-.form-group textarea::placeholder {
+.form-input::placeholder,
+.form-textarea::placeholder {
   color: #adb5bd;
+  font-weight: 400;
 }
 
 /* 폼 액션 버튼 */
 .form-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f3f5;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(102, 126, 234, 0.1);
 }
 
-.cancel-btn,
-.submit-btn {
+.btn {
   flex: 1;
-  padding: 14px 24px;
+  padding: 16px 24px;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
 }
 
-.cancel-btn {
-  background: #f8f9fa;
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   color: #495057;
-  border: 1px solid #dee2e6;
+  border: 2px solid #dee2e6;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.cancel-btn:hover {
-  background: #e9ecef;
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #e9ecef, #dee2e6);
   border-color: #adb5bd;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-.cancel-btn:active {
-  transform: scale(0.98);
-}
-
-.submit-btn {
-  background: #667eea;
-  color: white;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: #5568d3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.submit-btn:active:not(:disabled) {
+.btn-secondary:active {
   transform: translateY(0);
 }
 
-.submit-btn:disabled {
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #a0aec0, #9f7aea);
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+.btn-primary:disabled .btn-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* 에러 메시지 */
 .error-message {
   text-align: center;
-  background: white;
-  border-radius: 12px;
-  padding: 50px 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 60px 40px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06);
   max-width: 500px;
   margin: 50px auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .error-message h2 {
   color: #1a1a1a;
-  margin-bottom: 12px;
-  font-size: 1.4rem;
-  font-weight: 700;
+  margin-bottom: 16px;
+  font-size: 1.6rem;
+  font-weight: 800;
   cursor: default;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .error-message p {
   color: #6c757d;
-  margin-bottom: 24px;
-  font-size: 0.95rem;
+  margin-bottom: 32px;
+  font-size: 1rem;
   cursor: default;
+  line-height: 1.6;
 }
 
 .back-btn {
-  padding: 12px 24px;
-  background: #667eea;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .back-btn:hover {
-  background: #5568d3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
 .back-btn:active {
@@ -268,16 +607,18 @@
 }
 
 /* 입력 검증 스타일 */
-.form-group input:invalid:not(:placeholder-shown),
-.form-group select:invalid:not(:placeholder-shown),
-.form-group textarea:invalid:not(:placeholder-shown) {
-  border-color: #f03e3e;
+.form-input:invalid:not(:placeholder-shown),
+.form-select:invalid:not(:placeholder-shown),
+.form-textarea:invalid:not(:placeholder-shown) {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
 }
 
-.form-group input:valid:not(:placeholder-shown),
-.form-group select:valid:not(:placeholder-shown),
-.form-group textarea:valid:not(:placeholder-shown) {
-  border-color: #51cf66;
+.form-input:valid:not(:placeholder-shown),
+.form-select:valid:not(:placeholder-shown),
+.form-textarea:valid:not(:placeholder-shown) {
+  border-color: #27ae60;
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
 }
 
 /* 로딩 애니메이션 */
@@ -290,76 +631,108 @@
   }
 }
 
-.submit-btn:disabled {
+.btn-primary:disabled {
   animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .reservation-page {
-    padding: 12px;
+/* 반응형 디자인 - 모던한 반응형 레이아웃 */
+@media (max-width: 1200px) {
+  .reservation-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px;
   }
+  
+  .restaurant-info-card,
+  .reservation-form-card {
+    padding: 28px;
+  }
+}
 
+@media (max-width: 1024px) {
   .reservation-container {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 24px;
+    padding: 20px;
   }
   
   .restaurant-info-card {
     position: static;
-    padding: 20px;
+    order: 2;
+  }
+  
+  .reservation-form-card {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .reservation-container {
+    padding: 16px;
+    gap: 20px;
+  }
+  
+  .restaurant-info-card,
+  .reservation-form-card {
+    padding: 24px;
+    border-radius: 16px;
   }
 
   .restaurant-info-card h2 {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
   }
 
   .restaurant-info-card h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   .restaurant-details p {
-    font-size: 0.85rem;
-  }
-
-  .reservation-form-card {
-    padding: 20px;
+    font-size: 0.9rem;
   }
 
   .reservation-form-card h2 {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
+  }
+
+  .form-subtitle {
+    font-size: 0.9rem;
   }
   
   .form-row {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 16px;
   }
 
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    padding: 11px 14px;
-    font-size: 14px;
+  .form-section {
+    padding: 20px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    min-height: 48px;
   }
   
   .form-actions {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
   
-  .cancel-btn,
-  .submit-btn {
+  .btn {
     width: 100%;
-    padding: 12px 20px;
+    padding: 14px 20px;
+    min-height: 48px;
   }
 
   .error-message {
-    padding: 40px 20px;
+    padding: 40px 24px;
     margin: 30px auto;
   }
 
   .error-message h2 {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
 
   .error-message p {
@@ -367,22 +740,164 @@
   }
 }
 
+@media (max-width: 480px) {
+  .reservation-container {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .restaurant-info-card,
+  .reservation-form-card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .form-header {
+    margin-bottom: 24px;
+  }
+
+  .form-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .form-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .restaurant-info-card h2,
+  .reservation-form-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px 14px;
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .user-info-notice {
+    padding: 12px 16px;
+  }
+
+  .user-info-notice p {
+    font-size: 0.85rem;
+  }
+}
+
+/* 최소 크기 보장 */
+@media (max-width: 320px) {
+  .reservation-container {
+    padding: 8px;
+  }
+  
+  .restaurant-info-card,
+  .reservation-form-card {
+    padding: 16px;
+  }
+  
+  .restaurant-info-card h2,
+  .reservation-form-card h2 {
+    font-size: 1.2rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    min-height: 40px;
+    font-size: 0.85rem;
+  }
+  
+  .btn {
+    min-height: 40px;
+    font-size: 0.85rem;
+  }
+}
+
 /* 스크롤바 스타일 */
 .reservation-page::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .reservation-page::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
 .reservation-page::-webkit-scrollbar-thumb {
-  background: #dee2e6;
-  border-radius: 3px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
 .reservation-page::-webkit-scrollbar-thumb:hover {
-  background: #ced4da;
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+}
+
+/* 추가 애니메이션 효과 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reservation-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.restaurant-info-card,
+.reservation-form-card {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.restaurant-info-card {
+  animation-delay: 0.1s;
+}
+
+.reservation-form-card {
+  animation-delay: 0.2s;
+}
+
+/* 호버 효과 개선 */
+.form-group:hover .form-label {
+  color: #667eea;
+}
+
+.form-group:hover .label-icon {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.form-group:hover .label-icon svg {
+  color: #667eea;
+}
+
+/* 포커스 효과 개선 */
+.form-input:focus + .form-label,
+.form-select:focus + .form-label,
+.form-textarea:focus + .form-label {
+  color: #667eea;
 }
 
 /* 애니메이션 부드럽게 */
@@ -391,5 +906,11 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  
+  .reservation-container,
+  .restaurant-info-card,
+  .reservation-form-card {
+    animation: none;
   }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { filterOperatingRestaurants, filterByRegion, filterByService } from '../utils/restaurantUtils';
 
-export const useRestaurantSearch = () => {
+export const useRestaurantSearch = (onSearchComplete) => {
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,8 +11,8 @@ export const useRestaurantSearch = () => {
   const [regions, setRegions] = useState([]);
 
   const getApiUrl = () => {
-    // 항상 EC2 백엔드 직접 호출
-    return 'http://ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com:8080/api';
+    // 로컬 개발 환경
+    return 'http://localhost:8080/api';
   };
 
   
@@ -28,9 +28,9 @@ export const useRestaurantSearch = () => {
       setError(null);
       
       // 백엔드 API 호출 (좌표가 없는 식당들은 자동으로 카카오 API 호출하여 업데이트)
-      const proxyUrl = `https://dpt8rhufx9b4x.cloudfront.net/api/restaurants?keyword=${encodeURIComponent(searchKeyword)}`;
-      
-      const response = await axios.get(proxyUrl, {
+      const apiUrl = getApiUrl();
+      const response = await axios.get(`${apiUrl}/restaurants`, {
+        params: { keyword: searchKeyword },
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         timeout: 30000 // 모든 식당 좌표 업데이트를 위해 타임아웃 증가
       });
@@ -48,13 +48,28 @@ export const useRestaurantSearch = () => {
         };
       });
       
-      setRestaurants(processedRestaurants);
-      setFilteredRestaurants(processedRestaurants);
+      // 검색 결과를 지역별로 정렬 (같은 이름의 식당이 여러 지역에 있을 때 지역별로 그룹화)
+      const sortedRestaurants = processedRestaurants.sort((a, b) => {
+        // 먼저 식당명으로 정렬
+        const nameCompare = (a.restaurantName || '').localeCompare(b.restaurantName || '');
+        if (nameCompare !== 0) return nameCompare;
+        
+        // 같은 식당명이면 지역명으로 정렬
+        return (a.regionName || '').localeCompare(b.regionName || '');
+      });
+      
+      setRestaurants(sortedRestaurants);
+      setFilteredRestaurants(sortedRestaurants);
       setHasSearched(true);
       
       // 지역 목록 추출
-      const uniqueRegions = [...new Set(processedRestaurants.map(restaurant => restaurant.regionName).filter(Boolean))];
+      const uniqueRegions = [...new Set(sortedRestaurants.map(restaurant => restaurant.regionName).filter(Boolean))];
       setRegions(uniqueRegions.sort());
+      
+      // 검색 완료 콜백 실행
+      if (onSearchComplete) {
+        onSearchComplete(sortedRestaurants);
+      }
       
     } catch (error) {
       let errorMessage = '검색 중 오류가 발생했습니다.';

@@ -1,0 +1,202 @@
+/* ProfileSection.css - 프로필 섹션 스타일 */
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 0;
+  background: white;
+  border-bottom: none;
+}
+
+.profile-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #007aff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+}
+
+.avatar-icon {
+  font-size: 28px;
+  color: white;
+}
+
+.profile-info h2 {
+  margin: 0 0 6px 0;
+  color: #000;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.profile-info p {
+  margin: 0 0 10px 0;
+  color: #8e8e93;
+  font-size: 16px;
+}
+
+.role-badge {
+  display: inline-block;
+  background: #f2f2f7;
+  color: #8e8e93;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 24px 0;
+  border-bottom: none;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: none;
+}
+
+.form-group label {
+  color: #000;
+  font-weight: 500;
+  font-size: 17px;
+  flex: 1;
+}
+
+.form-input {
+  padding: 10px 14px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  font-size: 17px;
+  transition: all 0.2s ease;
+  background: white;
+  text-align: right;
+  min-width: 140px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #007aff;
+}
+
+.form-display {
+  color: #8e8e93;
+  font-size: 17px;
+  text-align: right;
+  min-width: 140px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: 24px 0;
+  border-bottom: none;
+}
+
+.btn-edit,
+.btn-save,
+.btn-cancel,
+.btn-logout {
+  padding: 10px 20px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.btn-edit {
+  background: #007aff;
+  color: white;
+  border-color: #007aff;
+}
+
+.btn-edit:hover {
+  background: #0056b3;
+}
+
+.btn-save {
+  background: #34c759;
+  color: white;
+  border-color: #34c759;
+}
+
+.btn-save:hover {
+  background: #28a745;
+}
+
+.btn-cancel {
+  background: #8e8e93;
+  color: white;
+  border-color: #8e8e93;
+}
+
+.btn-cancel:hover {
+  background: #6c757d;
+}
+
+.btn-logout {
+  background: #ff3b30;
+  color: white;
+  border-color: #ff3b30;
+}
+
+.btn-logout:hover {
+  background: #d70015;
+}
+
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-actions {
+    flex-direction: column;
+  }
+  
+}
+
+@media (max-width: 480px) {
+  .profile-header {
+    padding: 15px;
+  }
+  
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .avatar-icon {
+    font-size: 1.8rem;
+  }
+  
+  .profile-info h2 {
+    font-size: 1.4rem;
+  }
+}

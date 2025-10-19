@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import './App.css';
+import './styles/common.css';
 import ReservationPage from './ReservationPage';
-import SearchSection from './components/SearchSection';
+import SearchSection from './components/sections/SearchSection';
 import FilterTabs from './components/FilterTabs';
-import MapSection from './components/MapSection';
-import RestaurantList from './components/RestaurantList';
-import RestaurantDetailModal from './components/RestaurantDetailModal';
+import MapSection from './components/sections/MapSection';
+import RestaurantList from './components/sections/RestaurantList';
+import RestaurantDetailModal from './components/modals/RestaurantDetailModal';
+import TopNav from './components/navigation/TopNav';
+import MainNav from './components/navigation/MainNav';
+import ProtectedRoute from './components/ProtectedRoute';
 import { useRestaurantSearch } from './hooks/useRestaurantSearch';
 import { useMap } from './hooks/useMap';
+
+// 테스트용 Demo 컴포넌트 임포트
+import { AuthProvider, useAuth } from './demo/context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import LoginPage from './demo/pages/auth/LoginPage';
+import DemoLayout from './demo/components/layout/DemoLayout';
+import ReviewsPage from './demo/pages/auth/ReviewsPage';
+import AdminPage from './demo/pages/admin/AdminPage';
+import BottomNav from './demo/components/layout/BottomNav/BottomNav';
+import HomePage from './pages/main/HomePage';
+import SearchPage from './pages/main/SearchPage';
+import NearMePage from './pages/main/NearMePage';
+import OwnerDashboard from './pages/owner/OwnerDashboard';
+import ReservationHistoryPage from './pages/user/ReservationHistoryPage';
+import MyPageAccordion from './pages/user/MyPageAccordion';
 
 // public 폴더의 커서 이미지 경로
 // JS에서 사용하려면 이렇게 참조하세요:
@@ -24,8 +43,23 @@ function MainPage() {
   const [selectedServices, setSelectedServices] = useState([]);
   const [modalRestaurant, setModalRestaurant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentRegion, setCurrentRegion] = useState(null);
 
   const { map, updateMap, showSelectedMarker, clearMarkers, isMapLoading, mapError } = useMap();
+
+  // 검색 완료 시 지도 업데이트 콜백 (useCallback으로 메모이제이션)
+  const handleSearchComplete = React.useCallback((searchResults) => {
+    if (map && searchResults && searchResults.length > 0) {
+      const restaurantsWithCoords = searchResults.filter(
+        restaurant => restaurant.lat && restaurant.lng
+      );
+      if (restaurantsWithCoords.length > 0) {
+        updateMap(restaurantsWithCoords, handleMarkerClick);
+      } else {
+        clearMarkers();
+      }
+    }
+  }, [map, updateMap, clearMarkers, handleMarkerClick]);
 
   // 커스텀 훅 사용
   const {
@@ -40,7 +74,7 @@ function MainPage() {
     filterByRegionType,
     filterByServiceType,
     setError
-  } = useRestaurantSearch();
+  } = useRestaurantSearch(handleSearchComplete);
 
   // 마커 클릭 시 카드 자동 선택 핸들러
   const handleMarkerClick = (restaurant) => {
@@ -63,8 +97,12 @@ function MainPage() {
         restaurant => restaurant.lat && restaurant.lng
       );
       updateMap(restaurantsWithCoords, handleMarkerClick);
+    } else if (map && filteredRestaurants.length === 0) {
+      // 검색 결과가 없으면 기존 마커 제거
+      clearMarkers();
     }
-  }, [map, filteredRestaurants, updateMap]);
+  }, [map, filteredRestaurants]); // updateMap, clearMarkers 의존성 제거
+
 
   // 필터 변경 핸들러
   const handleFilterChange = (filterValue, filterType) => {
@@ -120,11 +158,13 @@ function MainPage() {
       
       switch(filterType) {
         case 'region':
+          setCurrentRegion(filterValue); // 현재 지역 설정
           filterByRegionType(filterValue);
           break;
         case 'all':
           // 전체 선택 시 - 모든 식당 표시
           setActiveFilterTab('전체');
+          setCurrentRegion(null); // 현재 지역 초기화
           setFilteredRestaurants(restaurants);
           break;
         default:
@@ -148,10 +188,10 @@ function MainPage() {
         // 1. 기존 마커 모두 제거
         clearMarkers();
         
-        // 2. 선택된 식당의 마커만 표시 (지도 중심 이동 포함)
+        // 2. 선택된 식당의 마커만 표시 (지도 중심 이동 및 확대 포함)
         setTimeout(() => {
           showSelectedMarker(restaurant, setSelectedRestaurant);
-        }, 100);
+        }, 50); // 더 빠른 응답을 위해 지연 시간 단축
       }
     } else {
       setSelectedRestaurant(null);
@@ -161,8 +201,13 @@ function MainPage() {
       
       // 2. 모든 필터링된 식당 마커 다시 표시
       setTimeout(() => {
-        updateMap(filteredRestaurants, handleMarkerClick);
-      }, 100);
+        const restaurantsWithCoords = filteredRestaurants.filter(
+          restaurant => restaurant.lat && restaurant.lng
+        );
+        if (restaurantsWithCoords.length > 0) {
+          updateMap(restaurantsWithCoords, handleMarkerClick);
+        }
+      }, 50);
     }
   };
 
@@ -195,11 +240,10 @@ function MainPage() {
 
   return (
     <div className="App">
-      <header className="header">
-        <h1>찹플랜</h1>
-      </header>
+      <TopNav />
+      <MainNav />
 
-      <SearchSection onSearch={handleSearch} />
+      <SearchSection onSearch={handleSearch} currentRegion={currentRegion} />
       
             <FilterTabs
               hasSearched={hasSearched}
@@ -250,18 +294,75 @@ function MainPage() {
         onClose={handleCloseModal}
         onReservation={handleModalReservation}
       />
+
     </div>
   );
+}
+
+// 보호된 라우트 컴포넌트
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="loading-spinner">로딩 중...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 }
 
 // 메인 App 컴포넌트 (라우터 설정)
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/reservation" element={<ReservationPage />} />
-      </Routes>
+      <AuthProvider>
+        <NotificationProvider>
+          <Routes>
+          {/* 메인 페이지들 */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/nearme" element={<NearMePage />} />
+          <Route path="/reservation" element={<ReservationPage />} />
+          <Route path="/reservation-history" element={
+            <ProtectedRoute>
+              <ReservationHistoryPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <MyPageAccordion />
+            </ProtectedRoute>
+          } />
+          <Route path="/my" element={
+            <ProtectedRoute>
+              <MyPageAccordion />
+            </ProtectedRoute>
+          } />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/owner-dashboard" element={
+            <ProtectedRoute>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          } />
+          
+          {/* 보호된 Demo 라우트 */}
+          <Route
+            path="/demo"
+            element={
+              <ProtectedRoute>
+                <DemoLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="reviews" element={<ReviewsPage />} />
+            <Route path="admin" element={<AdminPage />} />
+          </Route>
+        </Routes>
+        </NotificationProvider>
+      </AuthProvider>
     </Router>
   );
 }
