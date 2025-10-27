@@ -303,15 +303,33 @@ const OwnerDashboard = () => {
   // 방문 상태 업데이트
   const updateVisitStatus = async (visitStatus, reason) => {
     try {
-      await axios.put('http://localhost:8080/api/demo/reservations/visit-status', {
-        reservationId: selectedReservation.id,
-        visitStatus: visitStatus,
-        reason: reason,
-        createdBy: user.userId
+      console.log('방문 상태 업데이트 요청:', {
+        reservationId: selectedReservation?.id,
+        visitStatus,
+        reason,
+        createdBy: user?.userId,
+        selectedReservation
       });
 
+      if (!selectedReservation?.id) {
+        console.error('selectedReservation:', selectedReservation);
+        alert('예약 정보를 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+        return;
+      }
+
+      const requestData = {
+        reservationId: selectedReservation.id,
+        visitStatus: visitStatus,
+        reason: reason || '',
+        createdBy: user.userId
+      };
+
+      console.log('전송 데이터:', requestData);
+
+      await axios.put('http://localhost:8080/api/demo/reservations/visit-status', requestData);
+
       // 블랙리스트에 추가하는 경우
-      if (visitStatus === 'BLACKLISTED') {
+      if (visitStatus === 'BLACKLISTED' && reason) {
         await axios.post('http://localhost:8080/api/demo/blacklist', {
           userId: selectedReservation.userId,
           restaurantId: user.restaurantId,
@@ -330,7 +348,8 @@ const OwnerDashboard = () => {
       alert('방문 상태가 업데이트되었습니다.');
     } catch (error) {
       console.error('방문 상태 업데이트 오류:', error);
-      alert('오류가 발생했습니다.');
+      console.error('오류 상세:', error.response?.data);
+      alert('오류가 발생했습니다: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -1120,13 +1139,61 @@ const OwnerDashboard = () => {
                 <div className="info-item full-width">
                   <label>도로명 주소</label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      name="roadAddress"
-                      value={formData.roadAddress || ''}
-                      onChange={handleChange}
-                      placeholder="서울 중구 명동길 14"
-                    />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        name="roadAddress"
+                        value={formData.roadAddress || ''}
+                        onChange={handleChange}
+                        placeholder="서울 중구 명동길 14"
+                        style={{ flex: 1 }}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          // 카카오 주소 검색 팝업 (가장 편함)
+                          if (!window.daum) {
+                            const script = document.createElement('script');
+                            script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+                            script.onload = () => {
+                              new window.daum.Postcode({
+                                oncomplete: (data) => {
+                                  // 도로명 주소 선택
+                                  if (data.userSelectedType === 'R') {
+                                    handleChange({ target: { name: 'roadAddress', value: data.roadAddress } });
+                                  } else {
+                                    handleChange({ target: { name: 'roadAddress', value: data.jibunAddress } });
+                                  }
+                                }
+                              }).open();
+                            };
+                            document.body.appendChild(script);
+                          } else {
+                            new window.daum.Postcode({
+                              oncomplete: (data) => {
+                                // 도로명 주소 선택
+                                if (data.userSelectedType === 'R') {
+                                  handleChange({ target: { name: 'roadAddress', value: data.roadAddress } });
+                                } else {
+                                  handleChange({ target: { name: 'roadAddress', value: data.jibunAddress } });
+                                }
+                              }
+                            }).open();
+                          }
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          background: '#00a699',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                      >
+                        주소 검색
+                      </button>
+                    </div>
                   ) : (
                     <p>{restaurant.roadAddress || '-'}</p>
                   )}
@@ -3148,6 +3215,7 @@ const VisitStatusModal = ({ reservation, onClose, onSave }) => {
         return;
       }
     }
+    console.log('모달에서 전달하는 데이터:', { reservation, visitStatus, reason });
     onSave(visitStatus, reason);
   };
 
