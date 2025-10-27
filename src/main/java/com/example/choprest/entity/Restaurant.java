@@ -41,10 +41,10 @@ public class Restaurant {
     @Column(name = "restroom_info")
     private String restroomInfo;
     
-    @Column(name = "holiday_info", length = 1000)
+    @Column(name = "holiday_info", columnDefinition = "TEXT")
     private String holidayInfo;
     
-    @Column(name = "opening_hours", length = 1000)
+    @Column(name = "opening_hours", columnDefinition = "TEXT")
     private String openingHours;
     
     @Column(name = "delivery")
@@ -71,16 +71,16 @@ public class Restaurant {
     @Column(name = "smart_order")
     private String smartOrder;
     
-    @Column(name = "main_menu", length = 1000)
+    @Column(name = "main_menu", columnDefinition = "TEXT")
     private String mainMenu;
     
     @Column(name = "status")
     private String status;
     
-    @Column(name = "hashtags", length = 1000)
+    @Column(name = "hashtags", columnDefinition = "TEXT")
     private String hashtags;
     
-    @Column(name = "area_info", length = 2000)
+    @Column(name = "area_info", columnDefinition = "TEXT")
     private String areaInfo;
     
     @Column(name = "lat")
@@ -103,5 +103,56 @@ public class Restaurant {
     
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
+    
+    @Column(name = "main_image", length = 500)
+    private String mainImage;
+    
+    @Column(name = "menu_image1", length = 500)
+    private String menuImage1;
+    
+    @Column(name = "menu_image2", length = 500)
+    private String menuImage2;
+    
+    @Column(name = "menu_image3", length = 500)
+    private String menuImage3;
+    
+    @Column(name = "restaurant_photo1", length = 500)
+    private String restaurantPhoto1;
+    
+    @Column(name = "restaurant_photo2", length = 500)
+    private String restaurantPhoto2;
+    
+    @Column(name = "restaurant_photo3", length = 500)
+    private String restaurantPhoto3;
+    
+    @Column(name = "restaurant_photo4", length = 500)
+    private String restaurantPhoto4;
+    
+    @Column(name = "restaurant_photo5", length = 500)
+    private String restaurantPhoto5;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "parking_info", columnDefinition = "TEXT")
+    private String parkingInfo;
+
+    @Column(name = "transportation", columnDefinition = "TEXT")
+    private String transportation;
+
+    @Column(name = "special_notes", columnDefinition = "TEXT")
+    private String specialNotes;
+
+    @Column(name = "card_payment")
+    private String cardPayment;
+
+    @Column(name = "cash_payment")
+    private String cashPayment;
+
+    @Column(name = "mobile_payment")
+    private String mobilePayment;
+
+    @Column(name = "account_transfer")
+    private String accountTransfer;
 }
 

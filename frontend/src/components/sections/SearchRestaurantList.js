@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getKoreanValue, getStatusValue } from '../../utils/restaurantUtils';
 
 const SearchRestaurantList = ({ 
@@ -45,11 +45,29 @@ const SearchRestaurantList = ({
 };
 
 const SearchRestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, onDetailView }) => {
-  // 가게 사진 URL 생성 (실제로는 API에서 받아와야 함)
-  const getRestaurantImage = (restaurant) => {
-    // 실제 이미지가 있으면 사용, 없으면 플레이스홀더 이미지 사용
-    return restaurant.imageUrl || '/image-placeholder.svg';
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // 이미지 URL을 절대 URL로 변환하는 함수
+  const convertToAbsoluteUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads/')) {
+      return `http://localhost:8080${url}`;
+    }
+    return url;
   };
+
+  // 매장 사진들 수집
+  const restaurantPhotos = [
+    convertToAbsoluteUrl(restaurant.mainImage),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto1),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto2),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto3),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto4),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto5)
+  ].filter(Boolean);
+  
+  const imageUrl = restaurantPhotos.length > 0 ? restaurantPhotos[currentImageIndex] : '/image-placeholder.svg';
 
   return (
     <div
@@ -62,14 +80,57 @@ const SearchRestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservati
       >
         {/* 가게 사진 */}
         <div className="restaurant-image-container">
-          <img 
-            src={getRestaurantImage(restaurant)} 
-            alt={restaurant.restaurantName}
-            className="restaurant-image"
-            onError={(e) => {
-              e.target.src = '/image-placeholder.svg'; // 이미지 로드 실패 시 플레이스홀더 이미지
-            }}
-          />
+          {restaurantPhotos.length > 1 ? (
+            <div className="mini-slider">
+              <img 
+                src={imageUrl} 
+                alt={restaurant.restaurantName}
+                className="restaurant-image"
+                onError={(e) => {
+                  e.target.src = '/image-placeholder.svg';
+                }}
+              />
+              <button 
+                className="mini-slider-btn mini-slider-btn-prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex((prev) => prev > 0 ? prev - 1 : restaurantPhotos.length - 1);
+                }}
+              >
+                ‹
+              </button>
+              <button 
+                className="mini-slider-btn mini-slider-btn-next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex((prev) => prev < restaurantPhotos.length - 1 ? prev + 1 : 0);
+                }}
+              >
+                ›
+              </button>
+              <div className="mini-slider-indicators">
+                {restaurantPhotos.map((_, index) => (
+                  <span 
+                    key={index}
+                    className={`mini-indicator ${index === currentImageIndex ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(index);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <img 
+              src={imageUrl} 
+              alt={restaurant.restaurantName}
+              className="restaurant-image"
+              onError={(e) => {
+                e.target.src = '/image-placeholder.svg';
+              }}
+            />
+          )}
         </div>
 
         {/* 가게 정보 */}

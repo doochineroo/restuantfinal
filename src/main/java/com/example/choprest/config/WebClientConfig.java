@@ -28,6 +28,12 @@ public class WebClientConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(false);
+        
+        registry.addMapping("/uploads/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(false);
     }
     
     @Bean
@@ -40,6 +46,7 @@ public class WebClientConfig implements WebMvcConfigurer {
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/uploads/**", configuration);
         return source;
     }
 }

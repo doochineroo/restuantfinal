@@ -72,10 +72,11 @@
 }
 
 .form-group label {
-  color: #000;
+  color: white;
   font-weight: 500;
   font-size: 17px;
-  flex: 1;
+  min-width: 100px;
+  flex-shrink: 0;
 }
 
 .form-input {

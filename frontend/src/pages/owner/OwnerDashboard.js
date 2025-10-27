@@ -3,7 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../demo/context/AuthContext';
-import { statisticsAPI } from '../../demo/services/api';
+import { statisticsAPI, imageUploadAPI } from '../../demo/services/api';
 import axios from 'axios';
 import OwnerReservationDetailModal from '../../components/modals/OwnerReservationDetailModal';
 import ReservationCalendar from '../../components/calendar/ReservationCalendar';
@@ -23,11 +23,23 @@ const OwnerDashboard = () => {
   const [selectedDateReservations, setSelectedDateReservations] = useState([]); // 선택된 날짜의 예약들
   const [images, setImages] = useState({
     main: null,
-    menu1: null,
-    menu2: null,
-    menu3: null
+    photo1: null,
+    photo2: null,
+    photo3: null,
+    photo4: null,
+    photo5: null
   });
+  const [uploadingImages, setUploadingImages] = useState({
+    main: false,
+    photo1: false,
+    photo2: false,
+    photo3: false,
+    photo4: false,
+    photo5: false
+  });
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [menuItems, setMenuItems] = useState([]);
+  const [categoryOrder, setCategoryOrder] = useState([]);
   const [events, setEvents] = useState([]);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -333,8 +345,24 @@ const OwnerDashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:8080/api/restaurants/${user.restaurantId}`);
-      setRestaurant(response.data);
-      setFormData(response.data);
+      const restaurantData = response.data;
+      setRestaurant(restaurantData);
+      setFormData(restaurantData);
+      
+      // 이미지 정보 로드 (절대 URL로 변환)
+      const convertToAbsoluteUrl = (url) => {
+        if (!url) return null;
+        return url.startsWith('http') ? url : `http://localhost:8080${url}`;
+      };
+      
+      setImages({
+        main: convertToAbsoluteUrl(restaurantData.mainImage),
+        photo1: convertToAbsoluteUrl(restaurantData.restaurantPhoto1),
+        photo2: convertToAbsoluteUrl(restaurantData.restaurantPhoto2),
+        photo3: convertToAbsoluteUrl(restaurantData.restaurantPhoto3),
+        photo4: convertToAbsoluteUrl(restaurantData.restaurantPhoto4),
+        photo5: convertToAbsoluteUrl(restaurantData.restaurantPhoto5)
+      });
     } catch (error) {
       console.error('매장 정보 조회 오류:', error);
       alert('매장 정보를 불러올 수 없습니다.');
@@ -354,9 +382,50 @@ const OwnerDashboard = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await axios.put(`http://localhost:8080/api/restaurants/${user.restaurantId}`, formData);
+      
+      // 이미지 URL을 포함한 데이터 준비
+      // 절대 URL에서 상대 경로 추출
+      const getRelativePath = (url) => {
+        if (!url) return null;
+        // 이미 절대 경로인 경우 (http://... 형태)
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          // /uploads/... 형태로 추출
+          const match = url.match(/\/uploads\/.*$/);
+          return match ? match[0] : null;
+        }
+        // 이미 상대 경로인 경우
+        return url;
+      };
+      
+      // 세부사항 정보도 함께 가져오기
+      const descriptionEl = document.getElementById('description');
+      const parkingInfoEl = document.getElementById('parkingInfo');
+      const transportationEl = document.getElementById('transportation');
+      const specialNotesEl = document.getElementById('specialNotes');
+      
+      // 이미지 데이터 저장
+      const saveData = {
+        ...formData,
+        mainImage: getRelativePath(images.main),
+        restaurantPhoto1: getRelativePath(images.photo1),
+        restaurantPhoto2: getRelativePath(images.photo2),
+        restaurantPhoto3: getRelativePath(images.photo3),
+        restaurantPhoto4: getRelativePath(images.photo4),
+        restaurantPhoto5: getRelativePath(images.photo5),
+        // 세부사항 정보 포함
+        description: descriptionEl ? descriptionEl.value : formData.description || '',
+        parkingInfo: parkingInfoEl ? parkingInfoEl.value : formData.parkingInfo || '',
+        transportation: transportationEl ? transportationEl.value : formData.transportation || '',
+        specialNotes: specialNotesEl ? specialNotesEl.value : formData.specialNotes || '',
+        cardPayment: document.getElementById('cardPayment')?.checked ? 'Y' : 'N',
+        cashPayment: document.getElementById('cashPayment')?.checked ? 'Y' : 'N',
+        mobilePayment: document.getElementById('mobilePayment')?.checked ? 'Y' : 'N',
+        accountTransfer: document.getElementById('accountTransfer')?.checked ? 'Y' : 'N'
+      };
+      
+      await axios.put(`http://localhost:8080/api/restaurants/${user.restaurantId}`, saveData);
       alert('매장 정보가 저장되었습니다.');
-      setRestaurant(formData);
+      setRestaurant(saveData);
       setIsEditing(false);
       loadRestaurantInfo(); // 최신 정보 다시 로드
     } catch (error) {
@@ -372,25 +441,74 @@ const OwnerDashboard = () => {
     setIsEditing(false);
   };
 
-  const handleImageUpload = (e, imageType) => {
+  const handleImageUpload = async (e, imageType) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    if (!file) return;
+
+    // 파일 크기 검사 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 파일 타입 검사
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    try {
+      setUploadingImages(prev => ({ ...prev, [imageType]: true }));
+      const response = await imageUploadAPI.uploadRestaurantImage(file, imageType);
+      
+      if (response.data.success) {
+        // 절대 URL로 변환
+        const imageUrl = response.data.fileUrl.startsWith('http') 
+          ? response.data.fileUrl 
+          : `http://localhost:8080${response.data.fileUrl}`;
+        
         setImages(prev => ({
           ...prev,
-          [imageType]: reader.result
+          [imageType]: imageUrl
         }));
-      };
-      reader.readAsDataURL(file);
+        alert('이미지가 성공적으로 업로드되었습니다.');
+      } else {
+        alert(response.data.message || '이미지 업로드에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      alert('이미지 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setUploadingImages(prev => ({ ...prev, [imageType]: false }));
     }
   };
 
-  const removeImage = (imageType) => {
-    setImages(prev => ({
-      ...prev,
-      [imageType]: null
-    }));
+  const removeImage = async (imageType) => {
+    const currentImageUrl = images[imageType];
+    if (!currentImageUrl) return;
+
+    try {
+      // 서버에서 이미지 삭제
+      const response = await imageUploadAPI.deleteImage(currentImageUrl);
+      
+      if (response.data.success) {
+        setImages(prev => ({
+          ...prev,
+          [imageType]: null
+        }));
+        alert('이미지가 삭제되었습니다.');
+      } else {
+        alert(response.data.message || '이미지 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Image delete error:', error);
+      // 서버 삭제 실패해도 로컬에서 제거
+      setImages(prev => ({
+        ...prev,
+        [imageType]: null
+      }));
+      alert('이미지가 삭제되었습니다.');
+    }
   };
 
   // 메뉴 추가/수정
@@ -404,25 +522,191 @@ const OwnerDashboard = () => {
     setShowMenuModal(true);
   };
 
-  const handleDeleteMenu = (menuId) => {
+  const handleDeleteMenu = async (menuId) => {
     if (window.confirm('정말 이 메뉴를 삭제하시겠습니까?')) {
-      setMenuItems(menuItems.filter(m => m.id !== menuId));
+      try {
+        await axios.delete(`http://localhost:8080/api/menus/${menuId}`);
+        setMenuItems(menuItems.filter(m => m.menuId !== menuId));
       alert('메뉴가 삭제되었습니다.');
+      } catch (error) {
+        console.error('메뉴 삭제 실패:', error);
+        alert('메뉴 삭제에 실패했습니다.');
+      }
     }
   };
 
-  const handleSaveMenu = (menuData) => {
+  const handleMoveMenuOrder = async (menu, categoryMenus, direction) => {
+    const currentIndex = categoryMenus.indexOf(menu);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (newIndex < 0 || newIndex >= categoryMenus.length) return;
+
+    // 카테고리 내에서 순서 변경
+    const newCategoryMenus = [...categoryMenus];
+    [newCategoryMenus[currentIndex], newCategoryMenus[newIndex]] = [newCategoryMenus[newIndex], newCategoryMenus[currentIndex]];
+
+    // 백엔드에 순서 저장
+    try {
+      const category = menu.category || '분류 없음';
+      
+      for (let idx = 0; idx < newCategoryMenus.length; idx++) {
+        const m = newCategoryMenus[idx];
+        await axios.put(`http://localhost:8080/api/menus/${m.menuId}`, {
+          ...m,
+          sortOrder: idx
+        });
+      }
+      
+      // 저장 후 전체 메뉴 다시 로드
+      await loadMenus();
+    } catch (error) {
+      console.error('순서 저장 실패:', error);
+      alert('메뉴 순서 변경에 실패했습니다.');
+    }
+  };
+
+  const handleSaveMenu = async (menuData) => {
+    try {
+      // 기존 메뉴가 있으면 그 sortOrder를 사용하고, 없으면 현재 메뉴 개수를 사용
+      const maxSortOrder = Math.max(...menuItems.map(m => m.sortOrder || 0), 0);
+      
+      const menuPayload = {
+        storeId: restaurant?.id,
+        name: menuData.name,
+        description: menuData.description,
+        price: parseInt(menuData.price),
+        imageUrl: menuData.image,
+        isAvailable: menuData.available,
+        isPopular: menuData.isPopular || false,
+        isRecommended: menuData.isRecommended || false,
+        category: menuData.category || '',
+        sortOrder: editingItem ? editingItem.sortOrder : maxSortOrder + 1
+      };
+
+      let response;
     if (editingItem) {
       // 수정
-      setMenuItems(menuItems.map(m => m.id === editingItem.id ? { ...menuData, id: editingItem.id } : m));
+        response = await axios.put(`http://localhost:8080/api/menus/${editingItem.menuId}`, menuPayload);
+        setMenuItems(menuItems.map(m => m.menuId === editingItem.menuId ? response.data : m));
       alert('메뉴가 수정되었습니다.');
     } else {
       // 추가
-      setMenuItems([...menuItems, { ...menuData, id: Date.now() }]);
+        response = await axios.post('http://localhost:8080/api/menus', menuPayload);
+        setMenuItems([...menuItems, response.data]);
       alert('메뉴가 추가되었습니다.');
     }
     setShowMenuModal(false);
     setEditingItem(null);
+    } catch (error) {
+      console.error('메뉴 저장 실패:', error);
+      alert('메뉴 저장에 실패했습니다.');
+    }
+  };
+
+  // 메뉴 목록 로드
+  const loadMenus = async () => {
+    if (!restaurant?.id) return;
+    try {
+      const response = await axios.get(`http://localhost:8080/api/menus?storeId=${restaurant.id}`);
+      // sortOrder로 정렬하고, 없으면 메뉴 ID로 정렬
+      const sortedMenus = response.data.sort((a, b) => {
+        const orderA = a.sortOrder !== null && a.sortOrder !== undefined ? a.sortOrder : 999;
+        const orderB = b.sortOrder !== null && b.sortOrder !== undefined ? b.sortOrder : 999;
+        return orderA - orderB;
+      });
+      setMenuItems(sortedMenus);
+      
+      // 카테고리 목록 추출
+      const categories = [...new Set(sortedMenus.map(m => m.category || '분류 없음'))];
+      if (categoryOrder.length === 0) {
+        setCategoryOrder(categories);
+      }
+    } catch (error) {
+      console.error('메뉴 로드 실패:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadMenus();
+  }, [restaurant?.id]);
+
+  // 세부사항 저장 (이제 handleSave에서 처리되므로 사용하지 않음)
+  const handleSaveDetails = async () => {
+    if (!restaurant?.id) {
+      alert('매장 정보를 불러올 수 없습니다.');
+      return;
+    }
+    
+    try {
+      const descriptionEl = document.getElementById('description');
+      const parkingInfoEl = document.getElementById('parkingInfo');
+      const transportationEl = document.getElementById('transportation');
+      const specialNotesEl = document.getElementById('specialNotes');
+      
+      const detailsData = {
+        id: restaurant.id,
+        description: descriptionEl ? descriptionEl.value : '',
+        parkingInfo: parkingInfoEl ? parkingInfoEl.value : '',
+        transportation: transportationEl ? transportationEl.value : '',
+        specialNotes: specialNotesEl ? specialNotesEl.value : '',
+        cardPayment: document.getElementById('cardPayment')?.checked ? 'Y' : 'N',
+        cashPayment: document.getElementById('cashPayment')?.checked ? 'Y' : 'N',
+        mobilePayment: document.getElementById('mobilePayment')?.checked ? 'Y' : 'N',
+        accountTransfer: document.getElementById('accountTransfer')?.checked ? 'Y' : 'N',
+        restaurantName: restaurant.restaurantName,
+        branchName: restaurant.branchName,
+        regionName: restaurant.regionName,
+        mainImage: restaurant.mainImage,
+        restaurantPhoto1: restaurant.restaurantPhoto1,
+        restaurantPhoto2: restaurant.restaurantPhoto2,
+        restaurantPhoto3: restaurant.restaurantPhoto3,
+        restaurantPhoto4: restaurant.restaurantPhoto4,
+        restaurantPhoto5: restaurant.restaurantPhoto5
+      };
+      
+      await axios.put(`http://localhost:8080/api/restaurants/${restaurant.id}`, detailsData);
+      
+      loadRestaurantInfo();
+      
+      alert('세부사항이 저장되었습니다.');
+    } catch (error) {
+      console.error('세부사항 저장 실패:', error);
+      alert('세부사항 저장에 실패했습니다.');
+    }
+  };
+
+  // 카테고리 순서 변경
+  const handleMoveCategory = (category, direction) => {
+    const currentIndex = categoryOrder.indexOf(category);
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (newIndex < 0 || newIndex >= categoryOrder.length) return;
+
+    const newOrder = [...categoryOrder];
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+    setCategoryOrder(newOrder);
+  };
+
+  // 카테고리별로 정렬된 메뉴 반환
+  const getOrderedMenuGroups = () => {
+    const groupedMenus = menuItems.reduce((acc, menu) => {
+      const category = menu.category || '분류 없음';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(menu);
+      return acc;
+    }, {});
+
+    // 카테고리 순서대로 정렬
+    const orderedCategories = categoryOrder.length > 0 
+      ? categoryOrder.filter(cat => groupedMenus[cat])
+      : Object.keys(groupedMenus);
+
+    return orderedCategories.map(category => ({
+      category,
+      menus: groupedMenus[category]
+    }));
   };
 
   // 이벤트 추가/수정
@@ -943,6 +1227,85 @@ const OwnerDashboard = () => {
                     <p>{restaurant.delivery === 'Y' ? '가능' : '불가능'}</p>
                   )}
                 </div>
+
+                <div className="info-item">
+                  <label>아이존</label>
+                  {isEditing ? (
+                    <select
+                      name="kidsZone"
+                      value={formData.kidsZone || 'N'}
+                      onChange={handleChange}
+                      className="common-select"
+                    >
+                      <option value="Y">가능</option>
+                      <option value="N">불가능</option>
+                    </select>
+                  ) : (
+                    <p>{restaurant.kidsZone === 'Y' ? '가능' : '불가능'}</p>
+                  )}
+                </div>
+
+                <div className="info-item">
+                  <label>다국어 메뉴</label>
+                  {isEditing ? (
+                    <select
+                      name="multilingualMenu"
+                      value={formData.multilingualMenu || 'N'}
+                      onChange={handleChange}
+                      className="common-select"
+                    >
+                      <option value="Y">제공</option>
+                      <option value="N">미제공</option>
+                    </select>
+                  ) : (
+                    <p>{restaurant.multilingualMenu === 'Y' ? '제공' : '미제공'}</p>
+                  )}
+                </div>
+
+                <div className="info-item full-width">
+                  <label>해시태그</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="hashtags"
+                      value={formData.hashtags || ''}
+                      onChange={handleChange}
+                      placeholder="#해시태그 #입력"
+                    />
+                  ) : (
+                    <p>{restaurant.hashtags || '-'}</p>
+                  )}
+                </div>
+
+                <div className="info-item full-width">
+                  <label>홈페이지</label>
+                  {isEditing ? (
+                    <input
+                      type="url"
+                      name="homepageUrl"
+                      value={formData.homepageUrl || ''}
+                      onChange={handleChange}
+                      placeholder="https://example.com"
+                    />
+                  ) : (
+                    <p>{restaurant.homepageUrl || '-'}</p>
+                  )}
+                </div>
+
+                <div className="info-item full-width">
+                  <label>지역</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="regionName"
+                      value={formData.regionName || ''}
+                      onChange={handleChange}
+                      placeholder="서울, 부산 등"
+                    />
+                  ) : (
+                    <p>{restaurant.regionName || '-'}</p>
+                  )}
+                </div>
               </div>
 
               {/* 이미지 업로드 섹션 */}
@@ -954,11 +1317,19 @@ const OwnerDashboard = () => {
                     <label>메인 이미지</label>
                     {images.main ? (
                       <div className="image-preview">
-                        <img src={images.main} alt="메인" />
+                        <img 
+                          src={images.main} 
+                          alt="메인" 
+                          onError={(e) => {
+                            console.error('이미지 로딩 실패:', images.main);
+                            e.target.style.display = 'none';
+                          }}
+                        />
                         <button 
                           className="remove-image-btn" 
                           onClick={() => removeImage('main')}
                           type="button"
+                          disabled={uploadingImages.main}
                         >
                           ✕
                         </button>
@@ -970,26 +1341,44 @@ const OwnerDashboard = () => {
                           accept="image/*" 
                           onChange={(e) => handleImageUpload(e, 'main')}
                           style={{display: 'none'}}
+                          disabled={uploadingImages.main}
                         />
                         <div className="upload-placeholder">
-                          <span className="upload-icon">📷</span>
-                          <span>메인 이미지 업로드</span>
+                          {uploadingImages.main ? (
+                            <>
+                              <span className="upload-icon">⏳</span>
+                              <span>업로드 중...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="upload-icon">📷</span>
+                              <span>메인 이미지 업로드</span>
+                            </>
+                          )}
                         </div>
                       </label>
                     )}
                   </div>
 
-                  {/* 메뉴 이미지들 */}
-                  {['menu1', 'menu2', 'menu3'].map((menuKey, idx) => (
-                    <div key={menuKey} className="image-upload-item">
-                      <label>메뉴 이미지 {idx + 1}</label>
-                      {images[menuKey] ? (
+                  {/* 매장 사진들 */}
+                  {['photo1', 'photo2', 'photo3', 'photo4', 'photo5'].map((photoKey, idx) => (
+                    <div key={photoKey} className="image-upload-item">
+                      <label>매장 사진 {idx + 1}</label>
+                      {images[photoKey] ? (
                         <div className="image-preview">
-                          <img src={images[menuKey]} alt={`메뉴 ${idx + 1}`} />
+                          <img 
+                            src={images[photoKey]} 
+                            alt={`매장 사진 ${idx + 1}`} 
+                            onError={(e) => {
+                              console.error('이미지 로딩 실패:', images[photoKey]);
+                              e.target.style.display = 'none';
+                            }}
+                          />
                           <button 
                             className="remove-image-btn" 
-                            onClick={() => removeImage(menuKey)}
+                            onClick={() => removeImage(photoKey)}
                             type="button"
+                            disabled={uploadingImages[photoKey]}
                           >
                             ✕
                           </button>
@@ -999,12 +1388,22 @@ const OwnerDashboard = () => {
                           <input 
                             type="file" 
                             accept="image/*" 
-                            onChange={(e) => handleImageUpload(e, menuKey)}
+                            onChange={(e) => handleImageUpload(e, photoKey)}
                             style={{display: 'none'}}
+                            disabled={uploadingImages[photoKey]}
                           />
                           <div className="upload-placeholder">
-                            <span className="upload-icon">🍽️</span>
-                            <span>메뉴 사진</span>
+                            {uploadingImages[photoKey] ? (
+                              <>
+                                <span className="upload-icon">⏳</span>
+                                <span>업로드 중...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="upload-icon">📷</span>
+                                <span>매장 사진 업로드</span>
+                              </>
+                            )}
                   </div>
                         </label>
                       )}
@@ -1028,20 +1427,79 @@ const OwnerDashboard = () => {
                   </div>
 
                   {/* 이미지 갤러리 */}
-                  {(images.main || images.menu1 || images.menu2 || images.menu3) && (
+                  {(() => {
+                    // 업로드된 이미지들을 배열로 수집
+                    const uploadedImages = [
+                      images.main,
+                      images.photo1,
+                      images.photo2,
+                      images.photo3,
+                      images.photo4,
+                      images.photo5
+                    ].filter(Boolean); // null 값 제거
+                    
+                    return uploadedImages.length > 0 ? (
                     <div className="preview-image-gallery">
-                      {images.main && (
-                        <div className="preview-main-image">
-                          <img src={images.main} alt="메인" />
+                        {/* 메인 이미지 슬라이더 */}
+                        <div className="image-slider-container">
+                          <div className="image-slider-main">
+                            <img 
+                              src={uploadedImages[currentImageIndex] || uploadedImages[0]} 
+                              alt="매장 이미지" 
+                              className="slider-main-image"
+                            />
+                            {/* 이전/다음 버튼 */}
+                            {uploadedImages.length > 1 && (
+                              <>
+                                <button 
+                                  className="slider-btn slider-btn-prev"
+                                  onClick={() => setCurrentImageIndex((prev) => 
+                                    prev > 0 ? prev - 1 : uploadedImages.length - 1
+                                  )}
+                                >
+                                  ‹
+                                </button>
+                                <button 
+                                  className="slider-btn slider-btn-next"
+                                  onClick={() => setCurrentImageIndex((prev) => 
+                                    prev < uploadedImages.length - 1 ? prev + 1 : 0
+                                  )}
+                                >
+                                  ›
+                                </button>
+                              </>
+                            )}
+                            {/* 이미지 인디케이터 */}
+                            {uploadedImages.length > 1 && (
+                              <div className="slider-indicators">
+                                {uploadedImages.map((_, index) => (
+                                  <span 
+                                    key={index}
+                                    className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                  />
+                                ))}
                         </div>
                       )}
-                      <div className="preview-menu-images">
-                        {images.menu1 && <img src={images.menu1} alt="메뉴1" />}
-                        {images.menu2 && <img src={images.menu2} alt="메뉴2" />}
-                        {images.menu3 && <img src={images.menu3} alt="메뉴3" />}
                       </div>
+                          {/* 썸네일 목록 */}
+                          {uploadedImages.length > 1 && (
+                            <div className="slider-thumbnails">
+                              {uploadedImages.map((img, index) => (
+                                <img 
+                                  key={index}
+                                  src={img} 
+                                  alt={`썸네일 ${index + 1}`}
+                                  className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                                  onClick={() => setCurrentImageIndex(index)}
+                                />
+                              ))}
                     </div>
                   )}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
 
                   <div className="preview-modal-body">
                     <div className="preview-detail-section">
@@ -1103,33 +1561,84 @@ const OwnerDashboard = () => {
                       <p>등록된 메뉴가 없습니다.</p>
                       <button className="add-first-menu-btn" onClick={handleAddMenu}>첫 메뉴 등록하기</button>
                     </div>
-                  ) : (
-                    menuItems.map((menu) => (
-                      <div key={menu.id} className="menu-card">
-                        <div className="menu-card-image">
-                          {menu.image ? (
-                            <img src={menu.image} alt={menu.name} />
-                          ) : (
-                            <div className="menu-placeholder">🍽️</div>
-                          )}
-                        </div>
-                        <div className="menu-card-content">
-                          <h3>{menu.name}</h3>
-                          <p className="menu-description">{menu.description}</p>
-                          <div className="menu-info">
-                            <span className="menu-price">₩{menu.price?.toLocaleString()}</span>
-                            <span className={`menu-status ${menu.available ? 'available' : 'unavailable'}`}>
-                              {menu.available ? '판매중' : '품절'}
-                            </span>
+                  ) : (() => {
+                    // 카테고리별로 정렬된 메뉴 그룹 가져오기
+                    const orderedMenus = getOrderedMenuGroups();
+
+                    return orderedMenus.map(({ category, menus }) => (
+                      <div key={category} className="menu-category-group">
+                        <div className="menu-category-header">
+                          <div className="category-title-wrapper">
+                            <h3>{category}</h3>
+                            <span className="menu-count">({menus.length})</span>
+                          </div>
+                          <div className="category-order-buttons">
+                            <button 
+                              className="order-btn order-up" 
+                              onClick={() => handleMoveCategory(category, 'up')}
+                              disabled={orderedMenus.indexOf(orderedMenus.find(o => o.category === category)) === 0}
+                              title="위로"
+                            >
+                              ↑
+                            </button>
+                            <button 
+                              className="order-btn order-down" 
+                              onClick={() => handleMoveCategory(category, 'down')}
+                              disabled={orderedMenus.indexOf(orderedMenus.find(o => o.category === category)) === orderedMenus.length - 1}
+                              title="아래로"
+                            >
+                              ↓
+                            </button>
                           </div>
                         </div>
-                        <div className="menu-card-actions">
-                          <button className="edit-menu-btn" onClick={() => handleEditMenu(menu)}>수정</button>
-                          <button className="delete-menu-btn" onClick={() => handleDeleteMenu(menu.id)}>삭제</button>
-                        </div>
+                        {menus.map((menu) => (
+                          <div key={menu.menuId} className="menu-list-item">
+                            <div className="menu-list-image">
+                              {menu.imageUrl ? (
+                                <img src={menu.imageUrl.startsWith('http') ? menu.imageUrl : `http://localhost:8080${menu.imageUrl}`} alt={menu.name} />
+                              ) : (
+                                <div className="menu-placeholder">🍽️</div>
+                              )}
+                            </div>
+                            <div className="menu-list-content">
+                              <div className="menu-list-name">
+                                <h3>{menu.name}</h3>
+                                <span className={`menu-status ${menu.isAvailable ? 'available' : 'unavailable'}`}>
+                                  {menu.isAvailable ? '판매중' : '품절'}
+                                </span>
+                              </div>
+                              {menu.description && (
+                                <p className="menu-list-description">{menu.description}</p>
+                              )}
+                              <div className="menu-list-price">₩{menu.price?.toLocaleString()}</div>
+                            </div>
+                            <div className="menu-list-actions">
+                              <div className="menu-order-buttons">
+                                <button 
+                                  className="order-btn order-up" 
+                                  onClick={() => handleMoveMenuOrder(menu, menus, 'up')}
+                                  disabled={menus.indexOf(menu) === 0}
+                                  title="위로"
+                                >
+                                  ↑
+                                </button>
+                                <button 
+                                  className="order-btn order-down" 
+                                  onClick={() => handleMoveMenuOrder(menu, menus, 'down')}
+                                  disabled={menus.indexOf(menu) === menus.length - 1}
+                                  title="아래로"
+                                >
+                                  ↓
+                                </button>
+                              </div>
+                              <button className="edit-menu-btn" onClick={() => handleEditMenu(menu)}>수정</button>
+                              <button className="delete-menu-btn" onClick={() => handleDeleteMenu(menu.menuId)}>삭제</button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))
-                  )}
+                    ));
+                  })()}
                 </div>
               </div>
 
@@ -1141,26 +1650,54 @@ const OwnerDashboard = () => {
                     <div className="empty-preview">
                       <p>등록된 메뉴가 없습니다.</p>
                     </div>
-                  ) : (
-                    <div className="preview-menu-grid">
-                      {menuItems.map((menu) => (
-                        <div key={menu.id} className="preview-menu-item">
-                          <div className="preview-menu-image">
-                            {menu.image ? (
-                              <img src={menu.image} alt={menu.name} />
-                            ) : (
-                              <div className="preview-menu-placeholder">🍽️</div>
-                            )}
+                  ) : (() => {
+                    // 카테고리별로 그룹화
+                    const groupedMenus = menuItems.reduce((acc, menu) => {
+                      const category = menu.category || '분류 없음';
+                      if (!acc[category]) {
+                        acc[category] = [];
+                      }
+                      acc[category].push(menu);
+                      return acc;
+                    }, {});
+
+                    return (
+                      <div className="preview-menu-grid">
+                        {Object.entries(groupedMenus).map(([category, menus]) => (
+                          <div key={category} className="preview-category-group">
+                            <div className="preview-category-header">
+                              <h3>{category}</h3>
+                            </div>
+                            {menus.map((menu) => (
+                              <div key={menu.menuId} className="preview-menu-list-item">
+                                <div className="preview-menu-image">
+                                  {menu.imageUrl ? (
+                                    <img 
+                                      src={menu.imageUrl.startsWith('http') ? menu.imageUrl : `http://localhost:8080${menu.imageUrl}`} 
+                                      alt={menu.name} 
+                                      onError={(e) => {
+                                        console.error('이미지 로딩 실패:', menu.imageUrl);
+                                        e.target.style.display = 'none';
+                                        e.target.nextElementSibling.style.display = 'flex';
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className="preview-menu-placeholder" style={{ display: menu.imageUrl ? 'none' : 'flex' }}>🍽️</div>
+                                </div>
+                                <div className="preview-menu-info">
+                                  <div className="preview-menu-header">
+                                    <h4>{menu.name}</h4>
+                                    <div className="preview-menu-price">₩{menu.price?.toLocaleString()}</div>
+                                  </div>
+                                  {menu.description && <p>{menu.description}</p>}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="preview-menu-info">
-                            <h4>{menu.name}</h4>
-                            <p>{menu.description}</p>
-                            <div className="preview-menu-price">₩{menu.price?.toLocaleString()}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1177,6 +1714,7 @@ const OwnerDashboard = () => {
                   <div className="detail-group">
                     <label>매장 소개</label>
                     <textarea 
+                      id="description"
                       placeholder="매장을 소개하는 내용을 작성해주세요"
                       rows="5"
                       defaultValue={restaurant.description || ''}
@@ -1186,6 +1724,7 @@ const OwnerDashboard = () => {
                   <div className="detail-group">
                     <label>주차 정보</label>
                     <textarea 
+                      id="parkingInfo"
                       placeholder="주차 관련 상세 정보 (예: 건물 지하 1층, 2시간 무료)"
                       rows="3"
                       defaultValue={restaurant.parkingInfo || ''}
@@ -1195,6 +1734,7 @@ const OwnerDashboard = () => {
                   <div className="detail-group">
                     <label>교통편</label>
                     <textarea 
+                      id="transportation"
                       placeholder="대중교통 이용 방법 (예: 2호선 강남역 3번 출구 도보 5분)"
                       rows="3"
                       defaultValue={restaurant.transportation || ''}
@@ -1204,6 +1744,7 @@ const OwnerDashboard = () => {
                   <div className="detail-group">
                     <label>특별 사항</label>
                     <textarea 
+                      id="specialNotes"
                       placeholder="예약 시 유의사항, 특별 메뉴, 단체 예약 가능 여부 등"
                       rows="4"
                       defaultValue={restaurant.specialNotes || ''}
@@ -1213,15 +1754,20 @@ const OwnerDashboard = () => {
                   <div className="detail-group">
                     <label>결제 방법</label>
                     <div className="checkbox-group">
-                      <label><input type="checkbox" defaultChecked /> 현금</label>
-                      <label><input type="checkbox" defaultChecked /> 카드</label>
-                      <label><input type="checkbox" /> 계좌이체</label>
-                      <label><input type="checkbox" /> 간편결제</label>
+                      <label><input type="checkbox" id="cardPayment" defaultChecked /> 카드</label>
+                      <label><input type="checkbox" id="cashPayment" defaultChecked /> 현금</label>
+                      <label><input type="checkbox" id="mobilePayment" /> 간편결제</label>
+                      <label><input type="checkbox" id="accountTransfer" /> 계좌이체</label>
                     </div>
                   </div>
 
                   <div className="detail-actions">
-                    <button className="save-detail-btn">저장</button>
+                    <button 
+                      className="save-detail-btn" 
+                      onClick={handleSaveDetails}
+                    >
+                      저장
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1237,22 +1783,22 @@ const OwnerDashboard = () => {
                     </div>
 
                     <div className="preview-details-section">
-                      <h4>🅿️ 주차 정보</h4>
+                      <h4> 주차 정보</h4>
                       <p>{restaurant.parkingInfo || '주차 정보가 등록되지 않았습니다.'}</p>
                     </div>
 
                     <div className="preview-details-section">
-                      <h4>🚇 교통편</h4>
+                      <h4>교통편</h4>
                       <p>{restaurant.transportation || '교통편 정보가 등록되지 않았습니다.'}</p>
                     </div>
 
                     <div className="preview-details-section">
-                      <h4>📌 특별 사항</h4>
+                      <h4>특별 사항</h4>
                       <p>{restaurant.specialNotes || '특별 사항이 등록되지 않았습니다.'}</p>
                     </div>
 
                     <div className="preview-details-section">
-                      <h4>💳 결제 방법</h4>
+                      <h4> 결제 방법</h4>
                       <div className="preview-payment-methods">
                         <span className="payment-badge">현금</span>
                         <span className="payment-badge">카드</span>
@@ -2320,8 +2866,53 @@ const MenuModal = ({ editingItem, onClose, onSave }) => {
     description: '',
     price: '',
     available: true,
-    image: null
+    image: null,
+    imagePreview: null,
+    category: ''
   });
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('이미지 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append('file', file);
+      formDataObj.append('type', 'menu');
+
+      const response = await axios.post('http://localhost:8080/api/upload', formDataObj, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        const imageUrl = response.data.fileUrl;
+        setFormData({
+          ...formData,
+          image: imageUrl,
+          imagePreview: imageUrl
+        });
+      }
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      alert('이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -2367,6 +2958,33 @@ const MenuModal = ({ editingItem, onClose, onSave }) => {
               />
             </div>
             <div className="form-group">
+              <label>카테고리</label>
+              <input
+                type="text"
+                value={formData.category || ''}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                placeholder="예: 메인, 사이드, 음료 등"
+              />
+            </div>
+            <div className="form-group">
+              <label>메뉴 사진</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                disabled={uploading}
+              />
+              {formData.imagePreview && (
+                <div className="image-preview" style={{ marginTop: '12px', width: '100%', maxWidth: '200px' }}>
+                  <img 
+                    src={formData.imagePreview.startsWith('http') ? formData.imagePreview : `http://localhost:8080${formData.imagePreview}`} 
+                    alt="메뉴 미리보기" 
+                    style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="form-group">
               <label>
                 <input
                   type="checkbox"
@@ -2379,7 +2997,7 @@ const MenuModal = ({ editingItem, onClose, onSave }) => {
           </div>
           <div className="modal-footer-custom">
             <button type="button" className="btn-cancel" onClick={onClose}>취소</button>
-            <button type="submit" className="btn-submit">저장</button>
+            <button type="submit" className="btn-submit" disabled={uploading}>저장</button>
           </div>
         </form>
       </div>

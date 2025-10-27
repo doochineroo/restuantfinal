@@ -66,3 +66,30 @@ export const adminAPI = {
   updateUserStatus: (userId, status) => axios.put(`${API_BASE_URL}/admin/users/${userId}/status`, { status }),
   deleteUser: (userId) => axios.delete(`${API_BASE_URL}/admin/users/${userId}`),
 };
+
+// Image Upload API
+export const imageUploadAPI = {
+  uploadRestaurantImage: (file, type) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    return axios.post('http://localhost:8080/api/upload/restaurant-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  uploadMenuImage: (file, menuId) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('menuId', menuId);
+    return axios.post('http://localhost:8080/api/upload/menu-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  deleteImage: (fileUrl) => axios.delete('http://localhost:8080/api/upload/image', {
+    params: { fileUrl }
+  }),
+};

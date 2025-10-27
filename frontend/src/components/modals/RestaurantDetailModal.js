@@ -4,7 +4,7 @@ import axios from 'axios';
 import './RestaurantDetailModal.css';
 
 const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) => {
-  const [activeTab, setActiveTab] = useState('info'); // 'info', 'menu', 'event', 'additional', 'review'
+  const [activeTab, setActiveTab] = useState('info'); // 'info', 'menu', 'event', 'additional', 'review' 
   const [menus, setMenus] = useState([]);
   const [events, setEvents] = useState([]);
   const [additionalInfo, setAdditionalInfo] = useState([]);
@@ -12,6 +12,17 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // 이미지 URL을 절대 URL로 변환하는 함수
+  const convertToAbsoluteUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads/')) {
+      return `http://localhost:8080${url}`;
+    }
+    return url;
+  };
 
   const handleReservation = () => {
     onReservation(restaurant);
@@ -113,6 +124,16 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
 
   // 조건부 렌더링을 return 문에서 처리
   if (!isOpen || !restaurant) return null;
+  
+  // 매장 사진들 수집 (restaurant가 확실히 있을 때만)
+  const restaurantPhotos = [
+    convertToAbsoluteUrl(restaurant.mainImage),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto1),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto2),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto3),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto4),
+    convertToAbsoluteUrl(restaurant.restaurantPhoto5)
+  ].filter(Boolean); // null 값 제거
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
@@ -140,16 +161,16 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
             메뉴
           </button>
           <button 
+            className={`modal-tab ${activeTab === 'additional' ? 'active' : ''}`}
+            onClick={() => setActiveTab('additional')}
+          >
+            세부사항
+          </button>
+          <button 
             className={`modal-tab ${activeTab === 'event' ? 'active' : ''}`}
             onClick={() => setActiveTab('event')}
           >
             이벤트
-          </button>
-          <button 
-            className={`modal-tab ${activeTab === 'additional' ? 'active' : ''}`}
-            onClick={() => setActiveTab('additional')}
-          >
-            추가정보
           </button>
           <button 
             className={`modal-tab ${activeTab === 'review' ? 'active' : ''}`}
@@ -163,6 +184,63 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
           {/* 상세정보 탭 */}
           {activeTab === 'info' && (
             <div className="tab-content">
+              {/* 매장 사진 슬라이더 */}
+              {restaurantPhotos.length > 0 && (
+                <div className="restaurant-photos-section">
+                  <h4>매장 사진</h4>
+                  <div className="restaurant-image-slider">
+                    <div className="slider-main-image">
+                      <img 
+                        src={restaurantPhotos[currentImageIndex]} 
+                        alt="매장 사진" 
+                      />
+                      {restaurantPhotos.length > 1 && (
+                        <>
+                          <button 
+                            className="slider-btn-prev"
+                            onClick={() => setCurrentImageIndex((prev) => 
+                              prev > 0 ? prev - 1 : restaurantPhotos.length - 1
+                            )}
+                          >
+                            ‹
+                          </button>
+                          <button 
+                            className="slider-btn-next"
+                            onClick={() => setCurrentImageIndex((prev) => 
+                              prev < restaurantPhotos.length - 1 ? prev + 1 : 0
+                            )}
+                          >
+                            ›
+                          </button>
+                          <div className="slider-indicators">
+                            {restaurantPhotos.map((_, index) => (
+                              <span 
+                                key={index}
+                                className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                                onClick={() => setCurrentImageIndex(index)}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {restaurantPhotos.length > 1 && (
+                      <div className="slider-thumbnails">
+                        {restaurantPhotos.map((photo, index) => (
+                          <img 
+                            key={index}
+                            src={photo} 
+                            alt={`썸네일 ${index + 1}`}
+                            className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                            onClick={() => setCurrentImageIndex(index)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div className="detail-section">
                 <h4>기본 정보</h4>
                 <p><strong>주소:</strong> {restaurant.roadAddress || '정보없음'}</p>
@@ -244,13 +322,47 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                   <button onClick={loadMenus} className="retry-btn">다시 시도</button>
                 </div>
               ) : menus.length > 0 ? (
-                <div className="menu-grid">
-                  {menus.map(menu => (
-                    <div key={menu.menuId} className="menu-item">
-                      <div className="menu-image">
+                (() => {
+                  // 카테고리별로 그룹화
+                  const groupedMenus = menus.reduce((acc, menu) => {
+                    const category = menu.category || '분류 없음';
+                    if (!acc[category]) {
+                      acc[category] = [];
+                    }
+                    acc[category].push(menu);
+                    return acc;
+                  }, {});
+
+                  // 카테고리를 정렬 (메인 -> 사이드 -> 음료 -> 디저트 -> 기타 -> 분류 없음 순서)
+                  const categoryOrder = ['메인', '사이드', '음료', '디저트', '기타', '분류 없음'];
+                  const sortedCategories = Object.keys(groupedMenus).sort((a, b) => {
+                    const indexA = categoryOrder.indexOf(a);
+                    const indexB = categoryOrder.indexOf(b);
+                    
+                    // 카테고리 순서가 정의되어 있으면 그 순서대로
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    
+                    // 둘 다 정의되지 않았으면 알파벳 순서
+                    return a.localeCompare(b);
+                  });
+
+                  return (
+                    <div className="menu-list-modal">
+                      {sortedCategories.map((category) => {
+                        const categoryMenus = groupedMenus[category];
+                        return (
+                        <div key={category} className="menu-category-section">
+                          <div className="menu-category-header">
+                            <h3>{category}</h3>
+                          </div>
+                          {categoryMenus.map(menu => (
+                            <div key={menu.menuId} className="menu-list-modal-item">
+                      <div className="menu-list-modal-image">
                         <img 
                           src={menu.imageUrl ? 
-                            `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(menu.imageUrl)}` : 
+                            `http://localhost:8080${menu.imageUrl}` : 
                             '/image-placeholder.svg'
                           } 
                           alt={menu.name}
@@ -258,23 +370,33 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                             e.target.src = '/image-placeholder.svg';
                           }}
                         />
-                        {menu.isPopular && <span className="popular-badge">인기</span>}
-                        {menu.isRecommended && <span className="recommended-badge">추천</span>}
+                        {(menu.isPopular || menu.isRecommended) && (
+                          <div className="menu-badges">
+                            {menu.isPopular && <span className="popular-badge">인기</span>}
+                            {menu.isRecommended && <span className="recommended-badge">추천</span>}
+                          </div>
+                        )}
                       </div>
-                      <div className="menu-info">
-                        <h4 className="menu-name">{menu.name}</h4>
-                        <p className="menu-description">{menu.description}</p>
-                        <div className="menu-details">
+                      <div className="menu-list-modal-content">
+                        <div className="menu-list-modal-header">
+                          <h4 className="menu-name">{menu.name}</h4>
                           <span className="menu-price">{menu.price ? `${menu.price.toLocaleString()}원` : '가격 문의'}</span>
-                          {menu.category && <span className="menu-category">{menu.category}</span>}
                         </div>
+                        {menu.description && (
+                          <p className="menu-description">{menu.description}</p>
+                        )}
                         {menu.allergenInfo && (
                           <p className="allergen-info">⚠️ {menu.allergenInfo}</p>
                         )}
                       </div>
                     </div>
-                  ))}
-                </div>
+                          ))}
+                        </div>
+                          );
+                        })}
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="no-data">
                   <p>메뉴 정보가 없습니다.</p>
@@ -315,22 +437,12 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                       </div>
                       <div className="event-info">
                         <h4 className="event-name">{event.eventName}</h4>
-                        <p className="event-description">{event.eventDescription}</p>
-                        <div className="event-details">
-                          <span className="event-type">{event.eventType}</span>
-                          {event.discountRate && (
-                            <span className="discount-rate">{event.discountRate}% 할인</span>
-                          )}
-                          {event.discountAmount && (
-                            <span className="discount-amount">{event.discountAmount.toLocaleString()}원 할인</span>
-                          )}
-                        </div>
-                        <div className="event-period">
-                          <span>기간: {new Date(event.startDate).toLocaleDateString()} ~ {new Date(event.endDate).toLocaleDateString()}</span>
-                        </div>
-                        {event.termsAndConditions && (
-                          <p className="event-terms">📋 {event.termsAndConditions}</p>
+                        {event.eventDescription && (
+                          <p className="event-description">{event.eventDescription}</p>
                         )}
+                        <div className="event-period">
+                          <span>📅 {new Date(event.startDate).toLocaleDateString()} ~ {new Date(event.endDate).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -343,50 +455,54 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
             </div>
           )}
 
-          {/* 추가정보 탭 */}
+          {/* 세부사항 탭 */}
           {activeTab === 'additional' && (
             <div className="tab-content additional-tab-content">
-              {loading ? (
-                <div className="loading-container">
-                  <div className="spinner"></div>
-                  <p>추가 정보를 불러오는 중...</p>
+              <div className="details-sections">
+                {restaurant.description && (
+                  <div className="detail-section">
+                    <h4>매장 소개</h4>
+                    <p>{restaurant.description}</p>
+                  </div>
+                )}
+
+                {restaurant.parkingInfo && (
+                  <div className="detail-section">
+                    <h4>주차 정보</h4>
+                    <p>{restaurant.parkingInfo}</p>
+                  </div>
+                )}
+
+                {restaurant.transportation && (
+                  <div className="detail-section">
+                    <h4>교통편</h4>
+                    <p>{restaurant.transportation}</p>
+                  </div>
+                )}
+
+                {restaurant.specialNotes && (
+                  <div className="detail-section">
+                    <h4>특별 사항</h4>
+                    <p>{restaurant.specialNotes}</p>
+                  </div>
+                )}
+
+                <div className="detail-section">
+                  <h4>결제 방법</h4>
+                  <div className="payment-methods">
+                    {restaurant.cardPayment === 'Y' && <span className="payment-badge">카드</span>}
+                    {restaurant.cashPayment === 'Y' && <span className="payment-badge">현금</span>}
+                    {restaurant.mobilePayment === 'Y' && <span className="payment-badge">간편결제</span>}
+                    {restaurant.accountTransfer === 'Y' && <span className="payment-badge">계좌이체</span>}
+                  </div>
                 </div>
-              ) : error ? (
-                <div className="error-message">
-                  <p>{error}</p>
-                  <button onClick={loadAdditionalInfo} className="retry-btn">다시 시도</button>
-                </div>
-              ) : additionalInfo.length > 0 ? (
-                <div className="additional-info-grid">
-                  {additionalInfo.map(info => (
-                    <div key={info.infoId} className="info-item">
-                      <div className="info-icon">
-                        <img 
-                          src={info.iconUrl || 'https://via.placeholder.com/24x24'} 
-                          alt={info.infoType}
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/24x24';
-                          }}
-                        />
-                      </div>
-                      <div className="info-content">
-                        <h4 className="info-title">{info.infoTitle || info.infoType}</h4>
-                        <p className="info-description">{info.infoDescription}</p>
-                        {info.infoValue && (
-                          <p className="info-value">{info.infoValue}</p>
-                        )}
-                        {info.additionalNotes && (
-                          <p className="info-notes">💡 {info.additionalNotes}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="no-data">
-                  <p>추가 정보가 없습니다.</p>
-                </div>
-              )}
+
+                {(!restaurant.description && !restaurant.parkingInfo && !restaurant.transportation && !restaurant.specialNotes) && (
+                  <div className="no-data">
+                    <p>세부사항 정보가 없습니다.</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

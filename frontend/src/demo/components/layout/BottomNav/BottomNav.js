@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import LoginRequiredModal from '../../../components/modals/LoginRequiredModal';
+import LoginRequiredModal from '../../../../components/modals/LoginRequiredModal';
 import './BottomNav.css';
 
 const BottomNav = () => {

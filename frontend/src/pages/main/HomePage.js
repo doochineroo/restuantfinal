@@ -9,6 +9,16 @@ import './HomePage.css';
 const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // 이미지 URL을 절대 URL로 변환하는 함수
+  const convertToAbsoluteUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads/')) {
+      return `http://localhost:8080${url}`;
+    }
+    return url;
+  };
   const [popularRestaurants, setPopularRestaurants] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -188,7 +198,7 @@ const HomePage = () => {
                   >
                     <div className="pick-image">
                       <img 
-                        src={restaurant.imageUrl || '/image-placeholder.svg'} 
+                        src={convertToAbsoluteUrl(restaurant.mainImage || restaurant.imageUrl) || '/image-placeholder.svg'} 
                         alt={restaurant.restaurantName || restaurant.name}
                         onError={(e) => {
                           e.target.src = '/image-placeholder.svg';

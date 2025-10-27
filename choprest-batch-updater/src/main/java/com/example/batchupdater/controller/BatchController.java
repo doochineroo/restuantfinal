@@ -132,6 +132,31 @@ public class BatchController {
     }
     
     /**
+     * API 키 테스트
+     */
+    @GetMapping("/test-api")
+    public ResponseEntity<Map<String, Object>> testApi() {
+        try {
+            // 간단한 테스트 쿼리로 API 키 검증
+            boolean result = locationUpdateService.testApiKeys();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", result);
+            response.put("message", result ? "API keys are working" : "API keys failed");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error testing API keys", e);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "API test failed: " + e.getMessage());
+            
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
+    /**
      * 특정 식당의 위치 정보 수동 업데이트
      */
     @PostMapping("/update-restaurant/{id}")

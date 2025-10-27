@@ -17,6 +17,16 @@ const FavoritesTab = () => {
     }
   }, [user]);
 
+  // 이미지 URL을 절대 URL로 변환하는 함수
+  const convertToAbsoluteUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads/')) {
+      return `http://localhost:8080${url}`;
+    }
+    return url;
+  };
+
   const loadFavorites = async () => {
     if (!user) return;
     
@@ -133,7 +143,7 @@ const FavoritesTab = () => {
             <div key={favorite.id} className="favorite-card">
               <div className="restaurant-image">
                 <img 
-                  src={favorite.restaurant.imageUrl || '/image-placeholder.svg'} 
+                  src={convertToAbsoluteUrl(favorite.restaurant.mainImage || favorite.restaurant.imageUrl) || '/image-placeholder.svg'} 
                   alt={favorite.restaurant.restaurantName}
                   onError={(e) => {
                     e.target.src = '/image-placeholder.svg';

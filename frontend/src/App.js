@@ -299,20 +299,7 @@ function MainPage() {
   );
 }
 
-// 보호된 라우트 컴포넌트
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="loading-spinner">로딩 중...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
+// ProtectedRoute는 이미 import되어 있음
 
 // 메인 App 컴포넌트 (라우터 설정)
 function App() {

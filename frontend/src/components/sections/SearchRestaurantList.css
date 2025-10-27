@@ -61,6 +61,7 @@
   border-radius: 8px;
   overflow: hidden;
   background-color: #f8f9fa;
+  position: relative;
 }
 
 .restaurant-image {
@@ -81,6 +82,85 @@
 
 .restaurant-image-container:hover .restaurant-image {
   transform: scale(1.05);
+}
+
+/* 미니 슬라이더 스타일 */
+.mini-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mini-slider img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mini-slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.mini-slider:hover .mini-slider-btn {
+  opacity: 1;
+}
+
+.mini-slider-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.mini-slider-btn-prev {
+  left: 5px;
+}
+
+.mini-slider-btn-next {
+  right: 5px;
+}
+
+.mini-slider-indicators {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.mini-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mini-indicator.active {
+  background: white;
+  width: 16px;
+  border-radius: 3px;
 }
 
 /* 가게 정보 */

@@ -140,7 +140,81 @@ public class MenuController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    
+    /**
+     * 메뉴 추가
+     * POST /api/menus
+     */
+    @PostMapping
+    public ResponseEntity<Menu> createMenu(@RequestBody Menu menu) {
+        log.info("Creating menu: {}", menu.getName());
+        
+        try {
+            if (menu.getIsAvailable() == null) {
+                menu.setIsAvailable(true);
+            }
+            if (menu.getSortOrder() == null) {
+                menu.setSortOrder(0);
+            }
+            Menu savedMenu = menuRepository.save(menu);
+            log.info("Menu created successfully: {}", savedMenu.getName());
+            return ResponseEntity.ok(savedMenu);
+        } catch (Exception e) {
+            log.error("Error creating menu: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * 메뉴 수정
+     * PUT /api/menus/{menuId}
+     */
+    @PutMapping("/{menuId}")
+    public ResponseEntity<Menu> updateMenu(@PathVariable Long menuId, @RequestBody Menu menu) {
+        log.info("Updating menu with id: {}", menuId);
+        
+        try {
+            Optional<Menu> existingMenu = menuRepository.findById(menuId);
+            if (!existingMenu.isPresent()) {
+                log.warn("Menu not found with id: {}", menuId);
+                return ResponseEntity.notFound().build();
+            }
+            
+            menu.setMenuId(menuId);
+            Menu updatedMenu = menuRepository.save(menu);
+            log.info("Menu updated successfully: {}", updatedMenu.getName());
+            return ResponseEntity.ok(updatedMenu);
+        } catch (Exception e) {
+            log.error("Error updating menu with id {}: {}", menuId, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * 메뉴 삭제
+     * DELETE /api/menus/{menuId}
+     */
+    @DeleteMapping("/{menuId}")
+    public ResponseEntity<Void> deleteMenu(@PathVariable Long menuId) {
+        log.info("Deleting menu with id: {}", menuId);
+        
+        try {
+            Optional<Menu> menu = menuRepository.findById(menuId);
+            if (!menu.isPresent()) {
+                log.warn("Menu not found with id: {}", menuId);
+                return ResponseEntity.notFound().build();
+            }
+            
+            menuRepository.delete(menu.get());
+            log.info("Menu deleted successfully");
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error deleting menu with id {}: {}", menuId, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
+
 
 
 

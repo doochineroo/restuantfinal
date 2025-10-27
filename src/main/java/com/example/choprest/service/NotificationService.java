@@ -106,6 +106,14 @@ public class NotificationService {
         notifications.forEach(notification -> notification.setIsRead(true));
         notificationRepository.saveAll(notifications);
     }
+    
+    /**
+     * 알림 삭제
+     */
+    @Transactional
+    public void deleteNotification(Long notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
 }
 
 
