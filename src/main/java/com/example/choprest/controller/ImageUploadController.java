@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/upload")
 @CrossOrigin(origins = "*")
 public class ImageUploadController {
 
@@ -25,7 +25,7 @@ public class ImageUploadController {
     private static final String RESTAURANT_IMAGES_DIR = "restaurants/";
     private static final String MENU_IMAGES_DIR = "menus/";
     
-    @PostMapping("/upload")
+    @PostMapping("/image")
     public ResponseEntity<Map<String, Object>> uploadImage(
             @RequestParam("file") MultipartFile file,
             @RequestParam("type") String type) {

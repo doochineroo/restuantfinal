@@ -4,3 +4,4 @@ ALTER TABLE restaurants ADD COLUMN menu_image1 VARCHAR(500) NULL;
 ALTER TABLE restaurants ADD COLUMN menu_image2 VARCHAR(500) NULL;
 ALTER TABLE restaurants ADD COLUMN menu_image3 VARCHAR(500) NULL;
 
+

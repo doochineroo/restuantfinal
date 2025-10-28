@@ -115,6 +115,7 @@ export const useRestaurantSearch = (onSearchComplete) => {
     loading,
     error,
     hasSearched,
+    setHasSearched,
     regions,
     handleSearch,
     filterByRegionType,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
 import { statisticsAPI } from '../../demo/services/apiService';
+import { restaurantAPI } from '../../demo/services/api';
 import TopNav from '../../components/navigation/TopNav';
 import MainNav from '../../components/navigation/MainNav';
 import SearchSection from '../../components/sections/SearchSection';
@@ -33,6 +34,7 @@ const SearchPage = () => {
     loading,
     error,
     hasSearched,
+    setHasSearched,
     regions,
     handleSearch,
     filterByRegionType,
@@ -47,22 +49,37 @@ const SearchPage = () => {
     }
   }, [user, navigate]);
 
-  // URL에서 카테고리 파라미터 가져오기
+  // state에서 카테고리 파라미터 가져오기
   useEffect(() => {
-    const category = new URLSearchParams(location.search).get('category');
+    const category = location.state?.category;
     if (category) {
-      handleSearch(category);
+      // 모든 식당 불러오기
+      restaurantAPI.getAll().then(response => {
+        const filtered = response.data.filter(restaurant => {
+          // "기타"는 category가 null이거나 빈 문자열인 경우도 포함
+          if (category === '기타') {
+            return !restaurant.category || restaurant.category === '' || restaurant.category === '기타';
+          }
+          return restaurant.category === category;
+        });
+        setFilteredRestaurants(filtered);
+        setActiveFilterTab(category);
+        setHasSearched(true);
+      }).catch(error => {
+        console.error('카테고리 필터링 오류:', error);
+      });
     }
-  }, [location.search, handleSearch]);
+  }, [location.state, setFilteredRestaurants, setHasSearched]);
 
   // 인기 검색어 가져오기
   useEffect(() => {
     const fetchPopularKeywords = async () => {
       try {
         const response = await statisticsAPI.getPopularKeywords(10);
+        console.log('인기 검색어 데이터:', response.data);
         setPopularKeywords(response.data.map(item => ({
           keyword: item.keyword,
-          count: item.searchCount
+          count: item.searchCount || 0
         })));
       } catch (err) {
         console.error('인기 검색어 로딩 오류:', err);
