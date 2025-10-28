@@ -118,14 +118,22 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
 export const showSelectedRestaurantMarker = (map, markers, setMarkers, restaurant, setSelectedRestaurant) => {
   try {
     if (!map || !restaurant || !restaurant.lat || !restaurant.lng) {
+      console.log('showSelectedRestaurantMarker: 유효하지 않은 파라미터');
       return;
     }
 
+    console.log('showSelectedRestaurantMarker 호출:', restaurant.restaurantName);
+
     // 기존 마커와 인포윈도우 모두 제거 (더 확실하게)
     if (markers && markers.length > 0) {
+      console.log('기존 마커 제거 중:', markers.length, '개');
       markers.forEach(marker => {
-        if (marker && typeof marker.setMap === 'function') {
-          marker.setMap(null);
+        try {
+          if (marker && typeof marker.setMap === 'function') {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error('마커 제거 실패:', error);
         }
       });
     }
@@ -133,8 +141,12 @@ export const showSelectedRestaurantMarker = (map, markers, setMarkers, restauran
 
     // 기존 인포윈도우 제거
     if (window.currentInfoWindow) {
-      window.currentInfoWindow.close();
-      window.currentInfoWindow = null;
+      try {
+        window.currentInfoWindow.close();
+        window.currentInfoWindow = null;
+      } catch (error) {
+        console.error('인포윈도우 제거 실패:', error);
+      }
     }
 
     // 선택된 식당의 마커만 생성
@@ -204,48 +216,73 @@ export const clearMapMarkers = (map, markers, setMarkers) => {
   try {
     if (!map) return;
     
+    console.log('clearMapMarkers 호출, 기존 마커 수:', markers?.length || 0);
+    
     // 기존 마커 모두 제거 (더 확실하게)
     if (markers && markers.length > 0) {
-      markers.forEach(marker => {
-        if (marker && typeof marker.setMap === 'function') {
-          marker.setMap(null);
+      markers.forEach((marker, index) => {
+        try {
+          if (marker && typeof marker.setMap === 'function') {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error(`마커 ${index} 제거 실패:`, error);
         }
       });
     }
     
     // 전역 마커 배열도 확인 (혹시 모를 경우 대비)
     if (window.kakaoMarkers && Array.isArray(window.kakaoMarkers)) {
-      window.kakaoMarkers.forEach(marker => {
-        if (marker && typeof marker.setMap === 'function') {
-          marker.setMap(null);
+      window.kakaoMarkers.forEach((marker, index) => {
+        try {
+          if (marker && typeof marker.setMap === 'function') {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error(`전역 마커 ${index} 제거 실패:`, error);
         }
       });
       window.kakaoMarkers = [];
     }
     
+    // 마커 배열 즉시 초기화
     setMarkers([]);
     
     // 현재 인포윈도우 제거
     if (window.currentInfoWindow) {
-      window.currentInfoWindow.close();
-      window.currentInfoWindow = null;
+      try {
+        window.currentInfoWindow.close();
+        window.currentInfoWindow = null;
+      } catch (error) {
+        console.error('인포윈도우 제거 실패:', error);
+      }
     }
     
     // DOM에서 남아있는 모든 마커 이미지 제거
-    const markerImages = document.querySelectorAll('.kakao-maps-marker, .kakao-maps-custom-overlay');
+    const markerImages = document.querySelectorAll('.kakao-maps-marker, .kakao-maps-custom-overlay, img[data-type="marker"]');
     markerImages.forEach(img => {
-      if (img && img.parentNode) {
-        img.parentNode.removeChild(img);
+      try {
+        if (img && img.parentNode) {
+          img.parentNode.removeChild(img);
+        }
+      } catch (error) {
+        console.error('마커 이미지 제거 실패:', error);
       }
     });
     
     // DOM에서 인포윈도우 제거
     const infoWindows = document.querySelectorAll('.kakao-maps-info-window');
     infoWindows.forEach(infoWindow => {
-      if (infoWindow && infoWindow.parentNode) {
-        infoWindow.parentNode.removeChild(infoWindow);
+      try {
+        if (infoWindow && infoWindow.parentNode) {
+          infoWindow.parentNode.removeChild(infoWindow);
+        }
+      } catch (error) {
+        console.error('인포윈도우 DOM 제거 실패:', error);
       }
     });
+    
+    console.log('clearMapMarkers 완료');
   } catch (error) {
     console.error('지도 마커 제거 오류:', error);
   }

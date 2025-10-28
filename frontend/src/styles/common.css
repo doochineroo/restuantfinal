@@ -306,6 +306,28 @@ button:disabled,
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
 }
 
+/* 검색 섹션 스타일 */
+.search-section {
+  margin: 20px auto;
+  max-width: 800px;
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-container .common-input {
+  flex: 1;
+}
+
+.current-location-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 공통 입력 필드 스타일 */
 .common-input {
   width: 100%;
