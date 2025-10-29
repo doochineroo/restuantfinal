@@ -13,9 +13,8 @@ const SearchRestaurantList = ({
   return (
     <div className="search-restaurant-list-section">
       <h3>
-        {hasSearched ? `검색 결과 (${filteredRestaurants.length}개)` : '식당 검색'}
         {activeFilterTab !== '전체' && hasSearched && (
-          <span className="active-filter"> - {activeFilterTab} 필터 적용</span>
+          <span className="active-filter">{activeFilterTab} 필터 적용</span>
         )}
       </h3>
       <div className="search-restaurant-list">

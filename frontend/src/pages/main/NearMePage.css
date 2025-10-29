@@ -11,15 +11,17 @@
 }
 
 .main-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-top: 20px;
+  align-items: start;
 }
 
 .map-container-wrapper {
-  position: relative;
-  flex: 1;
+  height: 500px;
 }
+
 
 /* 지도 확대/축소 버튼 */
 .map-controls {

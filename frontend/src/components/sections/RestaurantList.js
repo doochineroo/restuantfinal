@@ -11,14 +11,31 @@ const RestaurantList = ({
   onReservation,
   onDetailView 
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const restaurantsPerPage = 5;
+  
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(filteredRestaurants.length / restaurantsPerPage);
+  const startIndex = (currentPage - 1) * restaurantsPerPage;
+  const endIndex = startIndex + restaurantsPerPage;
+  const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
+  
+  // 페이지 변경 핸들러
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    // 페이지 변경 시 상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // 현재 페이지의 식당들만 렌더링
   return (
     <div className="search-restaurant-list-section">
       <h3>
-        {hasSearched ? `검색 결과 (${filteredRestaurants.length}개)` : '식당 검색'}
         {activeFilterTab !== '전체' && hasSearched && (
-          <span className="active-filter"> - {activeFilterTab} 필터 적용</span>
+          <span className="active-filter">{activeFilterTab} 필터 적용</span>
         )}
       </h3>
+      
       <div className="search-restaurant-list">
         {!hasSearched ? (
           <div className="no-results">
@@ -29,16 +46,63 @@ const RestaurantList = ({
             <p>해당 조건에 맞는 식당이 없습니다.</p>
           </div>
         ) : (
-          filteredRestaurants.map((restaurant, index) => (
-            <RestaurantCard
-              key={restaurant.id || `restaurant-${index}`}
-              restaurant={restaurant}
-              isExpanded={expandedCard === restaurant.id}
-              onCardClick={onCardClick}
-              onReservation={onReservation}
-              onDetailView={onDetailView}
-            />
-          ))
+          <>
+            {currentRestaurants.map((restaurant, index) => (
+              <RestaurantCard
+                key={restaurant.id || `restaurant-${index}`}
+                restaurant={restaurant}
+                isExpanded={expandedCard === restaurant.id}
+                onCardClick={onCardClick}
+                onReservation={onReservation}
+                onDetailView={onDetailView}
+              />
+            ))}
+            
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+              <div className="pagination-container">
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  이전
+                </button>
+                
+                <div className="pagination-numbers">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`pagination-number ${currentPage === pageNum ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  className="pagination-btn"
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  다음
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -46,7 +110,7 @@ const RestaurantList = ({
 };
 
 const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, onDetailView }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   
   // 이미지 URL을 절대 URL로 변환하는 함수
   const convertToAbsoluteUrl = (url) => {

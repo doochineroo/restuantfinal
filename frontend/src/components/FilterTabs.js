@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const FilterTabs = ({ 
   hasSearched, 
   restaurants, 
+  filteredRestaurants,
   regions, 
   activeFilterTab, 
   selectedServices,

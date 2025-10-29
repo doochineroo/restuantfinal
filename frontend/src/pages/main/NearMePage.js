@@ -382,6 +382,7 @@ const NearMePage = () => {
         <FilterTabs
           hasSearched={hasSearched}
           restaurants={restaurants}
+          filteredRestaurants={filteredRestaurants}
           regions={regions}
           activeFilterTab={activeFilterTab}
           selectedServices={selectedServices}

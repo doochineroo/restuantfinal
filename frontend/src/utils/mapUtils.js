@@ -8,8 +8,8 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
     }
 
     // 기존 마커와 인포윈도우 제거 (더 확실하게)
-    if (markers && markers.length > 0) {
-      markers.forEach(marker => {
+    if (window.currentMarkers && window.currentMarkers.length > 0) {
+      window.currentMarkers.forEach(marker => {
         if (marker && typeof marker.setMap === 'function') {
           marker.setMap(null);
         }
@@ -102,6 +102,7 @@ export const updateMapWithRestaurants = (map, markers, setMarkers, restaurantLis
     });
 
     setMarkers(newMarkers);
+    window.currentMarkers = newMarkers;
 
     // 첫 번째 유효한 식당으로 지도 중심 이동
     if (validRestaurants.length > 0) {
@@ -125,9 +126,9 @@ export const showSelectedRestaurantMarker = (map, markers, setMarkers, restauran
     console.log('showSelectedRestaurantMarker 호출:', restaurant.restaurantName);
 
     // 기존 마커와 인포윈도우 모두 제거 (더 확실하게)
-    if (markers && markers.length > 0) {
-      console.log('기존 마커 제거 중:', markers.length, '개');
-      markers.forEach(marker => {
+    if (window.currentMarkers && window.currentMarkers.length > 0) {
+      console.log('기존 마커 제거 중:', window.currentMarkers.length, '개');
+      window.currentMarkers.forEach(marker => {
         try {
           if (marker && typeof marker.setMap === 'function') {
             marker.setMap(null);
@@ -166,6 +167,7 @@ export const showSelectedRestaurantMarker = (map, markers, setMarkers, restauran
 
     newMarkers.push(marker);
     setMarkers(newMarkers);
+    window.currentMarkers = newMarkers;
 
     // 선택된 식당으로 지도 중심 이동 (부드러운 애니메이션)
     map.panTo(position);
@@ -216,10 +218,20 @@ export const clearMapMarkers = (map, markers, setMarkers) => {
   try {
     if (!map) return;
     
-    console.log('clearMapMarkers 호출, 기존 마커 수:', markers?.length || 0);
+    console.log('clearMapMarkers 호출, 기존 마커 수:', window.currentMarkers?.length || markers?.length || 0);
     
     // 기존 마커 모두 제거 (더 확실하게)
-    if (markers && markers.length > 0) {
+    if (window.currentMarkers && window.currentMarkers.length > 0) {
+      window.currentMarkers.forEach((marker, index) => {
+        try {
+          if (marker && typeof marker.setMap === 'function') {
+            marker.setMap(null);
+          }
+        } catch (error) {
+          console.error(`마커 ${index} 제거 실패:`, error);
+        }
+      });
+    } else if (markers && markers.length > 0) {
       markers.forEach((marker, index) => {
         try {
           if (marker && typeof marker.setMap === 'function') {
@@ -247,6 +259,7 @@ export const clearMapMarkers = (map, markers, setMarkers) => {
     
     // 마커 배열 즉시 초기화
     setMarkers([]);
+    window.currentMarkers = [];
     
     // 현재 인포윈도우 제거
     if (window.currentInfoWindow) {
