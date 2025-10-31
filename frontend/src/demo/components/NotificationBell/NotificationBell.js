@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../demo/AuthContext';
+import { API_ENDPOINTS } from '../../../constants/config/apiConfig';
 import axios from 'axios';
 import './NotificationBell.css';
 
@@ -27,7 +28,7 @@ const NotificationBell = () => {
   const fetchUnreadCount = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/notifications/${user.userId}/unread-count`
+        `${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}/unread-count`
       );
       setUnreadCount(response.data.count);
     } catch (error) {
@@ -39,7 +40,7 @@ const NotificationBell = () => {
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/notifications/${user.userId}/unread`
+        `${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}/unread`
       );
       setNotifications(response.data.slice(0, 5)); // 최근 5개만
     } catch (error) {
@@ -58,7 +59,7 @@ const NotificationBell = () => {
     // 읽음 처리
     try {
       await axios.put(
-        `http://localhost:8080/api/notifications/${notification.id}/read`
+        `${API_ENDPOINTS.NOTIFICATIONS}/${notification.id}/read`
       );
       fetchUnreadCount();
       

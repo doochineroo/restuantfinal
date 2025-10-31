@@ -25,9 +25,10 @@
 }
 
 .calendar-section {
-  flex: 1;
+  flex: 2;
   display: flex;
   flex-direction: column;
+  min-width: 400px;
 }
 
 .reservations-section {
@@ -39,6 +40,7 @@
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
 }
 
 .calendar-header h3 {
@@ -91,14 +93,79 @@
   flex-direction: column;
 }
 
-/* React Calendar 커스터마이징 */
+/* React Calendar 커스터마이징 - CSS 충돌 방지 */
 .react-calendar {
-  width: 100%;
-  background: #2c2c2c;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  font-family: inherit;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  width: 100% !important;
+  min-width: 350px !important;
+  background: #2c2c2c !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  font-family: inherit !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 다른 CSS의 grid 설정이 캘린더에 영향을 주지 않도록 보호 */
+.react-calendar * {
+  box-sizing: border-box;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+  margin-bottom: 0;
+  padding: 8px 0;
+  background: rgba(255, 255, 255, 0.05);
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 4px !important;
+}
+
+/* 요일 헤더 스타일 */
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  border: none;
+  margin: 0;
+}
+
+/* 요일 헤더 색상 - 요일 텍스트 기반 선택 */
+/* 월요일 (1번째: 월화수목금토일 순서) */
+.react-calendar__month-view__weekdays__weekday:nth-child(1) {
+  color: #ff6b6b !important;
+}
+
+/* 일요일 (7번째: 월화수목금토일 순서) */
+.react-calendar__month-view__weekdays__weekday:nth-child(7) {
+  color: #ff6b6b !important;
+}
+
+/* 혹시 일요일이 첫 번째로 나오는 경우(일월화수목금토 순서)를 대비 */
+/* 만약 요일 순서가 "일월화수목금토"라면 아래 주석을 해제하고 위의 nth-child(1), nth-child(7)을 주석 처리하세요 */
+/*
+.react-calendar__month-view__weekdays__weekday:nth-child(1) {
+  color: #ff6b6b !important;
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(2) {
+  color: #ff6b6b !important;
+}
+*/
+
+/* 나머지 요일들(화수목금토)은 기본 색상 (흰색) */
+
+.react-calendar__month-view__weekdays {
+  margin-bottom: 0;
+}
+
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 4px !important;
+  margin: 0 !important;
 }
 
 .react-calendar__navigation {
@@ -133,37 +200,11 @@
   cursor: not-allowed;
 }
 
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: 600;
-  font-size: 14px;
-  color: #ffffff;
-  margin-bottom: 12px;
-  padding: 8px 0;
-  background: rgba(255, 255, 255, 0.05);
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.react-calendar__month-view__weekdays__weekday {
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.react-calendar__month-view__days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
 
 .react-calendar__tile {
-  max-width: 100%;
+  width: 100%;
   text-align: center;
-  padding: 12px 8px;
+  padding: 8px 0;
   background: #2c2c2c;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
@@ -175,8 +216,9 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  margin: 2px;
+  font-weight: 500;
 }
+
 
 .react-calendar__tile:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -228,23 +270,52 @@
 /* 주말 스타일 */
 .react-calendar__tile.weekend {
   background: rgba(255, 255, 255, 0.05);
-  color: #ff6b6b;
+  color: #ff6b6b !important;
 }
 
-.react-calendar__tile.weekend:hover {
+/* 주말 날짜 텍스트 강제 빨간색 (선택되지 않은 경우만) */
+.react-calendar__tile.weekend:not(.selected):not(.today) {
+  color: #ff6b6b !important;
+}
+
+.react-calendar__tile.weekend:not(.selected):not(.today) abbr,
+.react-calendar__tile.weekend:not(.selected):not(.today) button,
+.react-calendar__tile.weekend:not(.selected):not(.today) > *,
+.react-calendar__tile.weekend:not(.selected):not(.today) * {
+  color: #ff6b6b !important;
+}
+
+.react-calendar__tile.weekend:hover:not(.selected) {
   background: rgba(255, 107, 107, 0.1);
 }
 
+/* 선택된 주말 날짜 - 흰색 텍스트로 보이게 */
 .react-calendar__tile.weekend.selected {
-  background: #ff6b6b;
-  color: white;
+  background: #ff6b6b !important;
+  color: #ffffff !important;
 }
 
-.react-calendar__tile.weekend.today {
+.react-calendar__tile.weekend.selected abbr,
+.react-calendar__tile.weekend.selected button,
+.react-calendar__tile.weekend.selected > *,
+.react-calendar__tile.weekend.selected * {
+  color: #ffffff !important;
+}
+
+/* 선택된 주말이면서 오늘인 경우 */
+.react-calendar__tile.weekend.selected.today {
+  background: #ff6b6b !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff;
+}
+
+/* 선택되지 않은 주말의 오늘 날짜 */
+.react-calendar__tile.weekend.today:not(.selected) {
   background: rgba(255, 107, 107, 0.3);
-  color: #ff6b6b;
+  color: #ff6b6b !important;
   border: 2px solid #ff6b6b;
 }
+
 
 .calendar-tile-content {
   width: 100%;
@@ -292,9 +363,6 @@
 }
 
 .selected-date-info {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
   padding: 16px;
   text-align: center;
   margin-bottom: 20px;
@@ -312,25 +380,24 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px;
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  padding: 12px 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .reservation-card:hover {
-  background: #333;
-  border-color: #00a699;
+  opacity: 0.8;
+}
+
+.reservation-card:last-child {
+  border-bottom: none;
 }
 
 .reservation-card .reservation-time {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: #00a699;
-  min-width: 80px;
-  text-align: center;
+  min-width: 60px;
 }
 
 .reservation-card .reservation-details {
@@ -342,7 +409,7 @@
 
 .reservation-card .customer-name {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #ffffff;
 }
 
@@ -352,7 +419,7 @@
 }
 
 .reservation-card .reservation-phone {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #888;
 }
 
@@ -362,42 +429,30 @@
 }
 
 .reservation-card .status-badge {
-  padding: 6px 12px;
+  padding: 4px 12px;
   border-radius: 4px;
   font-size: 0.8rem;
-  font-weight: 600;
-  text-align: center;
-  min-width: 60px;
+  font-weight: 500;
 }
 
 .reservation-card .status-badge.pending {
-  background: rgba(255, 193, 7, 0.2);
   color: #ffc107;
-  border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
 .reservation-card .status-badge.approved {
-  background: rgba(0, 166, 153, 0.2);
   color: #00a699;
-  border: 1px solid rgba(0, 166, 153, 0.3);
 }
 
 .reservation-card .status-badge.rejected {
-  background: rgba(255, 90, 95, 0.2);
   color: #ff5a5f;
-  border: 1px solid rgba(255, 90, 95, 0.3);
 }
 
 .reservation-card .status-badge.cancelled {
-  background: rgba(255, 90, 95, 0.2);
   color: #ff5a5f;
-  border: 1px solid rgba(255, 90, 95, 0.3);
 }
 
 .reservation-card .status-badge.completed {
-  background: rgba(102, 126, 234, 0.2);
   color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.3);
 }
 
 .no-reservations {
@@ -411,14 +466,14 @@
 
 .selected-date-info h4 {
   margin: 0 0 8px 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
 }
 
 .selected-date-info p {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #b0b0b0;
 }
 
@@ -432,10 +487,13 @@
   .calendar-section,
   .reservations-section {
     flex: none;
+    width: 100%;
   }
   
   .reservations-section {
     margin-top: 20px;
+    min-height: 400px;
+    max-height: 600px;
   }
 }
 
@@ -458,6 +516,11 @@
   
   .calendar-container {
     padding: 12px;
+  }
+
+  .reservations-section {
+    min-height: 350px;
+    max-height: 500px;
   }
   
   .react-calendar__tile {
@@ -512,6 +575,7 @@
     min-width: 12px;
   }
 }
+
 
 
 

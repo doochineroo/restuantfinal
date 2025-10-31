@@ -5,6 +5,7 @@ import MainNav from '../../components/navigation/MainNav';
 import RestaurantDetailModal from '../../components/modals/RestaurantDetailModal';
 import { restaurantAPI, statisticsAPI } from '../../demo/services/api';
 import { useAuth } from '../../demo/context/AuthContext';
+import { getImageUrl } from '../../constants/config/apiConfig';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -12,12 +13,7 @@ const HomePage = () => {
   const { user } = useAuth();
 
   const convertToAbsoluteUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:8080${url}`;
-    }
-    return url;
+    return getImageUrl(url);
   };
   
   const [featuredRestaurants, setFeaturedRestaurants] = useState([]);

@@ -28,6 +28,7 @@ import NearMePage from './pages/main/NearMePage';
 import OwnerDashboard from './pages/owner/OwnerDashboard';
 import ReservationHistoryPage from './pages/user/ReservationHistoryPage';
 import MyPageAccordion from './pages/user/MyPageAccordion';
+import ChatPage from './pages/chat/ChatPage';
 
 // public 폴더의 커서 이미지 경로
 // JS에서 사용하려면 이렇게 참조하세요:
@@ -333,6 +334,11 @@ function App() {
           <Route path="/owner-dashboard" element={
             <ProtectedRoute>
               <OwnerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/chat" element={
+            <ProtectedRoute>
+              <ChatPage />
             </ProtectedRoute>
           } />
           

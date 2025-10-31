@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '../demo/context/AuthContext';
+import { API_ENDPOINTS } from '../constants/config/apiConfig';
 import axios from 'axios';
 
 const NotificationContext = createContext();
@@ -23,7 +24,7 @@ export const NotificationProvider = ({ children }) => {
     if (!user) return;
     
     try {
-      const response = await axios.get(`http://localhost:8080/api/notifications/${user.userId}`);
+      const response = await axios.get(`${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}`);
       const notificationData = response.data || [];
       setNotifications(notificationData);
       setUnreadCount(notificationData.filter(n => !n.isRead).length);
@@ -85,7 +86,7 @@ export const NotificationProvider = ({ children }) => {
   // 알림 읽음 처리
   const markAsRead = async (notificationId) => {
     try {
-      await axios.put(`http://localhost:8080/api/notifications/${notificationId}/read`);
+      await axios.put(`${API_ENDPOINTS.NOTIFICATIONS}/${notificationId}/read`);
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
       );
@@ -98,7 +99,7 @@ export const NotificationProvider = ({ children }) => {
   // 모든 알림 읽음 처리
   const markAllAsRead = async () => {
     try {
-      await axios.put(`http://localhost:8080/api/notifications/${user.userId}/read-all`);
+      await axios.put(`${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}/read-all`);
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -109,7 +110,7 @@ export const NotificationProvider = ({ children }) => {
   // 알림 삭제
   const deleteNotification = async (notificationId) => {
     try {
-      await axios.delete(`http://localhost:8080/api/notifications/${notificationId}`);
+      await axios.delete(`${API_ENDPOINTS.NOTIFICATIONS}/${notificationId}`);
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       setUnreadCount(prev => {
         const notification = notifications.find(n => n.id === notificationId);

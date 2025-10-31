@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { filterOperatingRestaurants, filterByRegion, filterByService } from '../utils/restaurantUtils';
+import { API_ENDPOINTS } from '../constants/config/apiConfig';
 
 export const useRestaurantSearch = (onSearchComplete) => {
   const [restaurants, setRestaurants] = useState([]);
@@ -11,8 +12,7 @@ export const useRestaurantSearch = (onSearchComplete) => {
   const [regions, setRegions] = useState([]);
 
   const getApiUrl = () => {
-    // 로컬 개발 환경
-    return 'http://localhost:8080/api';
+    return API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '');
   };
 
   
@@ -28,8 +28,7 @@ export const useRestaurantSearch = (onSearchComplete) => {
       setError(null);
       
       // 백엔드 API 호출 (좌표가 없는 식당들은 자동으로 카카오 API 호출하여 업데이트)
-      const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/restaurants`, {
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS}`, {
         params: { keyword: searchKeyword },
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         timeout: 30000 // 모든 식당 좌표 업데이트를 위해 타임아웃 증가

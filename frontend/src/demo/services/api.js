@@ -2,8 +2,9 @@
  * 테스트용 API 클라이언트 - 데모 종료 시 제거 예정
  */
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../constants/config/apiConfig';
 
-const API_BASE_URL = 'http://localhost:8080/api/demo';
+const API_BASE_URL = API_ENDPOINTS.DEMO;
 
 // Auth API
 export const authAPI = {
@@ -39,24 +40,24 @@ export const reviewAPI = {
 
 // Restaurant API
 export const restaurantAPI = {
-  getAll: () => axios.get(`http://localhost:8080/api/restaurants/all`), // DB 기반 전체 조회
-  getById: (id) => axios.get(`http://localhost:8080/api/restaurants/${id}`),
-  getNameById: (id) => axios.get(`http://localhost:8080/api/restaurants/${id}/name`), // 가게 ID로 가게 이름 조회
-  search: (keyword) => axios.get(`http://localhost:8080/api/restaurants?keyword=${keyword}`), // DB 기반 검색 API 사용
-  searchByName: (name) => axios.get(`http://localhost:8080/api/restaurants/name?name=${name}`), // 식당명으로 검색
-  searchByRegion: (latitude, longitude, radius = 5000) => axios.get(`http://localhost:8080/api/restaurants/region?latitude=${latitude}&longitude=${longitude}&radius=${radius}`), // 지역 기반 검색
+  getAll: () => axios.get(`${API_ENDPOINTS.RESTAURANTS}/all`), // DB 기반 전체 조회
+  getById: (id) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/${id}`),
+  getNameById: (id) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/${id}/name`), // 가게 ID로 가게 이름 조회
+  search: (keyword) => axios.get(`${API_ENDPOINTS.RESTAURANTS}`, { params: { keyword } }), // DB 기반 검색 API 사용
+  searchByName: (name) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/name`, { params: { name } }), // 식당명으로 검색
+  searchByRegion: (latitude, longitude, radius = 5000) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/region`, { params: { latitude, longitude, radius } }), // 지역 기반 검색
 };
 
 // Statistics API
 export const statisticsAPI = {
-  recordClick: (restaurantId, userId = null) => axios.post('http://localhost:8080/api/statistics/click', { restaurantId, userId }),
-  recordSearch: (keyword) => axios.post('http://localhost:8080/api/statistics/search', { keyword }),
-  getPopularRestaurants: (limit = 10) => axios.get(`http://localhost:8080/api/statistics/popular-restaurants?limit=${limit}`),
-  getPopularRestaurantsWithCount: (limit = 10) => axios.get(`http://localhost:8080/api/statistics/popular-restaurants-with-count?limit=${limit}`),
-  getRecentPopularRestaurants: (limit = 10) => axios.get(`http://localhost:8080/api/statistics/recent-popular-restaurants?limit=${limit}`),
-  getTodayPopularRestaurants: (limit = 10) => axios.get(`http://localhost:8080/api/statistics/today-popular-restaurants?limit=${limit}`),
-  getPopularKeywords: (limit = 10) => axios.get(`http://localhost:8080/api/statistics/popular-keywords?limit=${limit}`),
-  getKeywordSuggestions: (keyword) => axios.get(`http://localhost:8080/api/statistics/keyword-suggestions?keyword=${keyword}`),
+  recordClick: (restaurantId, userId = null) => axios.post(`${API_ENDPOINTS.STATISTICS}/click`, { restaurantId, userId }),
+  recordSearch: (keyword) => axios.post(`${API_ENDPOINTS.STATISTICS}/search`, { keyword }),
+  getPopularRestaurants: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/popular-restaurants`, { params: { limit } }),
+  getPopularRestaurantsWithCount: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/popular-restaurants-with-count`, { params: { limit } }),
+  getRecentPopularRestaurants: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/recent-popular-restaurants`, { params: { limit } }),
+  getTodayPopularRestaurants: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/today-popular-restaurants`, { params: { limit } }),
+  getPopularKeywords: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/popular-keywords`, { params: { limit } }),
+  getKeywordSuggestions: (keyword) => axios.get(`${API_ENDPOINTS.STATISTICS}/keyword-suggestions`, { params: { keyword } }),
 };
 
 // Admin API
@@ -73,7 +74,7 @@ export const imageUploadAPI = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
-    return axios.post('http://localhost:8080/api/upload/restaurant-image', formData, {
+    return axios.post(`${API_ENDPOINTS.UPLOAD}/restaurant-image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -83,13 +84,13 @@ export const imageUploadAPI = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('menuId', menuId);
-    return axios.post('http://localhost:8080/api/upload/menu-image', formData, {
+    return axios.post(`${API_ENDPOINTS.UPLOAD}/menu-image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
-  deleteImage: (fileUrl) => axios.delete('http://localhost:8080/api/upload/image', {
+  deleteImage: (fileUrl) => axios.delete(`${API_ENDPOINTS.UPLOAD}/image`, {
     params: { fileUrl }
   }),
 };

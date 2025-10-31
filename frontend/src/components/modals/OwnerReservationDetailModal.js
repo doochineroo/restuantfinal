@@ -26,12 +26,10 @@ const OwnerReservationDetailModal = ({
 
   const handleBlacklist = () => {
     onBlacklist(reservation);
-    onClose();
   };
 
   const handleNoShow = () => {
     onNoShow(reservation);
-    onClose();
   };
 
   const getStatusText = (status) => {

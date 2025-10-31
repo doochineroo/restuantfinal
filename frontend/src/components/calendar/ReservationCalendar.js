@@ -12,11 +12,12 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
   useEffect(() => {
     const grouped = {};
     reservations.forEach(reservation => {
-      const date = new Date(reservation.reservationDate).toDateString();
-      if (!grouped[date]) {
-        grouped[date] = [];
+      // LocalDate 문자열을 직접 사용 (YYYY-MM-DD 형식)
+      const dateString = reservation.reservationDate;
+      if (!grouped[dateString]) {
+        grouped[dateString] = [];
       }
-      grouped[date].push(reservation);
+      grouped[dateString].push(reservation);
     });
     setReservationsByDate(grouped);
   }, [reservations]);
@@ -24,7 +25,8 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
   // 날짜 클릭 핸들러
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    const dateString = date.toDateString();
+    // Date 객체를 YYYY-MM-DD 형식으로 변환
+    const dateString = date.toISOString().split('T')[0];
     const dayReservations = reservationsByDate[dateString] || [];
     setSelectedDateReservations(dayReservations);
     onDateClick(date, dayReservations);
@@ -32,20 +34,20 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
 
   // 초기 선택된 날짜의 예약 설정
   useEffect(() => {
-    const dateString = selectedDate.toDateString();
+    const dateString = selectedDate.toISOString().split('T')[0];
     const dayReservations = reservationsByDate[dateString] || [];
     setSelectedDateReservations(dayReservations);
   }, [selectedDate, reservationsByDate]);
 
   // 특정 날짜의 예약 개수 반환
   const getReservationCount = (date) => {
-    const dateString = date.toDateString();
+    const dateString = date.toISOString().split('T')[0];
     return reservationsByDate[dateString]?.length || 0;
   };
 
   // 특정 날짜의 예약 상태별 개수 반환
   const getReservationStatusCount = (date, status) => {
-    const dateString = date.toDateString();
+    const dateString = date.toISOString().split('T')[0];
     const dayReservations = reservationsByDate[dateString] || [];
     return dayReservations.filter(r => r.status === status).length;
   };
@@ -133,12 +135,10 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
               value={selectedDate}
               tileContent={tileContent}
               tileClassName={tileClassName}
-              showNeighboringMonth={false}
               calendarType="gregory"
-              locale="ko-KR"
               formatShortWeekday={(locale, date) => {
-                const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-                return weekdays[date.getDay()];
+                const days = ['일', '월', '화', '수', '목', '금', '토'];
+                return days[date.getDay()];
               }}
             />
           </div>
@@ -195,6 +195,7 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
 };
 
 export default ReservationCalendar;
+
 
 
 

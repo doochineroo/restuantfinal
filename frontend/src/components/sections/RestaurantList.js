@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getKoreanValue, getStatusValue } from '../../utils/restaurantUtils';
+import { getImageUrl } from '../../constants/config/apiConfig';
 import './SearchRestaurantList.css';
 
 const RestaurantList = ({ 
@@ -114,12 +115,7 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, on
   
   // 이미지 URL을 절대 URL로 변환하는 함수
   const convertToAbsoluteUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:8080${url}`;
-    }
-    return url;
+    return getImageUrl(url);
   };
   
   // 매장 사진들 수집

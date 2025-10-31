@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { reviewAPI } from '../../../services/api';
+import { API_ENDPOINTS } from '../../../../constants/config/apiConfig';
 import axios from 'axios';
 import './ReviewsPage.css';
 
@@ -18,8 +19,10 @@ const ReviewsPage = () => {
   const [showWriteForm, setShowWriteForm] = useState(false);
   const [formData, setFormData] = useState({
     rating: 5,
-    content: ''
+    content: '',
+    images: []
   });
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     loadMyReviews();
@@ -39,7 +42,7 @@ const ReviewsPage = () => {
 
   const loadRestaurants = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/restaurants/all');
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS}/all`);
       setRestaurants(response.data);
     } catch (error) {
       console.error('식당 조회 오류:', error);
@@ -75,17 +78,84 @@ const ReviewsPage = () => {
         userName: user.name,
         restaurantName: selectedRestaurant.restaurantName,
         rating: formData.rating,
-        content: formData.content
+        content: formData.content,
+        images: formData.images
       });
 
       alert('리뷰가 작성되었습니다!');
-      setFormData({ rating: 5, content: '' });
+      setFormData({ rating: 5, content: '', images: [] });
       setShowWriteForm(false);
       loadMyReviews();
       loadRestaurantReviews(selectedRestaurant.id);
     } catch (error) {
       alert('오류가 발생했습니다.');
     }
+  };
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    
+    const maxImages = 5;
+    const currentImageCount = formData.images.length;
+    const remainingSlots = maxImages - currentImageCount;
+    
+    if (remainingSlots <= 0) {
+      alert('최대 5장까지만 업로드할 수 있습니다.');
+      return;
+    }
+    
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      alert(`${remainingSlots}장만 업로드됩니다. (최대 5장 제한)`);
+    }
+    
+    try {
+      setUploadingImages(true);
+      const uploadPromises = filesToUpload.map(async (file) => {
+        // 파일 크기 검사 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error(`${file.name}: 파일 크기는 5MB를 초과할 수 없습니다.`);
+        }
+        
+        // 파일 타입 검사
+        if (!file.type.startsWith('image/')) {
+          throw new Error(`${file.name}: 이미지 파일만 업로드 가능합니다.`);
+        }
+
+        const formDataObj = new FormData();
+        formDataObj.append('file', file);
+        
+        const response = await axios.post(`${API_ENDPOINTS.DEMO}/reviews/upload`, formDataObj, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        return response.data.url;
+      });
+      
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls]
+      }));
+      
+    } catch (error) {
+      console.error('이미지 업로드 오류:', error);
+      alert(error.message || '이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  // 이미지 제거 핸들러
+  const handleImageRemove = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
   };
 
   const handleLike = async (reviewId) => {
@@ -172,6 +242,29 @@ const ReviewsPage = () => {
                           <div className="review-rating">{renderStars(review.rating)}</div>
                         </div>
                         <div className="review-content">{review.content}</div>
+                        {(() => {
+                          let reviewImages = [];
+                          try {
+                            if (review.images) {
+                              reviewImages = JSON.parse(review.images);
+                            }
+                          } catch (e) {
+                            console.error('이미지 파싱 오류:', e);
+                          }
+                          return reviewImages.length > 0 && (
+                            <div className="review-images">
+                              {reviewImages.map((imageUrl, imgIdx) => (
+                                <img
+                                  key={imgIdx}
+                                  src={`http://localhost:8080${imageUrl}`}
+                                  alt={`리뷰 이미지 ${imgIdx + 1}`}
+                                  className="review-image"
+                                  onClick={() => window.open(`http://localhost:8080${imageUrl}`, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          );
+                        })()}
                         <div className="review-footer">
                           <small>{new Date(review.createdAt).toLocaleDateString('ko-KR')}</small>
                           <div className="review-stats">
@@ -235,6 +328,43 @@ const ReviewsPage = () => {
                       rows="4"
                     />
                   </div>
+                  <div className="form-group">
+                    <label>사진 첨부</label>
+                    <div className="image-upload-section">
+                      <input
+                        type="file"
+                        id="review-image-upload"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e.target.files)}
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor="review-image-upload" className="image-upload-btn">
+                        {uploadingImages ? '업로드 중...' : '사진 선택'}
+                      </label>
+                      <span className="image-upload-hint">최대 5장까지 업로드 가능</span>
+                    </div>
+                    
+                    {formData.images.length > 0 && (
+                      <div className="uploaded-images">
+                        {formData.images.map((imageUrl, index) => (
+                          <div key={index} className="uploaded-image-item">
+                            <img 
+                              src={`http://localhost:8080${imageUrl}`} 
+                              alt={`리뷰 이미지 ${index + 1}`} 
+                            />
+                            <button
+                              type="button"
+                              className="remove-image-btn"
+                              onClick={() => handleImageRemove(index)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button type="submit" className="submit-btn">리뷰 등록</button>
                 </form>
               )}
@@ -254,6 +384,29 @@ const ReviewsPage = () => {
                           <div className="review-rating">{renderStars(review.rating)}</div>
                         </div>
                         <div className="review-content">{review.content}</div>
+                        {(() => {
+                          let reviewImages = [];
+                          try {
+                            if (review.images) {
+                              reviewImages = JSON.parse(review.images);
+                            }
+                          } catch (e) {
+                            console.error('이미지 파싱 오류:', e);
+                          }
+                          return reviewImages.length > 0 && (
+                            <div className="review-images">
+                              {reviewImages.map((imageUrl, imgIdx) => (
+                                <img
+                                  key={imgIdx}
+                                  src={`http://localhost:8080${imageUrl}`}
+                                  alt={`리뷰 이미지 ${imgIdx + 1}`}
+                                  className="review-image"
+                                  onClick={() => window.open(`http://localhost:8080${imageUrl}`, '_blank')}
+                                />
+                              ))}
+                            </div>
+                          );
+                        })()}
                         <div className="review-footer">
                           <small>{new Date(review.createdAt).toLocaleDateString('ko-KR')}</small>
                           <div className="review-actions">

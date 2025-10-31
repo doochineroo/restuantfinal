@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../demo/context/AuthContext';
 import { getKoreanValue, getStatusValue } from '../../utils/restaurantUtils';
+import { chatAPI } from '../../demo/services/chatAPI';
+import { API_ENDPOINTS, getImageUrl } from '../../constants/config/apiConfig';
 import axios from 'axios';
 import './RestaurantDetailModal.css';
 
 const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('info'); // 'info', 'menu', 'event', 'additional', 'review' 
   const [menus, setMenus] = useState([]);
   const [events, setEvents] = useState([]);
@@ -16,17 +22,36 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
   
   // 이미지 URL을 절대 URL로 변환하는 함수
   const convertToAbsoluteUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:8080${url}`;
-    }
-    return url;
+    return getImageUrl(url);
   };
 
   const handleReservation = () => {
     onReservation(restaurant);
     onClose();
+  };
+
+  const handleChat = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (user.role === 'OWNER') {
+      alert('가게 주인은 회원과의 채팅만 가능합니다.');
+      return;
+    }
+
+    try {
+      // 채팅방 생성 또는 조회
+      await chatAPI.createOrGetChatRoom(user.userId, restaurant.id);
+      // 채팅 페이지로 이동
+      navigate('/chat');
+      onClose();
+    } catch (error) {
+      console.error('채팅 시작 오류:', error);
+      alert('채팅을 시작할 수 없습니다.');
+    }
   };
 
   const handleBackdropClick = (e) => {
@@ -48,7 +73,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     if (!restaurant?.id) return;
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/menus?storeId=${restaurant.id}`);
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '')}/menus?storeId=${restaurant.id}`);
       setMenus(response.data);
     } catch (err) {
       console.error('메뉴 로딩 오류:', err);
@@ -62,7 +87,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     if (!restaurant?.id) return;
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/events/active?storeId=${restaurant.id}`);
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '')}/events/active?storeId=${restaurant.id}`);
       setEvents(response.data);
     } catch (err) {
       console.error('이벤트 로딩 오류:', err);
@@ -76,7 +101,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     if (!restaurant?.id) return;
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/additional-info/available?storeId=${restaurant.id}`);
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '')}/additional-info/available?storeId=${restaurant.id}`);
       setAdditionalInfo(response.data);
     } catch (err) {
       console.error('추가정보 로딩 오류:', err);
@@ -90,7 +115,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     if (!restaurant?.id) return;
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/demo/reviews/restaurant/${restaurant.id}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/reviews/restaurant/${restaurant.id}`);
       setReviews(response.data);
     } catch (err) {
       console.error('리뷰 로딩 오류:', err);
@@ -362,7 +387,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                       <div className="menu-list-modal-image">
                         <img 
                           src={menu.imageUrl ? 
-                            `http://localhost:8080${menu.imageUrl}` : 
+                            getImageUrl(menu.imageUrl) : 
                             '/image-placeholder.svg'
                           } 
                           alt={menu.name}
@@ -425,7 +450,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                       <div className="event-image">
                         <img 
                           src={event.imageUrl ? 
-                            `http://localhost:8080/api/proxy/image?url=${encodeURIComponent(event.imageUrl)}` : 
+                            `${API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '')}/proxy/image?url=${encodeURIComponent(event.imageUrl)}` : 
                             'https://via.placeholder.com/300x200'
                           } 
                           alt={event.eventName}
@@ -570,7 +595,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                                 {reviewImages.map((imageUrl, index) => (
                                   <img 
                                     key={index}
-                                    src={`http://localhost:8080${imageUrl}`}
+                                    src={getImageUrl(imageUrl)}
                                     alt={`리뷰 이미지 ${index + 1}`}
                                     className="review-image"
                                     onClick={() => handleImageClick(imageUrl)}
@@ -620,6 +645,11 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
           <button className="btn btn-outline-secondary" onClick={onClose}>
             닫기
           </button>
+          {user && user.role === 'USER' && (
+            <button className="btn btn-chat" onClick={handleChat}>
+              💬 채팅하기
+            </button>
+          )}
           <button className="btn btn-primary" onClick={handleReservation}>
             예약하기
           </button>
@@ -634,7 +664,7 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
               ✕
             </button>
             <img 
-              src={`http://localhost:8080${selectedImage}`}
+              src={getImageUrl(selectedImage)}
               alt="확대된 리뷰 이미지"
               className="image-modal-content"
             />

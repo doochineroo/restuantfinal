@@ -13,6 +13,12 @@
   width: 100%;
 }
 
+/* 캘린더 컴포넌트는 별도 CSS에서 관리하므로 전역 스타일 적용 안함 */
+.main-content .react-calendar,
+.main-content .calendar-section {
+  /* ReservationCalendar.css의 스타일을 덮어쓰지 않도록 주석 처리 */
+}
+
 /* 검색 영역 */
 .search-section {
   margin-bottom: 20px;
@@ -881,6 +887,17 @@
   background: #5568d3;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.modal-actions .btn-chat {
+  background: #28a745;
+  color: white;
+}
+
+.modal-actions .btn-chat:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
 .review-count {

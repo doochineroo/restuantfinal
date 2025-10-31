@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../demo/context/AuthContext';
+import { API_ENDPOINTS } from '../constants/config/apiConfig';
 import axios from 'axios';
 import TopNav from '../components/TopNav';
 import MainNav from '../components/MainNav';
@@ -25,7 +26,7 @@ const ReservationHistoryPage = () => {
   const loadReservations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/demo/reservations/user/${user.userId}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/reservations/user/${user.userId}`);
       setReservations(response.data);
     } catch (error) {
       console.error('예약 내역 로드 오류:', error);

@@ -7,3 +7,6 @@ ALTER TABLE restaurants ADD COLUMN menu_image3 VARCHAR(500) NULL;
 
 
 
+
+
+

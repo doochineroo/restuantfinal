@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { chatAPI } from '../../demo/services/chatAPI';
 import './TopNav.css';
 
 const TopNav = () => {
@@ -18,9 +19,36 @@ const TopNav = () => {
   } = useNotification();
   
   const dropdownRef = useRef(null);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+
+  // 채팅 읽지 않은 메시지 개수 조회 (5초마다) - 일반회원만
+  useEffect(() => {
+    if (user?.userId && user?.role === 'USER') {
+      loadChatUnreadCount();
+      const interval = setInterval(loadChatUnreadCount, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const loadChatUnreadCount = async () => {
+    if (!user?.userId) return;
+    try {
+      const response = await chatAPI.getUnreadChatRoomCount(user.userId);
+      setChatUnreadCount(response.data.count || 0);
+    } catch (error) {
+      console.error('채팅 알림 개수 조회 오류:', error);
+    }
+  };
+
+  const handleChatClick = () => {
+    navigate('/chat');
+  };
 
   const handleLogout = () => {
-    logout();
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      logout();
+      navigate('/login');
+    }
   };
 
   const handleLogin = () => {
@@ -81,6 +109,18 @@ const TopNav = () => {
 
         {/* 우측 메뉴 */}
         <div className="top-nav-right">
+          {/* 채팅 (일반회원만) */}
+          {user && user.role === 'USER' && (
+            <div className="chat-section">
+              <button className="chat-btn" onClick={handleChatClick} title="채팅 보기">
+                <span className="chat-icon">💬</span>
+                {chatUnreadCount > 0 && (
+                  <span className="chat-badge-nav">{chatUnreadCount}</span>
+                )}
+              </button>
+            </div>
+          )}
+          
           {/* 알림 */}
           <div className="notification-section" ref={dropdownRef}>
             <button className="notification-btn" onClick={toggleDropdown}>

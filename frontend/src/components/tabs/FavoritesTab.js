@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
 import { favoritesAPI, statisticsAPI } from '../../demo/services/apiService';
+import { getImageUrl } from '../../constants/config/apiConfig';
 import './FavoritesTab.css';
 
 const FavoritesTab = () => {
@@ -19,12 +20,7 @@ const FavoritesTab = () => {
 
   // 이미지 URL을 절대 URL로 변환하는 함수
   const convertToAbsoluteUrl = (url) => {
-    if (!url) return null;
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/uploads/')) {
-      return `http://localhost:8080${url}`;
-    }
-    return url;
+    return getImageUrl(url);
   };
 
   const loadFavorites = async () => {

@@ -4,6 +4,7 @@ import CancelReasonModal from './CancelReasonModal';
 import AppealModal from './AppealModal';
 import useConfirmModal from '../../hooks/useConfirmModal';
 import { reservationAPI } from '../../demo/services/api';
+import { API_ENDPOINTS } from '../../constants/config/apiConfig';
 import axios from 'axios';
 import './ReservationDetailModal.css';
 
@@ -49,7 +50,7 @@ const ReservationDetailModal = ({
   const loadDetailedReservation = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8080/api/demo/reservations/${reservation.id}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/reservations/${reservation.id}`);
       setDetailedReservation(response.data);
     } catch (error) {
       console.error('예약 상세 정보 로드 오류:', error);
@@ -130,7 +131,7 @@ const ReservationDetailModal = ({
         images: reviewData.images
       };
 
-      await axios.post('http://localhost:8080/api/demo/reviews', reviewPayload);
+      await axios.post(`${API_ENDPOINTS.DEMO}/reviews`, reviewPayload);
       
       alert('리뷰가 성공적으로 작성되었습니다!');
       setShowReviewModal(false);
@@ -204,7 +205,7 @@ const ReservationDetailModal = ({
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await axios.post('http://localhost:8080/api/demo/reviews/upload', formData, {
+        const response = await axios.post(`${API_ENDPOINTS.DEMO}/reviews/upload`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }

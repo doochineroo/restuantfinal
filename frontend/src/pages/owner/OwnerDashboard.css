@@ -221,6 +221,27 @@
   margin-left: auto;
 }
 
+.owner-dashboard .unread-dot {
+  width: 8px;
+  height: 8px;
+  background: #ff5a5f;
+  border-radius: 50%;
+  margin-left: auto;
+  display: inline-block;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
 /* 사이드바 하단 */
 .owner-dashboard .sidebar-footer {
   padding: 6px 12px;
@@ -229,11 +250,60 @@
 
 .owner-dashboard .restaurant-info {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 8px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  border-radius: 4px;
+}
+
+.owner-dashboard .chat-notification-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 166, 153, 0.2);
+  border: 1px solid rgba(0, 166, 153, 0.4);
+  border-radius: 4px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+}
+
+.owner-dashboard .chat-notification-btn:hover {
+  background: rgba(0, 166, 153, 0.3);
+  border-color: rgba(0, 166, 153, 0.6);
+  transform: translateY(-1px);
+}
+
+.owner-dashboard .chat-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .owner-dashboard .restaurant-avatar {
@@ -246,7 +316,7 @@
 
 .owner-dashboard .restaurant-details .restaurant-name {
   margin: 0;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 500;
   color: white;
   white-space: nowrap;
@@ -258,7 +328,7 @@
 
 .owner-dashboard .restaurant-details .restaurant-branch {
   margin: 0;
-  font-size: 10px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.3;
 }
@@ -1254,6 +1324,11 @@
   color: white;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* 캘린더 컴포넌트는 ReservationCalendar.css에서 관리하므로 여기서는 건드리지 않음 */
+.owner-dashboard .calendar-section .react-calendar {
+  /* ReservationCalendar.css의 스타일을 덮어쓰지 않도록 주석 처리 */
 }
 
 /* 반응형 */
@@ -3491,6 +3566,70 @@
   color: #e0e0e0;
   margin-bottom: 15px;
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #b0b0b0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+  transition: all 0.2s ease;
+  position: relative;
+  pointer-events: auto;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.help-icon:hover {
+  background: rgba(0, 166, 153, 0.3);
+  color: #00a699;
+}
+
+.help-icon:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid rgba(0, 166, 153, 0.4);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+  max-width: 260px;
+  width: max-content;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.help-icon:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #1a1a1a;
+  z-index: 1001;
 }
 
 .empty-chart {
@@ -3537,6 +3676,48 @@
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
+  display: inline-block;
+}
+
+/* 상태별 색상 - 더 구체적인 선택자 사용 */
+.mini-reservation-item .mini-status.status-pending,
+.mini-reservation-item .mini-status[class*="status-pending"],
+.reservation-chart .mini-status.status-pending,
+.reservation-chart .mini-status[class*="status-pending"] {
+  background: rgba(255, 193, 7, 0.2) !important;
+  color: #ffc107 !important;
+}
+
+.mini-reservation-item .mini-status.status-approved,
+.mini-reservation-item .mini-status[class*="status-approved"],
+.reservation-chart .mini-status.status-approved,
+.reservation-chart .mini-status[class*="status-approved"] {
+  background: rgba(0, 166, 153, 0.2) !important;
+  color: #00a699 !important;
+}
+
+.mini-reservation-item .mini-status.status-rejected,
+.mini-reservation-item .mini-status[class*="status-rejected"],
+.reservation-chart .mini-status.status-rejected,
+.reservation-chart .mini-status[class*="status-rejected"] {
+  background: rgba(255, 90, 95, 0.2) !important;
+  color: #ff5a5f !important;
+}
+
+.mini-reservation-item .mini-status.status-cancelled,
+.mini-reservation-item .mini-status[class*="status-cancelled"],
+.reservation-chart .mini-status.status-cancelled,
+.reservation-chart .mini-status[class*="status-cancelled"] {
+  background: rgba(255, 90, 95, 0.2) !important;
+  color: #ff5a5f !important;
+}
+
+.mini-reservation-item .mini-status.status-completed,
+.mini-reservation-item .mini-status[class*="status-completed"],
+.reservation-chart .mini-status.status-completed,
+.reservation-chart .mini-status[class*="status-completed"] {
+  background: rgba(102, 126, 234, 0.2) !important;
+  color: #667eea !important;
 }
 
 /* ========== 리뷰 관리 스타일 ========== */
@@ -3758,4 +3939,23 @@
   background: #5a6268;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 방문확인 버튼 스타일 */
+.btn-visit {
+  padding: 6px 12px;
+  background: #00a699;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-visit:hover {
+  background: #008b80;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 166, 153, 0.3);
 }

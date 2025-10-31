@@ -52,6 +52,61 @@
   gap: 16px;
 }
 
+/* 채팅 섹션 */
+.chat-section {
+  position: relative;
+}
+
+.chat-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.chat-btn:hover {
+  background: #f8f9fa;
+  transform: scale(1.05);
+}
+
+.chat-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.chat-badge-nav {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #28a745;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  animation: pulse-chat 2s infinite;
+}
+
+@keyframes pulse-chat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* 알림 섹션 */
 .notification-section {
   position: relative;
@@ -376,6 +431,14 @@
   }
   
   .notification-icon {
+    font-size: 16px;
+  }
+
+  .chat-btn {
+    padding: 6px;
+  }
+  
+  .chat-icon {
     font-size: 16px;
   }
 }

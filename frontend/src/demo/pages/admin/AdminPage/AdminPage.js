@@ -2,12 +2,14 @@
  * 테스트용 관리자 페이지 - 데모 종료 시 제거 예정
  */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { adminAPI, reviewAPI, reservationAPI } from '../../../services/api';
 import axios from 'axios';
 import './AdminPage.css';
 
 const AdminPage = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [loading, setLoading] = useState(false);
@@ -230,7 +232,12 @@ const AdminPage = () => {
           <div className="user-info">
             <span className="user-name">{user?.name}</span>
           </div>
-          <button className="logout-btn" onClick={logout}>
+          <button className="logout-btn" onClick={() => {
+            if (window.confirm('로그아웃 하시겠습니까?')) {
+              logout();
+              navigate('/login');
+            }
+          }}>
             로그아웃
           </button>
         </div>

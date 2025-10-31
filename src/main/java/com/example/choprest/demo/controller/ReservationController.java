@@ -78,6 +78,28 @@ public class ReservationController {
         }
     }
     
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateReservationStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        try {
+            String status = body.getOrDefault("status", "");
+            String reason = body.getOrDefault("reason", null);
+            
+            if (status == null || status.isEmpty()) {
+                return ResponseEntity.badRequest().body("예약 상태를 입력해주세요.");
+            }
+            
+            Reservation reservation = reservationService.updateReservationStatus(id, status, reason);
+            return ResponseEntity.ok(reservation);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("찾을 수 없습니다")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("예약 상태 변경 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+    
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelReservation(@PathVariable Long id) {
         try {

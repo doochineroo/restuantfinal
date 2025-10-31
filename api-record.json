@@ -1,0 +1,18 @@
+{
+  "Changes": [
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.chopplan.kro.kr",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "3.37.176.10"
+          }
+        ]
+      }
+    }
+  ]
+}
+
