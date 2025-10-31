@@ -29,27 +29,10 @@ const NotificationModal = ({
     }
   };
 
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return '✅';
-      case 'error':
-        return '❌';
-      case 'warning':
-        return '⚠️';
-      case 'info':
-      default:
-        return 'ℹ️';
-    }
-  };
-
   return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
       <div className="notification-modal">
         <div className={`notification-header notification-header-${type}`}>
-          <div className="notification-icon">
-            {getIcon()}
-          </div>
           <h3 className={`notification-title notification-title-${type}`}>{title}</h3>
         </div>
         

@@ -15,6 +15,9 @@ public class SignupRequest {
     private String phone;
     private User.UserRole role;
     
+    // 이메일 인증 코드 (회원가입 시 필수)
+    private String verificationCode;
+    
     // OWNER 회원가입 시 기존 식당 선택 (옵션 1)
     private Long restaurantId;
     

@@ -1,11 +1,12 @@
 /**
  * 테스트용 로그인/회원가입 페이지 - 데모 종료 시 제거 예정
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { authAPI } from '../../../services/api';
 import SimpleAddressSearch from '../../../../components/SimpleAddressSearch';
+import NotificationModal from '../../../../components/common/NotificationModal';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -15,8 +16,10 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
+    passwordConfirm: '',
     name: '',
     email: '',
+    emailVerificationCode: '',
     phone: '',
     role: 'USER',
     restaurantRegistrationType: 'existing', // 'existing' or 'new'
@@ -30,8 +33,80 @@ const LoginPage = () => {
     lng: null,
     regionName: null
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); // 문자열만 저장
   const [loading, setLoading] = useState(false);
+  
+  // 회원가입 유효성 검사 상태
+  const [validation, setValidation] = useState({
+    usernameChecked: false,
+    usernameAvailable: false,
+    passwordValid: false,
+    passwordMatch: false,
+    emailCodeSent: false,
+    emailVerified: false,
+  });
+  
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  
+  // 알림 모달 상태
+  const [notificationModal, setNotificationModal] = useState({
+    isOpen: false,
+    type: 'info', // success, error, warning, info
+    title: '',
+    message: ''
+  });
+  
+  // 알림 모달 표시 함수
+  const showNotification = (type, title, message) => {
+    setNotificationModal({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+  
+  // 알림 모달 닫기 함수
+  const closeNotification = () => {
+    setNotificationModal(prev => ({ ...prev, isOpen: false }));
+  };
+  
+  // 아이디 조건: 영문, 숫자, 4-20자
+  const isUsernameValid = (username) => /^[a-zA-Z0-9]{4,20}$/.test(username);
+  
+  // 비밀번호 조건: 8자 이상, 영문/숫자/특수문자 포함
+  const isPasswordValid = (password) => {
+    return password.length >= 8 && 
+           /[a-zA-Z]/.test(password) && 
+           /[0-9]/.test(password) && 
+           /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  };
+  
+  // 에러 메시지를 문자열로 변환하는 헬퍼 함수
+  const getErrorMessage = (error) => {
+    if (!error) return '';
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object') {
+      // Spring Boot 에러 응답 객체인 경우
+      if (error.message) return error.message;
+      if (error.error) return error.error;
+      // 객체의 모든 값을 문자열로 합치기
+      return Object.values(error).filter(v => typeof v === 'string').join(', ') || '오류가 발생했습니다.';
+    }
+    return String(error);
+  };
+
+  // 이메일 인증 코드가 입력되면 검증 상태 업데이트
+  useEffect(() => {
+    if (formData.emailVerificationCode && formData.emailVerificationCode.length === 6) {
+      // 실제로는 백엔드에서 검증하지만, 여기서는 길이만 확인
+      // 실제 검증은 회원가입 시 서버에서 이루어짐
+      setValidation(prev => ({ ...prev, emailVerified: true }));
+    } else {
+      setValidation(prev => ({ ...prev, emailVerified: false }));
+    }
+  }, [formData.emailVerificationCode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,6 +114,142 @@ const LoginPage = () => {
       ...prev,
       [name]: value
     }));
+    
+    // 실시간 유효성 검사
+    if (name === 'password') {
+      setValidation(prev => ({
+        ...prev,
+        passwordValid: isPasswordValid(value),
+        passwordMatch: value === formData.passwordConfirm
+      }));
+    } else if (name === 'passwordConfirm') {
+      setValidation(prev => ({
+        ...prev,
+        passwordMatch: value === formData.password
+      }));
+    } else if (name === 'username') {
+      setValidation(prev => ({
+        ...prev,
+        usernameChecked: false,
+        usernameAvailable: false
+      }));
+    }
+  };
+  
+  // 아이디 중복확인
+  const handleCheckUsername = async () => {
+    if (!formData.username) {
+      showNotification('warning', '입력 오류', '아이디를 입력해주세요.');
+      return;
+    }
+    
+    if (!isUsernameValid(formData.username)) {
+      showNotification('warning', '입력 오류', '아이디는 영문, 숫자로 4-20자로 입력해주세요.');
+      return;
+    }
+    
+    setCheckingUsername(true);
+    setError('');
+    
+    try {
+      const response = await authAPI.checkUsername(formData.username);
+      // API가 성공(200)을 반환하면 사용 가능
+      setValidation(prev => ({
+        ...prev,
+        usernameChecked: true,
+        usernameAvailable: true
+      }));
+      showNotification('success', '아이디 확인', '사용 가능한 아이디입니다.');
+    } catch (err) {
+      // 404 오류: 서버에서 엔드포인트를 찾을 수 없음
+      if (err.response?.status === 404) {
+        console.error('아이디 확인 API 엔드포인트를 찾을 수 없습니다. 백엔드 서버를 확인해주세요.');
+        showNotification('error', '서버 오류', '아이디 확인 기능이 서버에서 지원되지 않습니다. 백엔드 서버 설정을 확인해주세요.');
+        return;
+      }
+      
+      // 409 Conflict 또는 에러 메시지에 "존재"가 포함된 경우 중복
+      if (err.response?.status === 409 || 
+          (typeof err.response?.data === 'string' && err.response.data.includes('존재')) ||
+          (typeof err.response?.data === 'string' && err.response.data.includes('사용 중'))) {
+        setValidation(prev => ({
+          ...prev,
+          usernameChecked: true,
+          usernameAvailable: false
+        }));
+        showNotification('error', '아이디 중복', '이미 사용 중인 아이디입니다.');
+      } else {
+        console.error('아이디 확인 오류:', err);
+        const errorData = err.response?.data;
+        let errorMsg = '아이디 확인 중 오류가 발생했습니다.';
+        
+        if (errorData) {
+          errorMsg = getErrorMessage(errorData);
+        } else if (err.message) {
+          errorMsg = err.message;
+        }
+        
+        showNotification('error', '아이디 확인 오류', errorMsg);
+      }
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+  
+  // 이메일 인증 코드 발송 (재발송 포함)
+  const handleSendEmailCode = async () => {
+    if (!formData.email) {
+      showNotification('warning', '입력 오류', '이메일을 입력해주세요.');
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      showNotification('warning', '입력 오류', '올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+    
+    setSendingEmail(true);
+    setError('');
+    
+    try {
+      // 이미 발송된 경우 재발송 API 사용, 아니면 발송 API 사용
+      if (validation.emailCodeSent) {
+        await authAPI.resendVerificationEmail(formData.email);
+        showNotification('success', '인증 코드 재발송', '인증 코드가 재발송되었습니다.');
+      } else {
+        await authAPI.sendVerificationEmail(formData.email);
+        setValidation(prev => ({
+          ...prev,
+          emailCodeSent: true
+        }));
+        showNotification('success', '인증 코드 발송', '인증 코드가 발송되었습니다. 이메일을 확인해주세요.');
+      }
+    } catch (err) {
+      console.error('이메일 인증 코드 발송 오류:', err);
+      console.error('에러 응답 데이터:', err.response?.data);
+      console.error('에러 상태 코드:', err.response?.status);
+      const errorMsg = err.response?.data || err.message || '인증 코드 발송에 실패했습니다.';
+      showNotification('error', '이메일 발송 오류', getErrorMessage(errorMsg));
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+  
+  // 이메일 인증 코드 재발송
+  const handleResendEmailCode = async () => {
+    setSendingEmail(true);
+    setError('');
+    
+    try {
+        await authAPI.resendVerificationEmail(formData.email);
+        showNotification('success', '인증 코드 재발송', '인증 코드가 재발송되었습니다.');
+    } catch (err) {
+      const errorMsg = err.response?.data || err.message || '인증 코드 재발송에 실패했습니다.';
+      showNotification('error', '재발송 오류', getErrorMessage(errorMsg));
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   // 주소 선택 핸들러
@@ -61,6 +272,31 @@ const LoginPage = () => {
 
     try {
       if (isSignup) {
+        // 회원가입 유효성 검사
+        if (!validation.usernameChecked || !validation.usernameAvailable) {
+          showNotification('warning', '입력 오류', '아이디 중복확인을 해주세요.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!validation.passwordValid) {
+          showNotification('warning', '입력 오류', '비밀번호는 8자 이상, 영문/숫자/특수문자를 포함해야 합니다.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!validation.passwordMatch) {
+          showNotification('warning', '입력 오류', '비밀번호가 일치하지 않습니다.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!validation.emailVerified) {
+          showNotification('warning', '입력 오류', '이메일 인증을 완료해주세요.');
+          setLoading(false);
+          return;
+        }
+        
         // 회원가입
         const signupData = {
           username: formData.username,
@@ -68,7 +304,8 @@ const LoginPage = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          role: formData.role
+          role: formData.role,
+          verificationCode: formData.emailVerificationCode
         };
 
         // OWNER인 경우 - 매장 정보 검증
@@ -76,7 +313,7 @@ const LoginPage = () => {
           if (formData.restaurantRegistrationType === 'existing') {
             // 기존 매장 선택
             if (!formData.restaurantId || formData.restaurantId.trim() === '') {
-              setError('기존 매장 ID를 입력해주세요.');
+              showNotification('warning', '입력 오류', '기존 매장 ID를 입력해주세요.');
               setLoading(false);
               return;
             }
@@ -84,7 +321,7 @@ const LoginPage = () => {
           } else {
             // 새 매장 등록
             if (!formData.restaurantName || !formData.roadAddress) {
-              setError('매장명과 주소는 필수 입력 항목입니다.');
+              showNotification('warning', '입력 오류', '매장명과 주소는 필수 입력 항목입니다.');
               setLoading(false);
               return;
             }
@@ -96,10 +333,16 @@ const LoginPage = () => {
         }
 
         const response = await authAPI.signup(signupData);
+        
+        // 이메일 인증 완료 상태로 업데이트
+        setValidation(prev => ({ ...prev, emailVerified: true }));
+        
         login(response.data);
-        alert('회원가입이 완료되었습니다! 매장이 등록되었습니다.');
+        showNotification('success', '회원가입 완료', '회원가입이 완료되었습니다!');
         // OWNER는 대시보드로, 다른 역할은 홈으로
-        navigate(response.data.role === 'OWNER' ? '/owner-dashboard' : '/');
+        setTimeout(() => {
+          navigate(response.data.role === 'OWNER' ? '/owner-dashboard' : '/');
+        }, 1500);
       } else {
         // 로그인
         const response = await authAPI.login({
@@ -107,17 +350,22 @@ const LoginPage = () => {
           password: formData.password
         });
         login(response.data);
+        showNotification('success', '로그인 성공', '로그인되었습니다!');
         // OWNER는 대시보드로, 다른 역할은 홈으로
-        navigate(response.data.role === 'OWNER' ? '/owner-dashboard' : '/');
+        setTimeout(() => {
+          navigate(response.data.role === 'OWNER' ? '/owner-dashboard' : '/');
+        }, 1500);
       }
     } catch (err) {
       console.error('로그인/회원가입 오류:', err);
       if (err.code === 'ERR_NETWORK') {
-        setError('서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+        showNotification('error', '연결 오류', '서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
       } else if (err.response?.status === 404) {
-        setError('API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.');
+        showNotification('error', 'API 오류', 'API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.');
       } else {
-        setError(err.response?.data?.message || err.response?.data || '오류가 발생했습니다.');
+        const errorData = err.response?.data;
+        const errorMsg = errorData?.message || errorData || err.message || '오류가 발생했습니다.';
+        showNotification('error', '오류 발생', getErrorMessage(errorMsg));
       }
     } finally {
       setLoading(false);
@@ -148,31 +396,119 @@ const LoginPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="demo-login-form">
-          {error && <div className="demo-error-message">{error}</div>}
+          {/* 에러 메시지는 NotificationModal로 표시 */}
 
           <div className="demo-form-group">
             <label>아이디</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="아이디를 입력하세요"
-            />
+            {isSignup ? (
+              // 회원가입 모드: 중복확인 버튼 및 조건 검사
+              <>
+                <div className="input-with-button">
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                    placeholder="영문, 숫자 4-20자"
+                    className={validation.usernameChecked ? (validation.usernameAvailable ? 'valid' : 'invalid') : ''}
+                  />
+                  <button
+                    type="button"
+                    className="check-btn"
+                    onClick={handleCheckUsername}
+                    disabled={checkingUsername || !formData.username || formData.username.trim().length < 4}
+                  >
+                    {checkingUsername ? '확인 중...' : '중복확인'}
+                  </button>
+                </div>
+                {formData.username && !isUsernameValid(formData.username) && (
+                  <small className="validation-error">영문, 숫자로 4-20자로 입력해주세요.</small>
+                )}
+                {validation.usernameChecked && validation.usernameAvailable && (
+                  <small className="validation-success">✓ 사용 가능한 아이디입니다.</small>
+                )}
+                {validation.usernameChecked && !validation.usernameAvailable && (
+                  <small className="validation-error">✗ 이미 사용 중인 아이디입니다.</small>
+                )}
+              </>
+            ) : (
+              // 로그인 모드: 단순 입력만
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="아이디를 입력하세요"
+              />
+            )}
           </div>
 
           <div className="demo-form-group">
             <label>비밀번호</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="비밀번호를 입력하세요"
-            />
+            {isSignup ? (
+              // 회원가입 모드: 조건 안내
+              <>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="8자 이상, 영문/숫자/특수문자 포함"
+                  className={formData.password && (validation.passwordValid ? 'valid' : 'invalid')}
+                />
+                {formData.password && (
+                  <div className="password-requirements">
+                    <small className={formData.password.length >= 8 ? 'requirement-met' : 'requirement-unmet'}>
+                      {formData.password.length >= 8 ? '✓' : '○'} 8자 이상
+                    </small>
+                    <small className={/[a-zA-Z]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                      {/[a-zA-Z]/.test(formData.password) ? '✓' : '○'} 영문 포함
+                    </small>
+                    <small className={/[0-9]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                      {/[0-9]/.test(formData.password) ? '✓' : '○'} 숫자 포함
+                    </small>
+                    <small className={/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? 'requirement-met' : 'requirement-unmet'}>
+                      {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? '✓' : '○'} 특수문자 포함
+                    </small>
+                  </div>
+                )}
+              </>
+            ) : (
+              // 로그인 모드: 단순 입력만
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="비밀번호를 입력하세요"
+              />
+            )}
           </div>
+
+          {isSignup && (
+            <div className="demo-form-group">
+              <label>비밀번호 재확인</label>
+              <input
+                type="password"
+                name="passwordConfirm"
+                value={formData.passwordConfirm}
+                onChange={handleChange}
+                required
+                placeholder="비밀번호를 다시 입력하세요"
+                className={formData.passwordConfirm && (validation.passwordMatch ? 'valid' : 'invalid')}
+              />
+              {formData.passwordConfirm && !validation.passwordMatch && (
+                <small className="validation-error">비밀번호가 일치하지 않습니다.</small>
+              )}
+              {formData.passwordConfirm && validation.passwordMatch && (
+                <small className="validation-success">✓ 비밀번호가 일치합니다.</small>
+              )}
+            </div>
+          )}
 
           {isSignup && (
             <>
@@ -190,14 +526,51 @@ const LoginPage = () => {
 
               <div className="demo-form-group">
                 <label>이메일</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="example@email.com"
-                />
+                <div className="input-with-button">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="example@email.com"
+                  />
+                  <button
+                    type="button"
+                    className="check-btn"
+                    onClick={handleSendEmailCode}
+                    disabled={sendingEmail || !formData.email}
+                  >
+                    {sendingEmail ? '발송 중...' : validation.emailCodeSent ? '재발송' : '인증 코드 발송'}
+                  </button>
+                </div>
+                {validation.emailCodeSent && (
+                  <>
+                    <input
+                      type="text"
+                      name="emailVerificationCode"
+                      value={formData.emailVerificationCode}
+                      onChange={handleChange}
+                      required
+                      placeholder="인증 코드 6자리 입력"
+                      className="verification-code-input"
+                      maxLength="6"
+                    />
+                    <div className="email-verification-actions">
+                      <button
+                        type="button"
+                        className="resend-btn"
+                        onClick={handleResendEmailCode}
+                        disabled={sendingEmail}
+                      >
+                        {sendingEmail ? '재발송 중...' : '재발송'}
+                      </button>
+                    </div>
+                  </>
+                )}
+                {formData.emailVerificationCode && formData.emailVerificationCode.length === 6 && (
+                  <small className="validation-info">인증 코드를 입력하고 회원가입을 진행해주세요.</small>
+                )}
               </div>
 
               <div className="demo-form-group">
@@ -333,13 +706,24 @@ const LoginPage = () => {
           <h3>🧪 테스트 계정</h3>
           <ul>
             <li><strong>관리자:</strong> admin / admin123</li>
-            <li><strong>가게주인:</strong> owner / owner123</li>
-            <li><strong>회원:</strong> user / user123</li>
+            <li><strong>가게주인:</strong> o12 / 1234</li>
+            <li><strong>회원:</strong> newuser1 / test123</li>
           </ul>
           <p className="demo-note">* 먼저 회원가입을 통해 계정을 생성한 후 로그인하세요</p>
           <p className="demo-note">* 백엔드 서버가 실행 중인지 확인해주세요 (http://localhost:8080)</p>
         </div>
       </div>
+      
+      {/* 알림 팝업 */}
+      <NotificationModal
+        isOpen={notificationModal.isOpen}
+        onClose={closeNotification}
+        type={notificationModal.type}
+        title={notificationModal.title}
+        message={notificationModal.message}
+        buttonText="확인"
+        autoClose={false}
+      />
     </div>
   );
 };

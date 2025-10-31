@@ -35,6 +35,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
     
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean emailVerified;
+    
     @Column(nullable = false)
     private String phone;
     
@@ -63,6 +66,9 @@ public class User {
         updatedAt = LocalDateTime.now();
         if (status == null) {
             status = UserStatus.ACTIVE;
+        }
+        if (emailVerified == null) {
+            emailVerified = false;
         }
     }
     

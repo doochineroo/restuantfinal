@@ -10,6 +10,9 @@ const API_BASE_URL = API_ENDPOINTS.DEMO;
 export const authAPI = {
   signup: (data) => axios.post(`${API_BASE_URL}/auth/signup`, data),
   login: (data) => axios.post(`${API_BASE_URL}/auth/login`, data),
+  checkUsername: (username) => axios.get(`${API_BASE_URL}/auth/check-username?username=${username}`),
+  sendVerificationEmail: (email) => axios.post(`${API_BASE_URL}/auth/send-verification`, { email }),
+  resendVerificationEmail: (email) => axios.post(`${API_BASE_URL}/auth/resend-verification`, { email }),
 };
 
 // Reservation API (실제 API 호출)

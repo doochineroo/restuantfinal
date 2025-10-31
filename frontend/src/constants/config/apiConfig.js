@@ -4,8 +4,10 @@
  * 없으면 기본값을 사용합니다.
  */
 
-// 기본 API 베이스 URL
-const DEFAULT_API_BASE_URL = 'http://ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com:8080/api';
+// 기본 API 베이스 URL (로컬 개발 환경)
+const DEFAULT_API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'http://ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com:8080/api'
+  : 'http://localhost:8080/api';
 
 // 환경변수 또는 기본값 사용
 export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || DEFAULT_API_BASE_URL;

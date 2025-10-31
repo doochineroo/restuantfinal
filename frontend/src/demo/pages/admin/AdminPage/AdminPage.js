@@ -5,6 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { adminAPI, reviewAPI, reservationAPI } from '../../../services/api';
+import NotificationModal from '../../../../components/common/NotificationModal';
+import ConfirmModal from '../../../../components/common/ConfirmModal';
+import useConfirmModal from '../../../../hooks/useConfirmModal';
 import axios from 'axios';
 import './AdminPage.css';
 
@@ -13,6 +16,30 @@ const AdminPage = () => {
   const { user, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [loading, setLoading] = useState(false);
+  
+  // 팝업 모달 상태
+  const { modalState, showConfirm, hideConfirm, handleConfirm } = useConfirmModal();
+  const [notificationModal, setNotificationModal] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+  
+  // 알림 모달 표시 함수
+  const showNotification = (type, title, message) => {
+    setNotificationModal({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+  
+  // 알림 모달 닫기 함수
+  const closeNotification = () => {
+    setNotificationModal(prev => ({ ...prev, isOpen: false }));
+  };
   
   // 데이터 상태
   const [users, setUsers] = useState([]);
@@ -34,7 +61,7 @@ const AdminPage = () => {
 
   useEffect(() => {
     if (user?.role !== 'ADMIN') {
-      alert('관리자만 접근할 수 있습니다.');
+      showNotification('error', '접근 권한 없음', '관리자만 접근할 수 있습니다.');
       return;
     }
     loadDashboardData();
@@ -107,22 +134,30 @@ const AdminPage = () => {
   const handleUserStatusChange = async (userId, status) => {
     try {
       await adminAPI.updateUserStatus(userId, status);
-      alert('사용자 상태가 변경되었습니다.');
+      showNotification('success', '상태 변경 완료', '사용자 상태가 변경되었습니다.');
       loadMenuData();
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      showNotification('error', '오류 발생', '오류가 발생했습니다.');
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('정말 이 사용자를 삭제하시겠습니까?')) return;
-    try {
-      await adminAPI.deleteUser(userId);
-      alert('사용자가 삭제되었습니다.');
-      loadMenuData();
-    } catch (error) {
-      alert('오류가 발생했습니다.');
-    }
+    showConfirm({
+      title: '사용자 삭제',
+      message: '정말 이 사용자를 삭제하시겠습니까?',
+      confirmText: '삭제',
+      cancelText: '취소',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await adminAPI.deleteUser(userId);
+          showNotification('success', '삭제 완료', '사용자가 삭제되었습니다.');
+          loadMenuData();
+        } catch (error) {
+          showNotification('error', '오류 발생', '오류가 발생했습니다.');
+        }
+      }
+    });
   };
 
   const getRoleBadge = (role) => {
@@ -233,10 +268,17 @@ const AdminPage = () => {
             <span className="user-name">{user?.name}</span>
           </div>
           <button className="logout-btn" onClick={() => {
-            if (window.confirm('로그아웃 하시겠습니까?')) {
-              logout();
-              navigate('/login');
-            }
+            showConfirm({
+              title: '로그아웃',
+              message: '로그아웃 하시겠습니까?',
+              confirmText: '로그아웃',
+              cancelText: '취소',
+              type: 'warning',
+              onConfirm: () => {
+                logout();
+                navigate('/login');
+              }
+            });
           }}>
             로그아웃
           </button>
@@ -591,6 +633,29 @@ const AdminPage = () => {
           </div>
         )}
       </div>
+      
+      {/* 확인 팝업 */}
+      <ConfirmModal
+        isOpen={modalState.isOpen}
+        onClose={hideConfirm}
+        onConfirm={handleConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        type={modalState.type}
+      />
+      
+      {/* 알림 팝업 */}
+      <NotificationModal
+        isOpen={notificationModal.isOpen}
+        onClose={closeNotification}
+        type={notificationModal.type}
+        title={notificationModal.title}
+        message={notificationModal.message}
+        buttonText="확인"
+        autoClose={false}
+      />
     </div>
   );
 };

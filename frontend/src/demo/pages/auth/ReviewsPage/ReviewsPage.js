@@ -5,6 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { reviewAPI } from '../../../services/api';
 import { API_ENDPOINTS } from '../../../../constants/config/apiConfig';
+import NotificationModal from '../../../../components/common/NotificationModal';
+import ConfirmModal from '../../../../components/common/ConfirmModal';
+import useConfirmModal from '../../../../hooks/useConfirmModal';
 import axios from 'axios';
 import './ReviewsPage.css';
 
@@ -23,6 +26,30 @@ const ReviewsPage = () => {
     images: []
   });
   const [uploadingImages, setUploadingImages] = useState(false);
+  
+  // 팝업 모달 상태
+  const { modalState, showConfirm, hideConfirm, handleConfirm } = useConfirmModal();
+  const [notificationModal, setNotificationModal] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+  
+  // 알림 모달 표시 함수
+  const showNotification = (type, title, message) => {
+    setNotificationModal({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+  
+  // 알림 모달 닫기 함수
+  const closeNotification = () => {
+    setNotificationModal(prev => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     loadMyReviews();
@@ -82,13 +109,13 @@ const ReviewsPage = () => {
         images: formData.images
       });
 
-      alert('리뷰가 작성되었습니다!');
+      showNotification('success', '리뷰 작성 완료', '리뷰가 작성되었습니다!');
       setFormData({ rating: 5, content: '', images: [] });
       setShowWriteForm(false);
       loadMyReviews();
       loadRestaurantReviews(selectedRestaurant.id);
     } catch (error) {
-      alert('오류가 발생했습니다.');
+      showNotification('error', '오류 발생', '오류가 발생했습니다.');
     }
   };
 
@@ -101,14 +128,14 @@ const ReviewsPage = () => {
     const remainingSlots = maxImages - currentImageCount;
     
     if (remainingSlots <= 0) {
-      alert('최대 5장까지만 업로드할 수 있습니다.');
+      showNotification('warning', '업로드 제한', '최대 5장까지만 업로드할 수 있습니다.');
       return;
     }
     
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     
     if (files.length > remainingSlots) {
-      alert(`${remainingSlots}장만 업로드됩니다. (최대 5장 제한)`);
+      showNotification('info', '업로드 안내', `${remainingSlots}장만 업로드됩니다. (최대 5장 제한)`);
     }
     
     try {
@@ -144,7 +171,7 @@ const ReviewsPage = () => {
       
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
-      alert(error.message || '이미지 업로드에 실패했습니다.');
+      showNotification('error', '업로드 실패', error.message || '이미지 업로드에 실패했습니다.');
     } finally {
       setUploadingImages(false);
     }
@@ -181,14 +208,22 @@ const ReviewsPage = () => {
   };
 
   const handleReport = async (reviewId) => {
-    if (!window.confirm('이 리뷰를 신고하시겠습니까?')) return;
-
-    try {
-      await reviewAPI.report(reviewId);
-      alert('신고가 접수되었습니다.');
-    } catch (error) {
-      console.error(error);
-    }
+    showConfirm({
+      title: '리뷰 신고',
+      message: '이 리뷰를 신고하시겠습니까?',
+      confirmText: '신고',
+      cancelText: '취소',
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          await reviewAPI.report(reviewId);
+          showNotification('success', '신고 접수', '신고가 접수되었습니다.');
+        } catch (error) {
+          console.error(error);
+          showNotification('error', '신고 실패', '신고 처리에 실패했습니다.');
+        }
+      }
+    });
   };
 
   const renderStars = (rating) => {
@@ -435,6 +470,29 @@ const ReviewsPage = () => {
           )}
         </div>
       </div>
+      
+      {/* 확인 팝업 */}
+      <ConfirmModal
+        isOpen={modalState.isOpen}
+        onClose={hideConfirm}
+        onConfirm={handleConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        type={modalState.type}
+      />
+      
+      {/* 알림 팝업 */}
+      <NotificationModal
+        isOpen={notificationModal.isOpen}
+        onClose={closeNotification}
+        type={notificationModal.type}
+        title={notificationModal.title}
+        message={notificationModal.message}
+        buttonText="확인"
+        autoClose={false}
+      />
     </div>
   );
 };
