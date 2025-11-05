@@ -4,7 +4,7 @@ import CancelReasonModal from './CancelReasonModal';
 import AppealModal from './AppealModal';
 import useConfirmModal from '../../hooks/useConfirmModal';
 import { reservationAPI } from '../../demo/services/api';
-import { API_ENDPOINTS } from '../../constants/config/apiConfig';
+import { API_ENDPOINTS, getImageUrl } from '../../constants/config/apiConfig';
 import axios from 'axios';
 import './ReservationDetailModal.css';
 
@@ -535,18 +535,21 @@ const ReservationDetailModal = ({
                 
                 {reviewData.images.length > 0 && (
                   <div className="uploaded-images">
-                    {reviewData.images.map((imageUrl, index) => (
-                      <div key={index} className="uploaded-image-item">
-                        <img src={`http://localhost:8080${imageUrl}`} alt={`리뷰 이미지 ${index + 1}`} />
-                        <button
-                          type="button"
-                          className="remove-image-btn"
-                          onClick={() => handleImageRemove(index)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                    {reviewData.images.map((imageUrl, index) => {
+                      const fullImageUrl = getImageUrl(imageUrl);
+                      return (
+                        <div key={index} className="uploaded-image-item">
+                          <img src={fullImageUrl} alt={`리뷰 이미지 ${index + 1}`} />
+                          <button
+                            type="button"
+                            className="remove-image-btn"
+                            onClick={() => handleImageRemove(index)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

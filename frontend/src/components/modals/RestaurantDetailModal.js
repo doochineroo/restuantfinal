@@ -450,12 +450,12 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
                       <div className="event-image">
                         <img 
                           src={event.imageUrl ? 
-                            `${API_ENDPOINTS.RESTAURANTS.replace('/restaurants', '')}/proxy/image?url=${encodeURIComponent(event.imageUrl)}` : 
-                            'https://via.placeholder.com/300x200'
+                            getImageUrl(event.imageUrl) : 
+                            '/image-placeholder.svg'
                           } 
                           alt={event.eventName}
                           onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/300x200';
+                            e.target.src = '/image-placeholder.svg';
                           }}
                         />
                         {event.isPopular && <span className="popular-badge">인기</span>}

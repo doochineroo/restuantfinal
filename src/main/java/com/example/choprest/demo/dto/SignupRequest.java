@@ -19,7 +19,10 @@ public class SignupRequest {
     private String verificationCode;
     
     // OWNER 회원가입 시 기존 식당 선택 (옵션 1)
-    private Long restaurantId;
+    private Long restaurantId; // DB의 id
+    
+    // OWNER 회원가입 시 식당 코드로 검색 (옵션 1-1: CSV의 식당 ID 사용)
+    private Long restaurantCode; // CSV의 식당 ID (restaurant_code)
     
     // OWNER 회원가입 시 새 식당 등록 (옵션 2)
     private String restaurantName;

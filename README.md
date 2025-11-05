@@ -1,47 +1,62 @@
-# restuantfinal
-1. 로컬 CMD:
-REM 빌드
+# 🍽️ ChopPlan - 식당 예약 시스템
+
+**사이트 이름: ChopPlan (촙플랜)**
+
+## 🚀 Google Cloud 배포 (Always Free 티어)
+
+### 배포 가이드
+자세한 배포 가이드는 [GCP_COMPLETE_DEPLOYMENT_GUIDE.md](GCP_COMPLETE_DEPLOYMENT_GUIDE.md)를 참고하세요.
+
+### 빠른 배포 (로컬에서 실행)
+
+#### 1. 백엔드 빌드 및 배포
+```bash
+# 빌드
 gradlew.bat clean build
+
+# Google Cloud VM으로 파일 전송
+gcloud compute scp build/libs/choprest-0.0.1-SNAPSHOT.jar chopplan-server:chopplan/ --zone=us-west1-a
+
+# 프론트엔드 파일 전송
+gcloud compute scp --recurse frontend/build/* chopplan-server:chopplan/static/ --zone=us-west1-a
+
+# 애플리케이션 재시작
+gcloud compute ssh chopplan-server --zone=us-west1-a --command="cd ~/chopplan && pkill -f java && sleep 2 && nohup java -jar choprest-0.0.1-SNAPSHOT.jar --spring.profiles.active=gcp > app.log 2>&1 &"
 ```
 
-#### EC2로 파일 전송
+#### 2. 외부 IP 확인
 ```bash
-scp -i chopplan.pem build\libs\choprest-0.0.1-SNAPSHOT.jar ubuntu@ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com:~/
+gcloud compute instances describe chopplan-server --zone=us-west1-a --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
 ```
 
-#### EC2 접속
-```bash
-ssh -i chopplan.pem ubuntu@ec2-52-78-137-215.ap-northeast-2.compute.amazonaws.com
-```
-
-### 2. EC2에서 실행
-```bash
-# 기존 Java 프로세스 종료
-pkill -f java
-
-# 새 버전 실행
-nohup java -jar choprest-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
-
-# 로그 확인
-tail -f app.log
-```
-
-### 3. 프론트엔드 배포 (로컬)
-```bash
-cd frontend
-npm run build
-cd ..
-aws s3 sync frontend\build/ s3://chopplandemo-app --delete
-aws cloudfront create-invalidation --distribution-id E285T5MAAKCZRR --paths "/*"
-```
+#### 3. 접속
+- 프론트엔드: `http://[EXTERNAL_IP]:8080`
+- 백엔드 API: `http://[EXTERNAL_IP]:8080/api`
 
 ## 📋 개발 환경 설정
 
 ### 백엔드
 - Java 17+
 - Spring Boot
-- MySQL (AWS RDS)
+- MySQL (로컬 또는 Google Cloud VM 내부 MySQL)
 - Gradle
+
+### 🆓 무료 데이터베이스 설정
+Google Cloud VM 내부에 MySQL을 설치하여 사용합니다 (Always Free 티어).
+
+**빠른 설정:**
+1. XAMPP 설치: https://www.apachefriends.org/download.html
+2. XAMPP Control Panel에서 MySQL 시작
+3. 데이터베이스 생성:
+   ```sql
+   CREATE DATABASE `restaurant-demo`;
+   ```
+4. 자동 설정 스크립트 실행:
+   ```bash
+   setup-local-database.bat
+   ```
+
+자세한 가이드는 [LOCAL_DATABASE_SETUP.md](LOCAL_DATABASE_SETUP.md)를 참고하세요.
 
 ### 프론트엔드
 - React 18
@@ -73,8 +88,23 @@ body {
 - MySQL 연결 정보
 
 ### 환경 변수
+
+#### 프론트엔드 환경 변수 설정
+프로덕션 배포 전에 `frontend/.env.production` 파일을 생성하세요:
+
+```env
+# Google Cloud VM 외부 IP로 변경 필요
+REACT_APP_API_BASE_URL=http://[EXTERNAL_IP]:8080/api
+PUBLIC_URL=/
+```
+
+외부 IP 확인 방법:
+```bash
+gcloud compute instances describe chopplan-server --zone=us-west1-a --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
+```
+
+#### 기타 설정
 - Kakao API Key: `0daaba62d376e0a4633352753a28827c`
-- CloudFront URL: `https://dpt8rhufx9b4x.cloudfront.net`
 
 ## 📱 모바일 최적화
 - 지도 토글 버튼 (모바일에서만 표시)

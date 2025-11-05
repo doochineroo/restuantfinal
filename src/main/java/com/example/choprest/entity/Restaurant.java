@@ -17,6 +17,9 @@ public class Restaurant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "restaurant_code", unique = true)
+    private Long restaurantCode; // CSV의 식당 ID (회원가입 시 식당 연결용)
+    
     @Column(name = "restaurant_name")
     private String restaurantName;
     
@@ -46,6 +49,50 @@ public class Restaurant {
     
     @Column(name = "opening_hours", columnDefinition = "TEXT")
     private String openingHours;
+    
+    // 요일별 운영시간
+    @Column(name = "monday_opening_hours", columnDefinition = "TEXT")
+    private String mondayOpeningHours;
+    
+    @Column(name = "tuesday_opening_hours", columnDefinition = "TEXT")
+    private String tuesdayOpeningHours;
+    
+    @Column(name = "wednesday_opening_hours", columnDefinition = "TEXT")
+    private String wednesdayOpeningHours;
+    
+    @Column(name = "thursday_opening_hours", columnDefinition = "TEXT")
+    private String thursdayOpeningHours;
+    
+    @Column(name = "friday_opening_hours", columnDefinition = "TEXT")
+    private String fridayOpeningHours;
+    
+    @Column(name = "saturday_opening_hours", columnDefinition = "TEXT")
+    private String saturdayOpeningHours;
+    
+    @Column(name = "sunday_opening_hours", columnDefinition = "TEXT")
+    private String sundayOpeningHours;
+    
+    // 요일별 브레이크 타임
+    @Column(name = "monday_break_time", columnDefinition = "TEXT")
+    private String mondayBreakTime;
+    
+    @Column(name = "tuesday_break_time", columnDefinition = "TEXT")
+    private String tuesdayBreakTime;
+    
+    @Column(name = "wednesday_break_time", columnDefinition = "TEXT")
+    private String wednesdayBreakTime;
+    
+    @Column(name = "thursday_break_time", columnDefinition = "TEXT")
+    private String thursdayBreakTime;
+    
+    @Column(name = "friday_break_time", columnDefinition = "TEXT")
+    private String fridayBreakTime;
+    
+    @Column(name = "saturday_break_time", columnDefinition = "TEXT")
+    private String saturdayBreakTime;
+    
+    @Column(name = "sunday_break_time", columnDefinition = "TEXT")
+    private String sundayBreakTime;
     
     @Column(name = "delivery")
     private String delivery;
@@ -154,5 +201,8 @@ public class Restaurant {
 
     @Column(name = "account_transfer")
     private String accountTransfer;
+
+    @Column(name = "break_time", columnDefinition = "TEXT")
+    private String breakTime; // 브레이크 타임 (예: "15:00-17:00")
 }
 

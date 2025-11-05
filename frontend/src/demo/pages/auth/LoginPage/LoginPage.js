@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { authAPI } from '../../../services/api';
+import { authAPI, restaurantAPI } from '../../../services/api';
 import SimpleAddressSearch from '../../../../components/SimpleAddressSearch';
 import NotificationModal from '../../../../components/common/NotificationModal';
 import './LoginPage.css';
@@ -24,6 +24,7 @@ const LoginPage = () => {
     role: 'USER',
     restaurantRegistrationType: 'existing', // 'existing' or 'new'
     restaurantId: '',
+    restaurantCode: null,
     restaurantName: '',
     branchName: '',
     roadAddress: '',
@@ -48,6 +49,14 @@ const LoginPage = () => {
   
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  
+  // 식당 검색 상태
+  const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
+  const [restaurantSearchType, setRestaurantSearchType] = useState('code'); // 'code' or 'name'
+  const [restaurantSearchResults, setRestaurantSearchResults] = useState([]);
+  const [showRestaurantDropdown, setShowRestaurantDropdown] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [searchingRestaurants, setSearchingRestaurants] = useState(false);
   
   // 알림 모달 상태
   const [notificationModal, setNotificationModal] = useState({
@@ -107,6 +116,58 @@ const LoginPage = () => {
       setValidation(prev => ({ ...prev, emailVerified: false }));
     }
   }, [formData.emailVerificationCode]);
+
+  // 식당 검색 (버튼 클릭 시)
+  const handleSearchRestaurants = async () => {
+    if (!restaurantSearchQuery.trim()) {
+      showNotification('warning', '입력 오류', '검색어를 입력해주세요.');
+      return;
+    }
+
+    setSearchingRestaurants(true);
+    setShowRestaurantDropdown(false);
+    
+    try {
+      const response = await restaurantAPI.searchForSignup(restaurantSearchQuery, restaurantSearchType);
+      setRestaurantSearchResults(response.data || []);
+      setShowRestaurantDropdown(true);
+      
+      if (response.data.length === 0) {
+        showNotification('info', '검색 결과', '검색 결과가 없습니다.');
+      }
+    } catch (error) {
+      console.error('식당 검색 오류:', error);
+      setRestaurantSearchResults([]);
+      setShowRestaurantDropdown(false);
+      showNotification('error', '검색 오류', '식당 검색 중 오류가 발생했습니다.');
+    } finally {
+      setSearchingRestaurants(false);
+    }
+  };
+
+  // 식당 선택 핸들러
+  const handleSelectRestaurant = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setFormData(prev => ({
+      ...prev,
+      restaurantId: restaurant.id,
+      restaurantCode: restaurant.restaurantCode
+    }));
+    setRestaurantSearchQuery(`${restaurant.restaurantName}${restaurant.branchName ? ` (${restaurant.branchName})` : ''}`);
+    setShowRestaurantDropdown(false);
+  };
+
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showRestaurantDropdown && !event.target.closest('.restaurant-search-container')) {
+        setShowRestaurantDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRestaurantDropdown]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -312,12 +373,17 @@ const LoginPage = () => {
         if (formData.role === 'OWNER') {
           if (formData.restaurantRegistrationType === 'existing') {
             // 기존 매장 선택
-            if (!formData.restaurantId || formData.restaurantId.trim() === '') {
-              showNotification('warning', '입력 오류', '기존 매장 ID를 입력해주세요.');
+            if (!selectedRestaurant && (!formData.restaurantId || formData.restaurantId.toString().trim() === '')) {
+              showNotification('warning', '입력 오류', '식당을 검색하여 선택해주세요.');
               setLoading(false);
               return;
             }
-            signupData.restaurantId = parseInt(formData.restaurantId);
+            // restaurantCode가 있으면 우선 사용, 없으면 restaurantId 사용
+            if (formData.restaurantCode) {
+              signupData.restaurantCode = formData.restaurantCode;
+            } else if (formData.restaurantId) {
+              signupData.restaurantId = parseInt(formData.restaurantId);
+            }
           } else {
             // 새 매장 등록
             if (!formData.restaurantName || !formData.roadAddress) {
@@ -377,7 +443,6 @@ const LoginPage = () => {
       <div className="demo-login-container">
         <div className="demo-login-header">
           <h1>chopplan</h1>
-          <p className="demo-badge">테스트 버전</p>
         </div>
 
         <div className="demo-login-tabs">
@@ -610,17 +675,159 @@ const LoginPage = () => {
                   </div>
 
                   {formData.restaurantRegistrationType === 'existing' && (
-                    <div className="demo-form-group">
-                      <label>식당 ID</label>
-                      <input
-                        type="number"
-                        name="restaurantId"
-                        value={formData.restaurantId}
-                        onChange={handleChange}
-                        required
-                        placeholder="식당 ID를 입력하세요"
-                      />
-                      <small>예: 1, 2, 3... (기존 등록된 식당 ID)</small>
+                    <div className="demo-form-group restaurant-search-container" style={{ position: 'relative' }}>
+                      <label>식당 검색</label>
+                      
+                      {/* 검색 타입 라디오 버튼 */}
+                      <div style={{ marginBottom: '10px', display: 'flex', gap: '20px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name="restaurantSearchType"
+                            value="code"
+                            checked={restaurantSearchType === 'code'}
+                            onChange={(e) => {
+                              setRestaurantSearchType(e.target.value);
+                              setRestaurantSearchQuery('');
+                              setRestaurantSearchResults([]);
+                              setShowRestaurantDropdown(false);
+                              setSelectedRestaurant(null);
+                            }}
+                            style={{ marginRight: '6px' }}
+                          />
+                          식당 코드
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name="restaurantSearchType"
+                            value="name"
+                            checked={restaurantSearchType === 'name'}
+                            onChange={(e) => {
+                              setRestaurantSearchType(e.target.value);
+                              setRestaurantSearchQuery('');
+                              setRestaurantSearchResults([]);
+                              setShowRestaurantDropdown(false);
+                              setSelectedRestaurant(null);
+                            }}
+                            style={{ marginRight: '6px' }}
+                          />
+                          식당 이름
+                        </label>
+                      </div>
+                      
+                      {/* 검색 입력 필드와 버튼 */}
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                          type="text"
+                          value={restaurantSearchQuery}
+                          onChange={(e) => {
+                            setRestaurantSearchQuery(e.target.value);
+                            setSelectedRestaurant(null);
+                            setFormData(prev => ({ ...prev, restaurantId: '', restaurantCode: null }));
+                            setShowRestaurantDropdown(false);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSearchRestaurants();
+                            }
+                          }}
+                          placeholder={restaurantSearchType === 'code' ? '식당 코드를 입력하세요 (예: 10012)' : '식당 이름을 입력하세요'}
+                          required={!selectedRestaurant}
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSearchRestaurants}
+                          disabled={searchingRestaurants || !restaurantSearchQuery.trim()}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: searchingRestaurants ? '#ccc' : '#007bff',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: searchingRestaurants ? 'not-allowed' : 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {searchingRestaurants ? '검색 중...' : '검색'}
+                        </button>
+                      </div>
+                      
+                      {searchingRestaurants && (
+                        <small style={{ color: '#666', display: 'block', marginTop: '4px' }}>검색 중...</small>
+                      )}
+                      {showRestaurantDropdown && restaurantSearchResults.length > 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'white',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          maxHeight: '300px',
+                          overflowY: 'auto',
+                          zIndex: 1000,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          marginTop: '4px'
+                        }}>
+                          {restaurantSearchResults.map((restaurant) => (
+                            <div
+                              key={restaurant.id}
+                              onClick={() => handleSelectRestaurant(restaurant)}
+                              style={{
+                                padding: '12px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #eee',
+                                transition: 'background-color 0.2s'
+                              }}
+                              onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                              onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                            >
+                              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                                {restaurant.restaurantName}
+                                {restaurant.branchName && <span style={{ color: '#666', fontWeight: 'normal' }}> ({restaurant.branchName})</span>}
+                              </div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {restaurant.roadAddress || restaurant.regionName || '주소 정보 없음'}
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>
+                                ID: {restaurant.id} | 코드: {restaurant.restaurantCode || 'N/A'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {showRestaurantDropdown && restaurantSearchResults.length === 0 && restaurantSearchQuery.trim() && !searchingRestaurants && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'white',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          padding: '12px',
+                          zIndex: 1000,
+                          marginTop: '4px'
+                        }}>
+                          검색 결과가 없습니다.
+                        </div>
+                      )}
+                      {selectedRestaurant && (
+                        <small style={{ color: '#28a745', display: 'block', marginTop: '4px' }}>
+                          선택됨: {selectedRestaurant.restaurantName}
+                          {selectedRestaurant.branchName && ` (${selectedRestaurant.branchName})`}
+                          {selectedRestaurant.restaurantCode && ` [코드: ${selectedRestaurant.restaurantCode}]`}
+                        </small>
+                      )}
+                      <small style={{ display: 'block', marginTop: '4px', color: '#666' }}>
+                        {restaurantSearchType === 'code' 
+                          ? '식당 코드(예: 10012)를 입력하고 검색 버튼을 클릭하세요.' 
+                          : '식당 이름을 입력하고 검색 버튼을 클릭하세요.'}
+                      </small>
                     </div>
                   )}
 
@@ -701,17 +908,6 @@ const LoginPage = () => {
             {loading ? '처리 중...' : (isSignup ? '회원가입' : '로그인')}
           </button>
         </form>
-
-        <div className="demo-test-accounts">
-          <h3>🧪 테스트 계정</h3>
-          <ul>
-            <li><strong>관리자:</strong> admin / admin123</li>
-            <li><strong>가게주인:</strong> o12 / 1234</li>
-            <li><strong>회원:</strong> newuser1 / test123</li>
-          </ul>
-          <p className="demo-note">* 먼저 회원가입을 통해 계정을 생성한 후 로그인하세요</p>
-          <p className="demo-note">* 백엔드 서버가 실행 중인지 확인해주세요 (http://localhost:8080)</p>
-        </div>
       </div>
       
       {/* 알림 팝업 */}

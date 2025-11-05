@@ -62,7 +62,8 @@
   border-bottom: none;
 }
 
-.form-group {
+/* ProfileSection 내부의 form-group만 적용 */
+.profile-section .form-group {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -71,7 +72,7 @@
   border-bottom: none;
 }
 
-.form-group label {
+.profile-section .form-group label {
   color: white;
   font-weight: 500;
   font-size: 17px;
@@ -79,7 +80,8 @@
   flex-shrink: 0;
 }
 
-.form-input {
+/* ProfileSection 내부의 form-input만 적용 */
+.profile-section .form-input {
   padding: 10px 14px;
   border: 1px solid #e5e5ea;
   border-radius: 8px;
@@ -90,19 +92,19 @@
   min-width: 140px;
 }
 
-.form-input:focus {
+.profile-section .form-input:focus {
   outline: none;
   border-color: #007aff;
 }
 
-.form-display {
+.profile-section .form-display {
   color: #8e8e93;
   font-size: 17px;
   text-align: right;
   min-width: 140px;
 }
 
-.profile-actions {
+.profile-section .profile-actions {
   display: flex;
   gap: 16px;
   justify-content: flex-end;
@@ -111,10 +113,10 @@
   border-bottom: none;
 }
 
-.btn-edit,
-.btn-save,
-.btn-cancel,
-.btn-logout {
+.profile-section .btn-edit,
+.profile-section .btn-save,
+.profile-section .btn-cancel,
+.profile-section .btn-logout {
   padding: 10px 20px;
   border: 1px solid #e5e5ea;
   border-radius: 8px;
@@ -125,43 +127,43 @@
   background: white;
 }
 
-.btn-edit {
+.profile-section .btn-edit {
   background: #007aff;
   color: white;
   border-color: #007aff;
 }
 
-.btn-edit:hover {
+.profile-section .btn-edit:hover {
   background: #0056b3;
 }
 
-.btn-save {
+.profile-section .btn-save {
   background: #34c759;
   color: white;
   border-color: #34c759;
 }
 
-.btn-save:hover {
+.profile-section .btn-save:hover {
   background: #28a745;
 }
 
-.btn-cancel {
+.profile-section .btn-cancel {
   background: #8e8e93;
   color: white;
   border-color: #8e8e93;
 }
 
-.btn-cancel:hover {
+.profile-section .btn-cancel:hover {
   background: #6c757d;
 }
 
-.btn-logout {
+.profile-section .btn-logout {
   background: #ff3b30;
   color: white;
   border-color: #ff3b30;
 }
 
-.btn-logout:hover {
+.profile-section .btn-logout:hover {
   background: #d70015;
 }
 

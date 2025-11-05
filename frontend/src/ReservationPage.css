@@ -325,7 +325,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  color: white !important;
+  color: #1a1a1a !important;
   font-size: 0.9rem;
   cursor: default;
   margin-bottom: 4px;
@@ -881,7 +881,7 @@
 
 /* 호버 효과 개선 */
 .form-group:hover .form-label {
-  color: #667eea;
+  color: #667eea !important;
 }
 
 .form-group:hover .label-icon {
@@ -898,6 +898,296 @@
 .form-select:focus + .form-label,
 .form-textarea:focus + .form-label {
   color: #667eea;
+}
+
+/* 캘린더 및 시간 선택 섹션 */
+.calendar-time-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 32px;
+}
+
+.calendar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calendar-container-reservation {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.time-selection-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.time-slot-btn {
+  padding: 14px 16px;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  background: white;
+  color: #667eea;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
+}
+
+.time-slot-btn:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+}
+
+.time-slot-btn.selected {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.no-time-available {
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(248, 249, 250, 0.8);
+  border-radius: 12px;
+  border: 2px dashed #adb5bd;
+}
+
+.no-time-available p {
+  margin: 8px 0;
+  color: #6c757d;
+}
+
+.time-hint {
+  font-size: 13px;
+  color: #adb5bd !important;
+}
+
+/* 캘린더 커스텀 스타일 - 밝은 느낌 */
+.calendar-container-reservation .react-calendar {
+  width: 100%;
+  border: none;
+  background: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard', 'Segoe UI', sans-serif;
+}
+
+.calendar-container-reservation .react-calendar * {
+  background-color: transparent;
+}
+
+.calendar-container-reservation .react-calendar__navigation {
+  margin-bottom: 20px;
+  padding: 0 8px;
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__month-view {
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__month-view__weekdays {
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__month-view__days {
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__navigation button {
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  padding: 12px 8px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.calendar-container-reservation .react-calendar__navigation button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #764ba2;
+}
+
+.calendar-container-reservation .react-calendar__navigation button:enabled:hover,
+.calendar-container-reservation .react-calendar__navigation button:enabled:focus {
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.calendar-container-reservation .react-calendar__month-view__weekdays {
+  margin-bottom: 12px;
+  padding: 0 8px;
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__month-view__weekdays__weekday {
+  font-weight: 700;
+  font-size: 14px;
+  color: #667eea;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.calendar-container-reservation .react-calendar__month-view__days {
+  padding: 0 4px;
+  background: #ffffff !important;
+}
+
+.calendar-container-reservation .react-calendar__tile {
+  padding: 14px 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 15px;
+  color: #667eea;
+  background: #f8f9ff;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  margin: 2px;
+}
+
+.calendar-container-reservation .react-calendar__tile:hover {
+  background: rgba(102, 126, 234, 0.15);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+}
+
+.calendar-container-reservation .react-calendar__tile--active {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  border-color: #667eea !important;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4) !important;
+  font-weight: 700;
+}
+
+.calendar-container-reservation .react-calendar__tile--active:hover {
+  background: linear-gradient(135deg, #764ba2, #667eea) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5) !important;
+}
+
+.calendar-container-reservation .react-calendar__tile--now {
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.4);
+  font-weight: 700;
+  color: #667eea;
+}
+
+.calendar-container-reservation .react-calendar__tile--now:hover {
+  background: rgba(102, 126, 234, 0.35);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+
+.calendar-container-reservation .react-calendar__month-view__days__day--weekend .react-calendar__tile {
+  color: #667eea;
+}
+
+/* 지난 날짜 스타일 - 회색 계열로 표시 */
+.calendar-container-reservation .react-calendar__tile.past-date {
+  background: #e9ecef !important;
+  color: #adb5bd !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  border-color: #dee2e6 !important;
+}
+
+.calendar-container-reservation .react-calendar__tile.past-date:hover {
+  background: #e9ecef !important;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #dee2e6 !important;
+}
+
+/* 다른 달 날짜 투명하게 숨기기 (공간은 유지) */
+.calendar-container-reservation .react-calendar__month-view__days__day--neighboringMonth .react-calendar__tile {
+  color: transparent !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  border: none !important;
+  /* display: none 제거 - 공간 유지 */
+}
+
+.calendar-container-reservation .react-calendar__tile--disabled {
+  /* 다른 달 날짜가 아닌 경우 (지난 날짜 등) */
+  color: #adb5bd !important;
+  background: #e9ecef !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  border-color: #dee2e6 !important;
+}
+
+.calendar-container-reservation .react-calendar__tile--disabled:hover {
+  background: #e9ecef !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 다른 달 날짜는 투명하게 */
+.calendar-container-reservation .react-calendar__tile--disabled.hidden-month-date {
+  color: transparent !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  border: none !important;
+}
+
+/* 커스텀 클래스로 투명하게 숨김 처리 (공간 유지) */
+.calendar-container-reservation .react-calendar__tile.hidden-month-date {
+  color: transparent !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  /* display: none 제거 - 공간 유지 */
+  /* width, height, padding, margin 유지 */
+}
+
+.calendar-container-reservation .react-calendar__tile.hidden-month-date * {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .calendar-time-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .time-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .time-slot-btn {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 }
 
 /* 애니메이션 부드럽게 */

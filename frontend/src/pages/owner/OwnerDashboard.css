@@ -1327,6 +1327,31 @@
 }
 
 /* 캘린더 컴포넌트는 ReservationCalendar.css에서 관리하므로 여기서는 건드리지 않음 */
+/* Owner Dashboard 캘린더 - 다른 달 날짜 투명하게 숨기기 (공간은 유지) */
+.owner-dashboard .calendar-section .react-calendar__month-view__days__day--neighboringMonth .react-calendar__tile {
+  color: transparent !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  border: none !important;
+}
+
+.owner-dashboard .calendar-section .react-calendar__tile--disabled {
+  color: transparent !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  border: none !important;
+}
+
+.owner-dashboard .calendar-section .react-calendar__tile--disabled:hover {
+  background: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .owner-dashboard .calendar-section .react-calendar {
   /* ReservationCalendar.css의 스타일을 덮어쓰지 않도록 주석 처리 */
 }
@@ -2644,6 +2669,42 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+}
+
+/* 요일별 운영시간 설정 */
+.owner-dashboard .weekly-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.owner-dashboard .day-schedule-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .day-label {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding-top: 8px;
+}
+
+.owner-dashboard .day-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-dashboard .day-inputs input {
+  font-size: 14px;
 }
 
 .owner-dashboard .checkbox-group input[type="checkbox"] {

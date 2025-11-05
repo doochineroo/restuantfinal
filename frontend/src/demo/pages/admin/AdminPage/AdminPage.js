@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { adminAPI, reviewAPI, reservationAPI } from '../../../services/api';
+import { API_ENDPOINTS } from '../../../../constants/config/apiConfig';
 import NotificationModal from '../../../../components/common/NotificationModal';
 import ConfirmModal from '../../../../components/common/ConfirmModal';
 import useConfirmModal from '../../../../hooks/useConfirmModal';
@@ -78,7 +79,7 @@ const AdminPage = () => {
     try {
       const [usersRes, restaurantsRes, reservationsRes] = await Promise.all([
         adminAPI.getAllUsers(),
-        axios.get('http://localhost:8080/api/restaurants/all'),
+        axios.get(`${API_ENDPOINTS.RESTAURANTS}/all`),
         reservationAPI.getAllReservations()
       ]);
 
@@ -115,7 +116,7 @@ const AdminPage = () => {
         const response = await adminAPI.getAllUsers();
         setUsers(response.data);
       } else if (activeMenu === 'restaurants') {
-        const response = await axios.get('http://localhost:8080/api/restaurants/all');
+        const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS}/all`);
         setRestaurants(response.data);
       } else if (activeMenu === 'reservations') {
         const response = await reservationAPI.getAllReservations();

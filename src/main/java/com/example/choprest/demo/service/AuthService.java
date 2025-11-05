@@ -57,13 +57,23 @@ public class AuthService {
         if (request.getRole() == User.UserRole.OWNER) {
             // 옵션 1: 기존 식당 선택
             if (request.getRestaurantId() != null) {
-                restaurant = new Restaurant();
-                restaurant.setId(request.getRestaurantId());
+                // 실제 데이터베이스에서 레스토랑 조회 (DB의 id 사용)
+                restaurant = restaurantService.getRestaurantById(request.getRestaurantId())
+                    .orElseThrow(() -> new RuntimeException("해당 식당을 찾을 수 없습니다. (ID: " + request.getRestaurantId() + ")"));
+            }
+            // 옵션 1-1: 식당 코드로 검색 (CSV의 식당 ID 사용)
+            else if (request.getRestaurantCode() != null) {
+                restaurant = restaurantService.getRestaurantByCode(request.getRestaurantCode())
+                    .orElseThrow(() -> new RuntimeException("해당 식당을 찾을 수 없습니다. (식당 코드: " + request.getRestaurantCode() + ")"));
             }
             // 옵션 2: 새 식당 등록
             else if (request.getRestaurantName() != null && request.getRoadAddress() != null) {
-                // 새 식당 생성 (ID는 자동 생성됨)
+                // 다음 식당 코드 생성 (최대값 + 1)
+                Long nextRestaurantCode = restaurantService.generateNextRestaurantCode();
+                
+                // 새 식당 생성 (ID는 자동 생성됨, restaurant_code는 최대값 + 1)
                 restaurant = Restaurant.builder()
+                    .restaurantCode(nextRestaurantCode) // 자동 생성된 식당 코드
                     .restaurantName(request.getRestaurantName())
                     .branchName(request.getBranchName())
                     .roadAddress(request.getRoadAddress())
@@ -74,7 +84,7 @@ public class AuthService {
                     .regionName(request.getRegionName()) // 지역명 추가
                     .build();
                 
-                // 데이터베이스에 저장 (ID가 자동으로 생성됨)
+                // 데이터베이스에 저장 (ID와 restaurant_code가 자동으로 설정됨)
                 restaurant = restaurantService.updateRestaurant(restaurant);
             }
             else {

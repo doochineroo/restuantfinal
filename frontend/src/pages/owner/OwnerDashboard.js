@@ -132,7 +132,7 @@ const OwnerDashboard = () => {
   // 예약 목록 조회
   const loadReservations = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/demo/reservations/restaurant/${user.restaurantId}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/reservations/restaurant/${user.restaurantId}`);
       setReservations(response.data);
     } catch (error) {
       console.error('예약 조회 오류:', error);
@@ -142,7 +142,7 @@ const OwnerDashboard = () => {
   // 예약 승인
   const handleApproveReservation = async (id) => {
     try {
-      await axios.put(`http://localhost:8080/api/demo/reservations/${id}/approve`);
+      await axios.put(`${API_ENDPOINTS.DEMO}/reservations/${id}/approve`);
       loadReservations();
       alert('예약이 승인되었습니다.');
     } catch (error) {
@@ -157,7 +157,7 @@ const OwnerDashboard = () => {
     if (!reason) return;
 
     try {
-      await axios.put(`http://localhost:8080/api/demo/reservations/${id}/reject`, { reason });
+      await axios.put(`${API_ENDPOINTS.DEMO}/reservations/${id}/reject`, { reason });
       loadReservations();
       alert('예약이 거절되었습니다.');
     } catch (error) {
@@ -169,7 +169,7 @@ const OwnerDashboard = () => {
   // 블랙리스트 조회
   const loadBlacklist = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/demo/blacklist/restaurant/${user.restaurantId}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/blacklist/restaurant/${user.restaurantId}`);
       setBlacklist(response.data);
     } catch (error) {
       console.error('블랙리스트 조회 오류:', error);
@@ -179,7 +179,7 @@ const OwnerDashboard = () => {
   // 리뷰 조회
   const loadReviews = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/demo/reviews/restaurant/${user.restaurantId}`);
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/reviews/restaurant/${user.restaurantId}`);
       setReviews(response.data);
     } catch (error) {
       console.error('리뷰 조회 오류:', error);
@@ -615,6 +615,8 @@ const OwnerDashboard = () => {
       const parkingInfoEl = document.getElementById('parkingInfo');
       const transportationEl = document.getElementById('transportation');
       const specialNotesEl = document.getElementById('specialNotes');
+      const openingHoursEl = document.getElementById('openingHours');
+      const breakTimeEl = document.getElementById('breakTime');
       
       // 이미지 데이터 저장
       const saveData = {
@@ -630,6 +632,8 @@ const OwnerDashboard = () => {
         parkingInfo: parkingInfoEl ? parkingInfoEl.value : formData.parkingInfo || '',
         transportation: transportationEl ? transportationEl.value : formData.transportation || '',
         specialNotes: specialNotesEl ? specialNotesEl.value : formData.specialNotes || '',
+        openingHours: openingHoursEl ? openingHoursEl.value : formData.openingHours || '',
+        breakTime: breakTimeEl ? breakTimeEl.value : formData.breakTime || '',
         cardPayment: document.getElementById('cardPayment')?.checked ? 'Y' : 'N',
         cashPayment: document.getElementById('cashPayment')?.checked ? 'Y' : 'N',
         mobilePayment: document.getElementById('mobilePayment')?.checked ? 'Y' : 'N',
@@ -854,12 +858,23 @@ const OwnerDashboard = () => {
       const transportationEl = document.getElementById('transportation');
       const specialNotesEl = document.getElementById('specialNotes');
       
+      // 요일별 운영시간 수집
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const weeklySchedule = {};
+      days.forEach(day => {
+        const openingHoursEl = document.getElementById(`openingHours_${day}`);
+        const breakTimeEl = document.getElementById(`breakTime_${day}`);
+        weeklySchedule[`${day}OpeningHours`] = openingHoursEl ? openingHoursEl.value : '';
+        weeklySchedule[`${day}BreakTime`] = breakTimeEl ? breakTimeEl.value : '';
+      });
+      
       const detailsData = {
         id: restaurant.id,
         description: descriptionEl ? descriptionEl.value : '',
         parkingInfo: parkingInfoEl ? parkingInfoEl.value : '',
         transportation: transportationEl ? transportationEl.value : '',
         specialNotes: specialNotesEl ? specialNotesEl.value : '',
+        ...weeklySchedule,
         cardPayment: document.getElementById('cardPayment')?.checked ? 'Y' : 'N',
         cashPayment: document.getElementById('cashPayment')?.checked ? 'Y' : 'N',
         mobilePayment: document.getElementById('mobilePayment')?.checked ? 'Y' : 'N',
@@ -1419,6 +1434,21 @@ const OwnerDashboard = () => {
                 </div>
 
                 <div className="info-item full-width">
+                  <label>브레이크 타임</label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="breakTime"
+                      value={formData.breakTime || ''}
+                      onChange={handleChange}
+                      placeholder="15:00-17:00 (없으면 비워두세요)"
+                    />
+                  ) : (
+                    <p>{restaurant.breakTime || '-'}</p>
+                  )}
+                </div>
+
+                <div className="info-item full-width">
                   <label>휴무일</label>
                   {isEditing ? (
                     <input
@@ -1782,6 +1812,9 @@ const OwnerDashboard = () => {
                     <div className="preview-detail-section">
                       <h4>운영 정보</h4>
                       <p><strong>영업시간:</strong> {formData.openingHours || restaurant.openingHours || '정보없음'}</p>
+                      {formData.breakTime || restaurant.breakTime ? (
+                        <p><strong>브레이크 타임:</strong> {formData.breakTime || restaurant.breakTime}</p>
+                      ) : null}
                       <p><strong>휴무일:</strong> {formData.holidayInfo || restaurant.holidayInfo || '정보없음'}</p>
                     </div>
 
@@ -2023,12 +2056,50 @@ const OwnerDashboard = () => {
                   </div>
 
                   <div className="detail-group">
+                    <label>요일별 운영시간 설정</label>
+                    <div className="weekly-schedule">
+                      {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => {
+                        const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][index];
+                        const openingHoursId = `openingHours_${dayKey}`;
+                        const breakTimeId = `breakTime_${dayKey}`;
+                        const defaultOpeningHours = restaurant[`${dayKey}OpeningHours`] || restaurant.openingHours || '';
+                        const defaultBreakTime = restaurant[`${dayKey}BreakTime`] || restaurant.breakTime || '';
+                        
+                        return (
+                          <div key={dayKey} className="day-schedule-row">
+                            <div className="day-label">{day}요일</div>
+                            <div className="day-inputs">
+                              <input
+                                type="text"
+                                id={openingHoursId}
+                                placeholder="11:00~22:00"
+                                defaultValue={defaultOpeningHours}
+                                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.1)', color: 'white', fontSize: '14px' }}
+                              />
+                              <input
+                                type="text"
+                                id={breakTimeId}
+                                placeholder="15:00-17:00"
+                                defaultValue={defaultBreakTime}
+                                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.1)', color: 'white', fontSize: '14px', marginTop: '4px' }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <small style={{ color: '#b0b0b0', fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                      운영시간: 시작시간~종료시간 (예: 11:00~22:00) | 브레이크 타임: 시작시간-종료시간 (예: 15:00-17:00)
+                    </small>
+                  </div>
+
+                  <div className="detail-group">
                     <label>결제 방법</label>
                     <div className="checkbox-group">
-                      <label><input type="checkbox" id="cardPayment" defaultChecked /> 카드</label>
-                      <label><input type="checkbox" id="cashPayment" defaultChecked /> 현금</label>
-                      <label><input type="checkbox" id="mobilePayment" /> 간편결제</label>
-                      <label><input type="checkbox" id="accountTransfer" /> 계좌이체</label>
+                      <label><input type="checkbox" id="cardPayment" defaultChecked={restaurant?.cardPayment === 'Y'} /> 카드</label>
+                      <label><input type="checkbox" id="cashPayment" defaultChecked={restaurant?.cashPayment === 'Y'} /> 현금</label>
+                      <label><input type="checkbox" id="mobilePayment" defaultChecked={restaurant?.mobilePayment === 'Y'} /> 간편결제</label>
+                      <label><input type="checkbox" id="accountTransfer" defaultChecked={restaurant?.accountTransfer === 'Y'} /> 계좌이체</label>
                     </div>
                   </div>
 
@@ -2068,13 +2139,31 @@ const OwnerDashboard = () => {
                       <p>{restaurant.specialNotes || '특별 사항이 등록되지 않았습니다.'}</p>
                     </div>
 
-                    <div className="preview-details-section">
-                      <h4> 결제 방법</h4>
-                      <div className="preview-payment-methods">
-                        <span className="payment-badge">현금</span>
-                        <span className="payment-badge">카드</span>
+                    {restaurant?.openingHours && (
+                      <div className="preview-details-section">
+                        <h4>영업시간</h4>
+                        <p>{restaurant.openingHours}</p>
                       </div>
-                    </div>
+                    )}
+
+                    {restaurant?.breakTime && (
+                      <div className="preview-details-section">
+                        <h4>브레이크 타임</h4>
+                        <p>{restaurant.breakTime}</p>
+                      </div>
+                    )}
+
+                    {(restaurant?.cardPayment === 'Y' || restaurant?.cashPayment === 'Y' || restaurant?.mobilePayment === 'Y' || restaurant?.accountTransfer === 'Y') && (
+                      <div className="preview-details-section">
+                        <h4> 결제 방법</h4>
+                        <div className="preview-payment-methods">
+                          {restaurant?.cashPayment === 'Y' && <span className="payment-badge">현금</span>}
+                          {restaurant?.cardPayment === 'Y' && <span className="payment-badge">카드</span>}
+                          {restaurant?.mobilePayment === 'Y' && <span className="payment-badge">간편결제</span>}
+                          {restaurant?.accountTransfer === 'Y' && <span className="payment-badge">계좌이체</span>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2114,7 +2203,10 @@ const OwnerDashboard = () => {
                         </div>
                         {event.image && (
                           <div className="event-image">
-                            <img src={event.image} alt={event.title} />
+                            <img src={getImageUrl(event.image)} alt={event.title} 
+                                 onError={(e) => {
+                                   e.target.src = '/image-placeholder.svg';
+                                 }} />
                           </div>
                         )}
                         <div className="event-content">
@@ -2147,7 +2239,10 @@ const OwnerDashboard = () => {
                         <div key={event.id} className="preview-event-card">
                           {event.image && (
                             <div className="preview-event-image">
-                              <img src={event.image} alt={event.title} />
+                              <img src={getImageUrl(event.image)} alt={event.title}
+                                   onError={(e) => {
+                                     e.target.src = '/image-placeholder.svg';
+                                   }} />
                             </div>
                           )}
                           <div className="preview-event-content">
@@ -3180,7 +3275,7 @@ const OwnerDashboard = () => {
 
 // 메뉴 모달 컴포넌트
 const MenuModal = ({ editingItem, onClose, onSave }) => {
-  const [formData, setFormData] = useState(editingItem || {
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
@@ -3190,6 +3285,34 @@ const MenuModal = ({ editingItem, onClose, onSave }) => {
     category: ''
   });
   const [uploading, setUploading] = useState(false);
+
+  // editingItem이 변경될 때 formData 업데이트
+  useEffect(() => {
+    if (editingItem) {
+      setFormData({
+        name: editingItem.name || '',
+        description: editingItem.description || '',
+        price: editingItem.price || '',
+        available: editingItem.isAvailable !== undefined ? editingItem.isAvailable : true,
+        image: editingItem.imageUrl || null,
+        imagePreview: editingItem.imageUrl || null,
+        category: editingItem.category || '',
+        isPopular: editingItem.isPopular || false,
+        isRecommended: editingItem.isRecommended || false
+      });
+    } else {
+      // 새 메뉴 추가 시 초기화
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        available: true,
+        image: null,
+        imagePreview: null,
+        category: ''
+      });
+    }
+  }, [editingItem]);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -3211,7 +3334,7 @@ const MenuModal = ({ editingItem, onClose, onSave }) => {
       formDataObj.append('file', file);
       formDataObj.append('type', 'menu');
 
-      const response = await axios.post(`${API_ENDPOINTS.UPLOAD}`, formDataObj, {
+      const response = await axios.post(`${API_ENDPOINTS.UPLOAD}/image`, formDataObj, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

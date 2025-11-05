@@ -49,6 +49,7 @@ export const restaurantAPI = {
   search: (keyword) => axios.get(`${API_ENDPOINTS.RESTAURANTS}`, { params: { keyword } }), // DB 기반 검색 API 사용
   searchByName: (name) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/name`, { params: { name } }), // 식당명으로 검색
   searchByRegion: (latitude, longitude, radius = 5000) => axios.get(`${API_ENDPOINTS.RESTAURANTS}/region`, { params: { latitude, longitude, radius } }), // 지역 기반 검색
+  searchForSignup: (query, type = 'code') => axios.get(`${API_ENDPOINTS.RESTAURANTS}/search-for-signup`, { params: { query, type } }), // 회원가입용 식당 검색 (코드 또는 이름)
 };
 
 // Statistics API

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { reviewAPI } from '../../../services/api';
-import { API_ENDPOINTS } from '../../../../constants/config/apiConfig';
+import { API_ENDPOINTS, getImageUrl } from '../../../../constants/config/apiConfig';
 import NotificationModal from '../../../../components/common/NotificationModal';
 import ConfirmModal from '../../../../components/common/ConfirmModal';
 import useConfirmModal from '../../../../hooks/useConfirmModal';
@@ -160,6 +160,15 @@ const ReviewsPage = () => {
           }
         });
         
+        // 응답 형식 확인: { url: "... } 또는 { error: "..." }
+        if (response.data.error) {
+          throw new Error(response.data.error);
+        }
+        
+        if (!response.data.url) {
+          throw new Error('서버에서 이미지 URL을 받지 못했습니다.');
+        }
+        
         return response.data.url;
       });
       
@@ -171,7 +180,9 @@ const ReviewsPage = () => {
       
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
-      showNotification('error', '업로드 실패', error.message || '이미지 업로드에 실패했습니다.');
+      console.error('에러 응답:', error.response?.data);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || '이미지 업로드에 실패했습니다.';
+      showNotification('error', '업로드 실패', errorMsg);
     } finally {
       setUploadingImages(false);
     }
@@ -288,15 +299,18 @@ const ReviewsPage = () => {
                           }
                           return reviewImages.length > 0 && (
                             <div className="review-images">
-                              {reviewImages.map((imageUrl, imgIdx) => (
-                                <img
-                                  key={imgIdx}
-                                  src={`http://localhost:8080${imageUrl}`}
-                                  alt={`리뷰 이미지 ${imgIdx + 1}`}
-                                  className="review-image"
-                                  onClick={() => window.open(`http://localhost:8080${imageUrl}`, '_blank')}
-                                />
-                              ))}
+                              {reviewImages.map((imageUrl, imgIdx) => {
+                                const fullImageUrl = getImageUrl(imageUrl);
+                                return (
+                                  <img
+                                    key={imgIdx}
+                                    src={fullImageUrl}
+                                    alt={`리뷰 이미지 ${imgIdx + 1}`}
+                                    className="review-image"
+                                    onClick={() => window.open(fullImageUrl, '_blank')}
+                                  />
+                                );
+                              })}
                             </div>
                           );
                         })()}
@@ -382,21 +396,24 @@ const ReviewsPage = () => {
                     
                     {formData.images.length > 0 && (
                       <div className="uploaded-images">
-                        {formData.images.map((imageUrl, index) => (
-                          <div key={index} className="uploaded-image-item">
-                            <img 
-                              src={`http://localhost:8080${imageUrl}`} 
-                              alt={`리뷰 이미지 ${index + 1}`} 
-                            />
-                            <button
-                              type="button"
-                              className="remove-image-btn"
-                              onClick={() => handleImageRemove(index)}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
+                        {formData.images.map((imageUrl, index) => {
+                          const fullImageUrl = getImageUrl(imageUrl);
+                          return (
+                            <div key={index} className="uploaded-image-item">
+                              <img 
+                                src={fullImageUrl} 
+                                alt={`리뷰 이미지 ${index + 1}`} 
+                              />
+                              <button
+                                type="button"
+                                className="remove-image-btn"
+                                onClick={() => handleImageRemove(index)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -430,15 +447,18 @@ const ReviewsPage = () => {
                           }
                           return reviewImages.length > 0 && (
                             <div className="review-images">
-                              {reviewImages.map((imageUrl, imgIdx) => (
-                                <img
-                                  key={imgIdx}
-                                  src={`http://localhost:8080${imageUrl}`}
-                                  alt={`리뷰 이미지 ${imgIdx + 1}`}
-                                  className="review-image"
-                                  onClick={() => window.open(`http://localhost:8080${imageUrl}`, '_blank')}
-                                />
-                              ))}
+                              {reviewImages.map((imageUrl, imgIdx) => {
+                                const fullImageUrl = getImageUrl(imageUrl);
+                                return (
+                                  <img
+                                    key={imgIdx}
+                                    src={fullImageUrl}
+                                    alt={`리뷰 이미지 ${imgIdx + 1}`}
+                                    className="review-image"
+                                    onClick={() => window.open(fullImageUrl, '_blank')}
+                                  />
+                                );
+                              })}
                             </div>
                           );
                         })()}

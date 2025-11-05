@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import TopNav from './components/navigation/TopNav';
 import MainNav from './components/navigation/MainNav';
 import NotificationModal from './components/common/NotificationModal';
@@ -18,6 +20,22 @@ const ReservationPage = () => {
   const { addReservationNotification } = useReservationNotification();
   const { notificationState, showSuccess, showError, showWarning, hideNotification } = useNotification();
 
+  // 테스트용 임시 식당 정보
+  const testRestaurant = {
+    id: 10026,
+    name: '곰국시집 명동점',
+    restaurantName: '곰국시집 명동점',
+    branchName: '명동점',
+    roadAddress: '서울 중구 명동길 26',
+    phoneNumber: '02-1234-5678',
+    mainMenu: '국시, 만두',
+    openingHours: '11:00~22:00',
+    breakTime: '15:00-17:00'
+  };
+
+  // 식당 정보 (location.state 또는 테스트용)
+  const currentRestaurant = restaurant || testRestaurant;
+
   const [reservationData, setReservationData] = useState({
     name: '',
     phone: '',
@@ -29,6 +47,34 @@ const ReservationPage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeOptions, setTimeOptions] = useState([]);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [activeStartDate, setActiveStartDate] = useState(new Date());
+  
+  // 캘린더 날짜 선택 핸들러
+  const handleCalendarDateChange = (date) => {
+    if (date) {
+      const dateStr = date.toISOString().split('T')[0];
+      setSelectedCalendarDate(date);
+      setReservationData(prev => ({
+        ...prev,
+        date: dateStr,
+        time: '' // 날짜 변경 시 시간 초기화
+      }));
+    }
+  };
+
+  // 날짜가 변경될 때 시간 옵션 업데이트
+  useEffect(() => {
+    if (!currentRestaurant) {
+      setTimeOptions([]);
+      return;
+    }
+    
+    const options = generateTimeOptionsForDate(reservationData.date, currentRestaurant);
+    setTimeOptions(options);
+    console.log('날짜 변경으로 시간 옵션 업데이트:', reservationData.date, '옵션 개수:', options.length, '옵션:', options.map(o => o.value));
+  }, [reservationData.date, currentRestaurant?.openingHours, currentRestaurant?.breakTime, currentRestaurant?.id]);
 
   // OWNER는 Owner Dashboard로 리다이렉트
   useEffect(() => {
@@ -49,19 +95,168 @@ const ReservationPage = () => {
     }
   }, [user]);
 
-  // 테스트용 임시 식당 정보
-  const testRestaurant = {
-    id: 10026,
-    name: '곰국시집 명동점',
-    restaurantName: '곰국시집 명동점',
-    branchName: '명동점',
-    roadAddress: '서울 중구 명동10길 19-3',
-    phoneNumber: '02-1234-5678',
-    mainMenu: '곰국, 국수',
-    openingHours: '매일 11:00~22:30'
+  // 시간 문자열을 분으로 변환 (예: "11:30" -> 690)
+  const timeToMinutes = (timeStr) => {
+    const [hour, minute] = timeStr.split(':').map(Number);
+    return hour * 60 + minute;
   };
 
-  const currentRestaurant = restaurant || testRestaurant;
+  // 운영시간 파싱 (예: "11:00~22:30" -> { start: 660, end: 1350 })
+  const parseOpeningHours = (openingHours) => {
+    if (!openingHours) return null;
+    
+    // "11:00~22:30" 형식 파싱
+    const match = openingHours.match(/(\d{1,2}):(\d{2})[~-](\d{1,2}):(\d{2})/);
+    if (match) {
+      const startHour = parseInt(match[1]);
+      const startMinute = parseInt(match[2]);
+      const endHour = parseInt(match[3]);
+      const endMinute = parseInt(match[4]);
+      
+      return {
+        start: startHour * 60 + startMinute,
+        end: endHour * 60 + endMinute
+      };
+    }
+    
+    // 기본값 (11:00-22:00)
+    return { start: 660, end: 1320 };
+  };
+
+  // 브레이크 타임 파싱 (예: "15:00-17:00" -> { start: 900, end: 1020 })
+  const parseBreakTime = (breakTime) => {
+    if (!breakTime) return null;
+    
+    // "15:00-17:00" 형식 파싱
+    const match = breakTime.match(/(\d{1,2}):(\d{2})[~-](\d{1,2}):(\d{2})/);
+    if (match) {
+      const startHour = parseInt(match[1]);
+      const startMinute = parseInt(match[2]);
+      const endHour = parseInt(match[3]);
+      const endMinute = parseInt(match[4]);
+      
+      return {
+        start: startHour * 60 + startMinute,
+        end: endHour * 60 + endMinute
+      };
+    }
+    
+    return null;
+  };
+
+  // 선택된 날짜의 요일 가져오기 (0=일요일, 1=월요일, ...)
+  const getDayOfWeek = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.getDay(); // 0=일요일, 1=월요일, ..., 6=토요일
+  };
+
+  // 요일별 필드명 매핑
+  const getDayFieldName = (dayOfWeek) => {
+    const mapping = {
+      0: 'sunday',
+      1: 'monday',
+      2: 'tuesday',
+      3: 'wednesday',
+      4: 'thursday',
+      5: 'friday',
+      6: 'saturday'
+    };
+    return mapping[dayOfWeek];
+  };
+
+  // 특정 날짜에 대한 시간 옵션 생성
+  const generateTimeOptionsForDate = (date, restaurant = currentRestaurant) => {
+    // 요일별 운영시간 사용
+    let openingHours = null;
+    let breakTime = null;
+    
+    if (date && restaurant) {
+      const dayOfWeek = getDayOfWeek(date);
+      const dayField = getDayFieldName(dayOfWeek);
+      
+      if (dayField) {
+        const dayOpeningHours = restaurant[`${dayField}OpeningHours`];
+        const dayBreakTime = restaurant[`${dayField}BreakTime`];
+        
+        // 요일별 설정이 있으면 사용, 없으면 기본값 사용
+        openingHours = dayOpeningHours ? parseOpeningHours(dayOpeningHours) : parseOpeningHours(restaurant?.openingHours);
+        breakTime = dayBreakTime ? parseBreakTime(dayBreakTime) : parseBreakTime(restaurant?.breakTime);
+      } else {
+        // 기본값 사용
+        openingHours = parseOpeningHours(restaurant?.openingHours);
+        breakTime = parseBreakTime(restaurant?.breakTime);
+      }
+    } else {
+      // 기본값 사용
+      openingHours = parseOpeningHours(restaurant?.openingHours);
+      breakTime = parseBreakTime(restaurant?.breakTime);
+    }
+    
+    // 시간 슬롯 생성 (30분 간격, 00:00부터 23:30까지)
+    const allTimeSlots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        allTimeSlots.push(timeStr);
+      }
+    }
+
+    // 선택된 날짜가 오늘인지 확인
+    let currentTimeInMinutes = null;
+    if (date) {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
+      // 날짜 문자열 비교 (타임존 문제 방지)
+      const isToday = date === todayStr;
+
+      if (isToday) {
+        const now = new Date();
+        currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+        console.log('오늘 날짜 선택됨, 현재 시간:', now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0'), '분:', currentTimeInMinutes);
+      }
+    }
+
+    // 필터링된 시간 슬롯 생성
+    const filteredSlots = allTimeSlots.filter(timeStr => {
+      const timeInMinutes = timeToMinutes(timeStr);
+      
+      // 1. 운영시간 체크
+      if (openingHours) {
+        if (timeInMinutes < openingHours.start || timeInMinutes >= openingHours.end) {
+          return false;
+        }
+      }
+      
+      // 2. 브레이크 타임 체크
+      if (breakTime) {
+        if (timeInMinutes >= breakTime.start && timeInMinutes < breakTime.end) {
+          return false;
+        }
+      }
+      
+      // 3. 지난 시간 체크 (오늘이면)
+      if (currentTimeInMinutes !== null) {
+        // 현재 시간보다 30분 이후의 시간만 (여유 시간)
+        if (timeInMinutes <= currentTimeInMinutes + 30) {
+          console.log('지난 시간 필터링:', timeStr, '현재:', currentTimeInMinutes, '요구:', currentTimeInMinutes + 30);
+          return false;
+        }
+      }
+      
+      return true;
+    });
+
+    return filteredSlots.map(time => ({ value: time }));
+  };
+
+  // 현재 선택된 날짜에 대한 시간 옵션 생성
+  const generateTimeOptions = () => {
+    const options = generateTimeOptionsForDate(reservationData.date, currentRestaurant);
+    console.log('생성된 시간 옵션:', options.length, '개', options.map(opt => opt.value));
+    return options;
+  };
 
   console.log('예약 페이지 - 전달받은 가게 정보:', restaurant);
   console.log('예약 페이지 - 사용할 가게 정보:', currentRestaurant);
@@ -82,11 +277,32 @@ const ReservationPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // 날짜가 변경되면 시간도 재확인
+    if (name === 'date') {
+      setReservationData(prev => {
+        const newData = { ...prev, [name]: value };
+        
+        // 선택된 시간이 필터링된 목록에 있는지 확인
+        if (newData.time) {
+          const timeOptions = generateTimeOptionsForDate(value, currentRestaurant);
+          const isAvailable = timeOptions.some(opt => opt.value === newData.time);
+          if (!isAvailable) {
+            // 사용 불가능한 시간이면 리셋
+            newData.time = '';
+          }
+        }
+        
+        return newData;
+      });
+    } else {
     setReservationData(prev => ({
       ...prev,
       [name]: value
     }));
+    }
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -332,35 +548,93 @@ const ReservationPage = () => {
             </div>
 
             <div className="form-section">
-              <h3 className="section-title">예약 정보</h3>
+              <h3 className="section-title">예약 날짜 및 시간 선택</h3>
               
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="date" className="form-label">
+              {/* 캘린더 섹션 */}
+              <div className="calendar-time-section">
+                <div className="calendar-wrapper">
+                  <label className="form-label">
                     <span className="label-icon">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 13.5H12.01M12 17.5H12.01M16 13.5H16.01M16 17.5H16.01M8 13.5H8.01M8 17.5H8.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </span>
                     예약 날짜 <span className="required">*</span>
                   </label>
-                  <div className="input-wrapper">
-                    <input
-                      type="date"
-                      id="date"
-                      name="date"
-                      value={reservationData.date}
-                      onChange={handleInputChange}
-                      min={getCurrentDate()}
-                      required
-                      className="form-input"
+                  <div className="calendar-container-reservation">
+                    <Calendar
+                      onChange={handleCalendarDateChange}
+                      value={selectedCalendarDate || (reservationData.date ? new Date(reservationData.date + 'T00:00:00') : null)}
+                      minDate={new Date()}
+                      onActiveStartDateChange={({ activeStartDate }) => {
+                        if (activeStartDate) {
+                          setActiveStartDate(activeStartDate);
+                        }
+                      }}
+                      formatShortWeekday={(locale, date) => {
+                        const days = ['일', '월', '화', '수', '목', '금', '토'];
+                        return days[date.getDay()];
+                      }}
+                      calendarType="gregory"
+                      locale="ko-KR"
+                      tileDisabled={({ date, view }) => {
+                        if (view === 'month') {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const dateToCheck = new Date(date);
+                          dateToCheck.setHours(0, 0, 0, 0);
+                          
+                          // 지난 날짜는 비활성화
+                          if (dateToCheck < today) {
+                            return true;
+                          }
+                          
+                          // 현재 보이는 달의 날짜만 선택 가능하도록
+                          const dateMonth = date.getMonth();
+                          const dateYear = date.getFullYear();
+                          const viewMonth = activeStartDate.getMonth();
+                          const viewYear = activeStartDate.getFullYear();
+                          
+                          // 현재 보이는 달이 아니면 비활성화
+                          return dateMonth !== viewMonth || dateYear !== viewYear;
+                        }
+                        return false;
+                      }}
+                      tileClassName={({ date, view }) => {
+                        const classes = [];
+                        
+                        if (view === 'month') {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const dateToCheck = new Date(date);
+                          dateToCheck.setHours(0, 0, 0, 0);
+                          
+                          // 지난 날짜에 클래스 추가
+                          if (dateToCheck < today) {
+                            classes.push('past-date');
+                          }
+                          
+                          // 다른 달 날짜에 특별한 클래스 추가
+                          const dateMonth = date.getMonth();
+                          const dateYear = date.getFullYear();
+                          const viewMonth = activeStartDate.getMonth();
+                          const viewYear = activeStartDate.getFullYear();
+                          
+                          if (dateMonth !== viewMonth || dateYear !== viewYear) {
+                            classes.push('hidden-month-date');
+                          }
+                        }
+                        
+                        return classes.length > 0 ? classes.join(' ') : null;
+                      }}
                     />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="time" className="form-label">
+                {/* 시간 선택 그리드 */}
+                {reservationData.date && (
+                  <div className="time-selection-wrapper">
+                    <label className="form-label">
                     <span className="label-icon">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -369,39 +643,27 @@ const ReservationPage = () => {
                     </span>
                     예약 시간 <span className="required">*</span>
                   </label>
-                  <div className="select-wrapper">
-                    <select
-                      id="time"
-                      name="time"
-                      value={reservationData.time}
-                      onChange={handleInputChange}
-                      className="form-select"
-                      required
-                    >
-                      <option value="">시간 선택</option>
-                      <option value="11:00">11:00</option>
-                      <option value="11:30">11:30</option>
-                      <option value="12:00">12:00</option>
-                      <option value="12:30">12:30</option>
-                      <option value="13:00">13:00</option>
-                      <option value="13:30">13:30</option>
-                      <option value="14:00">14:00</option>
-                      <option value="17:00">17:00</option>
-                      <option value="17:30">17:30</option>
-                      <option value="18:00">18:00</option>
-                      <option value="18:30">18:30</option>
-                      <option value="19:00">19:00</option>
-                      <option value="19:30">19:30</option>
-                      <option value="20:00">20:00</option>
-                      <option value="20:30">20:30</option>
-                    </select>
-                    <div className="select-arrow">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                    {timeOptions.length > 0 ? (
+                      <div className="time-grid">
+                        {timeOptions.map(({ value }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            className={`time-slot-btn ${reservationData.time === value ? 'selected' : ''}`}
+                            onClick={() => setReservationData(prev => ({ ...prev, time: value }))}
+                          >
+                            {value}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-time-available">
+                        <p>선택하신 날짜에는 예약 가능한 시간이 없습니다.</p>
+                        <p className="time-hint">운영시간, 브레이크 타임, 또는 지난 시간으로 인해 예약이 불가능합니다.</p>
                     </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="form-group">

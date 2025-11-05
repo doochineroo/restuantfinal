@@ -8,14 +8,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,6 +36,7 @@ public class RestaurantService {
     
     /**
      * 애플리케이션 시작 시 CSV 데이터 로드
+     * restaurant_code를 기준으로 중복 체크하여 추가 또는 업데이트
      */
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void initializeData() {
@@ -40,21 +44,91 @@ public class RestaurantService {
             long count = restaurantRepository.count();
             log.info("Current restaurant count in database: {}", count);
             
-            if (count == 0) {
-                log.info("Database is empty, loading restaurants from CSV...");
-                List<Restaurant> restaurants = loadRestaurantsFromCsv();
-                
-                if (!restaurants.isEmpty()) {
-                    List<Restaurant> savedRestaurants = restaurantRepository.saveAll(restaurants);
-                    log.info("Successfully loaded {} restaurants from CSV to database", savedRestaurants.size());
-                } else {
-                    log.warn("No restaurants loaded from CSV file");
+            log.info("Loading restaurants from CSV and checking duplicates by restaurant_code...");
+            List<Restaurant> csvRestaurants = loadRestaurantsFromCsv();
+            
+            if (csvRestaurants.isEmpty()) {
+                log.warn("No restaurants loaded from CSV file");
+                return;
+            }
+            
+            // 기존 데이터가 있으면 restaurant_code 업데이트
+            if (count > 0) {
+                log.info("Updating restaurant_code for existing {} restaurants...", count);
+                updateRestaurantCodesFromCsv(csvRestaurants);
+            }
+            
+            // restaurant_code 기준으로 중복 체크하여 추가
+            List<Restaurant> newRestaurants = new ArrayList<>();
+            int duplicateCount = 0;
+            
+            for (Restaurant csvRestaurant : csvRestaurants) {
+                if (csvRestaurant.getRestaurantCode() == null) {
+                    log.warn("Skipping restaurant without restaurant_code: {}", csvRestaurant.getRestaurantName());
+                    continue;
                 }
+                
+                // restaurant_code로 기존 데이터 확인
+                Optional<Restaurant> existing = restaurantRepository.findByRestaurantCode(csvRestaurant.getRestaurantCode());
+                
+                if (existing.isPresent()) {
+                    duplicateCount++;
+                    log.debug("Restaurant with code {} already exists: {}", csvRestaurant.getRestaurantCode(), csvRestaurant.getRestaurantName());
+                } else {
+                    newRestaurants.add(csvRestaurant);
+                }
+            }
+            
+            if (!newRestaurants.isEmpty()) {
+                List<Restaurant> savedRestaurants = restaurantRepository.saveAll(newRestaurants);
+                log.info("Successfully loaded {} new restaurants from CSV ({} duplicates skipped)", 
+                    savedRestaurants.size(), duplicateCount);
             } else {
-                log.info("Database already contains {} restaurants, skipping CSV load", count);
+                log.info("All restaurants from CSV already exist in database ({} duplicates)", duplicateCount);
             }
         } catch (Exception e) {
             log.error("Error initializing restaurant data: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 기존 데이터의 restaurant_code를 CSV 데이터로 업데이트
+     * id 순서대로 매칭하여 업데이트
+     */
+    private void updateRestaurantCodesFromCsv(List<Restaurant> csvRestaurants) {
+        try {
+            // 기존 데이터를 id 순서대로 가져오기
+            List<Restaurant> existingRestaurants = restaurantRepository.findAll();
+            existingRestaurants.sort((a, b) -> Long.compare(a.getId(), b.getId()));
+            
+            int updateCount = 0;
+            int csvIndex = 0;
+            
+            for (Restaurant existing : existingRestaurants) {
+                // CSV 데이터가 더 이상 없으면 중단
+                if (csvIndex >= csvRestaurants.size()) {
+                    break;
+                }
+                
+                Restaurant csvRestaurant = csvRestaurants.get(csvIndex);
+                
+                // restaurant_code가 없거나 다르면 업데이트
+                if (existing.getRestaurantCode() == null || 
+                    !existing.getRestaurantCode().equals(csvRestaurant.getRestaurantCode())) {
+                    
+                    existing.setRestaurantCode(csvRestaurant.getRestaurantCode());
+                    restaurantRepository.save(existing);
+                    updateCount++;
+                    log.debug("Updated restaurant_code for id {}: {} -> {}", 
+                        existing.getId(), existing.getRestaurantName(), csvRestaurant.getRestaurantCode());
+                }
+                
+                csvIndex++;
+            }
+            
+            log.info("Updated restaurant_code for {} existing restaurants", updateCount);
+        } catch (Exception e) {
+            log.error("Error updating restaurant_code from CSV: {}", e.getMessage(), e);
         }
     }
     
@@ -225,6 +299,22 @@ public class RestaurantService {
     }
     
     /**
+     * 식당 코드로 식당 조회 (CSV의 식당 ID)
+     */
+    public Optional<Restaurant> getRestaurantByCode(Long restaurantCode) {
+        return restaurantRepository.findByRestaurantCode(restaurantCode);
+    }
+    
+    /**
+     * 다음 식당 코드 생성 (최대값 + 1)
+     * 새 식당 등록 시 사용
+     */
+    public Long generateNextRestaurantCode() {
+        Optional<Long> maxCode = restaurantRepository.findMaxRestaurantCode();
+        return maxCode.map(code -> code + 1).orElse(10000L); // 최소값 10000부터 시작
+    }
+    
+    /**
      * 모든 식당 조회 (데이터베이스 캐시 우선)
      */
     public List<Restaurant> getAllRestaurants() {
@@ -339,17 +429,20 @@ public class RestaurantService {
     
     /**
      * CSV 파일에서 식당 데이터를 메모리에 로드
+     * 최대 400개까지만 로드
      */
     private List<Restaurant> loadRestaurantsFromCsv() {
         List<Restaurant> restaurants = new ArrayList<>();
+        int maxCount = 400; // 최대 400개만 로드
         try {
             ClassPathResource resource = new ClassPathResource("restaurants.csv");
             
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), "UTF-8"))) {
                 String line;
                 boolean isFirstLine = true;
+                int count = 0;
                 
-                while ((line = reader.readLine()) != null) {
+                while ((line = reader.readLine()) != null && count < maxCount) {
                     if (isFirstLine) {
                         isFirstLine = false;
                         continue; // 헤더 스킵
@@ -360,7 +453,7 @@ public class RestaurantService {
                     
                     if (values.size() >= 23) {
                         Restaurant restaurant = Restaurant.builder()
-                                .id(parseLong(cleanValue(values.get(0)))) // 식당 ID
+                                .restaurantCode(parseLong(cleanValue(values.get(0)))) // CSV의 식당 ID (restaurant_code에 저장)
                                 .restaurantName(cleanValue(values.get(1))) // 식당명
                                 .branchName(cleanValue(values.get(2))) // 지점명
                                 .regionName(cleanValue(values.get(3))) // 지역명
@@ -386,6 +479,7 @@ public class RestaurantService {
                                 .build();
                         
                         restaurants.add(restaurant);
+                        count++;
                     }
                 }
             }
@@ -1056,6 +1150,65 @@ public class RestaurantService {
                     !restaurant.getRoadAddress().trim().isEmpty()
                 )
                 .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
+    
+    /**
+     * 좌표가 없는 식당들 삭제 (데이터베이스 크기 절약)
+     * lat 또는 lng가 NULL인 레스토랑을 삭제합니다.
+     */
+    @Transactional
+    public int deleteRestaurantsWithoutCoordinates() {
+        log.info("Deleting restaurants without coordinates (lat or lng is NULL)");
+        
+        // 삭제 전 개수 확인
+        List<Restaurant> restaurantsToDelete = restaurantRepository.findByLatIsNullOrLngIsNull();
+        int count = restaurantsToDelete.size();
+        
+        if (count == 0) {
+            log.info("No restaurants found without coordinates");
+            return 0;
+        }
+        
+        log.info("Found {} restaurants without coordinates to delete", count);
+        
+        // 삭제 실행 - 개별 삭제로 변경 (더 안정적)
+        restaurantRepository.deleteAll(restaurantsToDelete);
+        
+        log.info("Successfully deleted {} restaurants without coordinates", count);
+        return count;
+    }
+    
+    /**
+     * 좌표가 없는 식당 개수 조회
+     */
+    public long countRestaurantsWithoutCoordinates() {
+        return restaurantRepository.findByLatIsNullOrLngIsNull().size();
+    }
+    
+    /**
+     * 좌표가 없는 모든 식당 조회 (배치 업데이트용)
+     */
+    public List<Restaurant> findAllRestaurantsWithoutCoordinates() {
+        return restaurantRepository.findByLatIsNullOrLngIsNull();
+    }
+    
+    /**
+     * 좌표 통계 조회
+     */
+    public Map<String, Long> getCoordinateStatistics() {
+        List<Restaurant> allRestaurants = restaurantRepository.findAll();
+        long total = allRestaurants.size();
+        long withCoordinates = allRestaurants.stream()
+                .filter(r -> r.getLat() != null && r.getLng() != null)
+                .count();
+        long withoutCoordinates = total - withCoordinates;
+        
+        Map<String, Long> stats = new HashMap<>();
+        stats.put("total", total);
+        stats.put("withCoordinates", withCoordinates);
+        stats.put("withoutCoordinates", withoutCoordinates);
+        
+        return stats;
     }
     
 }

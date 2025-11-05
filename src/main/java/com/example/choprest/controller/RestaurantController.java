@@ -2,20 +2,21 @@ package com.example.choprest.controller;
 
 import com.example.choprest.entity.Restaurant;
 import com.example.choprest.service.RestaurantService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/restaurants")
-@RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*") // CORS 설정
 public class RestaurantController {
@@ -24,12 +25,26 @@ public class RestaurantController {
     private final WebClient webClient;
     
     // 카카오 API 키 배열 (로테이션용) - 3개 키로 429 오류 방지
-    private final String[] KAKAO_API_KEYS = {
-        "0daaba62d376e0a4633352753a28827c",  // REST API 키 1
-        "56a153a339ec3e4e1f0fbd87bafcc0d1",  // REST API 키 2
-        "d712769a072b1868812aa282ce367ae7"   // REST API 키 3
-    };
+    private final String[] KAKAO_API_KEYS;
     private int currentApiKeyIndex = 0;
+    
+    // 생성자에서 application.properties에서 API 키 읽어오기
+    public RestaurantController(RestaurantService restaurantService, WebClient webClient,
+                                @Value("${kakao.api.key1:${kakao.api.key}}") String key1,
+                                @Value("${kakao.api.key2:${kakao.api.key}}") String key2,
+                                @Value("${kakao.api.key3:${kakao.api.key}}") String key3) {
+        this.restaurantService = restaurantService;
+        this.webClient = webClient;
+        
+        // API 키 배열 초기화 (application.properties에서 읽어옴)
+        this.KAKAO_API_KEYS = new String[] {
+            key1 != null && !key1.isEmpty() ? key1 : "363d03dddf733d17f5b3edb9be1e8911",
+            key2 != null && !key2.isEmpty() ? key2 : "5d1502f95e6ae410f5ce45abf596d639",
+            key3 != null && !key3.isEmpty() ? key3 : "674451cc66e051ddfca840a7f734213c"
+        };
+        
+        log.info("Initialized with {} Kakao API keys", KAKAO_API_KEYS.length);
+    }
     
     /**
      * 다음 API 키를 가져오는 메서드 (로테이션)
@@ -126,12 +141,19 @@ public class RestaurantController {
             }
             
             // 4. 업데이트된 데이터 반환
-            log.info("Returning {} total restaurants ({} with coordinates, {} without coordinates)", 
-                updatedRestaurants.size(),
-                updatedRestaurants.stream().mapToInt(r -> (r.getLat() != null && r.getLng() != null) ? 1 : 0).sum(),
-                updatedRestaurants.stream().mapToInt(r -> (r.getLat() == null || r.getLng() == null) ? 1 : 0).sum());
+            long withCoords = updatedRestaurants.stream().mapToInt(r -> (r.getLat() != null && r.getLng() != null) ? 1 : 0).sum();
+            long withoutCoords = updatedRestaurants.stream().mapToInt(r -> (r.getLat() == null || r.getLng() == null) ? 1 : 0).sum();
             
-            return ResponseEntity.ok(updatedRestaurants);
+            log.info("Returning {} total restaurants ({} with coordinates, {} without coordinates)", 
+                updatedRestaurants.size(), withCoords, withoutCoords);
+            
+            // 빈 리스트인 경우도 로그로 확인
+            if (updatedRestaurants.isEmpty()) {
+                log.warn("⚠️ Empty result list for keyword: {}", keyword);
+                log.warn("DB search result was: {} restaurants", restaurants.size());
+            }
+            
+            return ResponseEntity.ok(updatedRestaurants != null ? updatedRestaurants : new ArrayList<>());
         } catch (Exception e) {
             log.error("Error searching restaurants for keyword {}: {}", keyword, e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -188,20 +210,78 @@ public class RestaurantController {
                             .timeout(java.time.Duration.ofSeconds(10))
                             .block();
                     
+                    // 응답 로그 (디버깅용)
+                    if (response != null && !response.isEmpty()) {
+                        log.debug("Kakao API raw response: {}", response.length() > 200 ? response.substring(0, 200) + "..." : response);
+                    } else {
+                        log.warn("Empty response from Kakao API for query: {}", searchQuery);
+                        continue;
+                    }
+                    
                     // JSON 파싱
                     com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                    com.fasterxml.jackson.databind.JsonNode jsonNode = mapper.readTree(response);
+                    com.fasterxml.jackson.databind.JsonNode jsonNode = null;
                     
-                    if (jsonNode.has("documents") && jsonNode.get("documents").size() > 0) {
+                    try {
+                        jsonNode = mapper.readTree(response);
+                    } catch (Exception e) {
+                        log.error("❌ JSON 파싱 실패 for query '{}': {}", searchQuery, e.getMessage());
+                        log.error("Response content: {}", response);
+                        continue;
+                    }
+                    
+                    // 에러 응답 체크
+                    if (jsonNode.has("error")) {
+                        String errorMessage = jsonNode.has("message") ? jsonNode.get("message").asText() : "Unknown error";
+                        log.error("❌ Kakao API error for query '{}': {}", searchQuery, errorMessage);
+                        continue;
+                    }
+                    
+                    // documents 배열 확인
+                    if (jsonNode.has("documents") && jsonNode.get("documents").isArray() && jsonNode.get("documents").size() > 0) {
                         com.fasterxml.jackson.databind.JsonNode firstResult = jsonNode.get("documents").get(0);
                         
-                        Double lat = firstResult.get("y").asDouble();
-                        Double lng = firstResult.get("x").asDouble();
-                        String roadAddress = firstResult.has("road_address_name") && 
-                                           !firstResult.get("road_address_name").isNull() ? 
-                                           firstResult.get("road_address_name").asText() : 
-                                           firstResult.get("address_name").asText();
-                        String phone = firstResult.has("phone") && !firstResult.get("phone").isNull() ? 
+                        // 필수 필드 확인
+                        if (!firstResult.has("y") || !firstResult.has("x")) {
+                            log.warn("❌ Missing coordinates in response for query '{}'", searchQuery);
+                            log.debug("Response structure: {}", firstResult.toString());
+                            continue;
+                        }
+                        
+                        // 좌표 추출 (안전하게)
+                        Double lat = null;
+                        Double lng = null;
+                        try {
+                            lat = firstResult.get("y").asDouble();
+                            lng = firstResult.get("x").asDouble();
+                            log.debug("Parsed coordinates: lat={}, lng={} for query '{}'", lat, lng, searchQuery);
+                        } catch (Exception e) {
+                            log.error("❌ 좌표 파싱 실패 for query '{}': {}", searchQuery, e.getMessage());
+                            log.debug("y value: {}, x value: {}", 
+                                firstResult.has("y") ? firstResult.get("y").asText() : "N/A",
+                                firstResult.has("x") ? firstResult.get("x").asText() : "N/A");
+                            continue;
+                        }
+                        
+                        if (lat == null || lng == null) {
+                            log.warn("❌ 좌표가 null입니다 for query '{}'", searchQuery);
+                            continue;
+                        }
+                        // 주소 추출 (안전하게)
+                        String roadAddress = null;
+                        if (firstResult.has("road_address_name") && 
+                            !firstResult.get("road_address_name").isNull() &&
+                            !firstResult.get("road_address_name").asText().isEmpty()) {
+                            roadAddress = firstResult.get("road_address_name").asText();
+                        } else if (firstResult.has("address_name") && 
+                                   !firstResult.get("address_name").isNull()) {
+                            roadAddress = firstResult.get("address_name").asText();
+                        }
+                        
+                        // 전화번호 추출
+                        String phone = firstResult.has("phone") && 
+                                      !firstResult.get("phone").isNull() && 
+                                      !firstResult.get("phone").asText().isEmpty() ? 
                                       firstResult.get("phone").asText() : null;
                         String categoryFull = firstResult.has("category_name") && !firstResult.get("category_name").isNull() ? 
                                              firstResult.get("category_name").asText() : null;
@@ -260,6 +340,20 @@ public class RestaurantController {
     
     
     /**
+     * 키워드로 식당 검색 (검색 경로)
+     * GET /api/restaurants/search?keyword=검색어
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<Restaurant>> searchRestaurantsByPath(@RequestParam String keyword) {
+        log.info("Search endpoint called with keyword: {}", keyword);
+        ResponseEntity<List<Restaurant>> response = searchRestaurants(keyword);
+        log.info("Search response: status={}, body size={}", 
+            response.getStatusCode(), 
+            response.getBody() != null ? response.getBody().size() : 0);
+        return response;
+    }
+    
+    /**
      * 지역명으로 식당 검색
      * GET /api/restaurants/region?region=지역명
      */
@@ -299,6 +393,69 @@ public class RestaurantController {
             return ResponseEntity.ok(restaurants);
         } catch (Exception e) {
             log.error("Error searching restaurants for name {}: {}", name, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * 식당 검색 (코드 또는 이름으로 검색)
+     * GET /api/restaurants/search-for-signup?query=검색어&type=code|name
+     * 회원가입 시 식당 선택용
+     * type: 'code' (식당 코드로 검색) 또는 'name' (식당 이름으로 검색)
+     * 주의: 이 경로는 /{id}보다 먼저 선언되어야 함
+     */
+    @GetMapping("/search-for-signup")
+    public ResponseEntity<List<Map<String, Object>>> searchRestaurantsForSignup(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false, defaultValue = "code") String type) {
+        log.info("Search restaurants for signup with query: {}, type: {}", query, type);
+        
+        try {
+            List<Restaurant> restaurants = new ArrayList<>();
+            
+            if (query == null || query.trim().isEmpty()) {
+                log.warn("Empty query provided");
+                return ResponseEntity.ok(new ArrayList<>());
+            }
+            
+            String trimmedQuery = query.trim();
+            
+            if ("code".equalsIgnoreCase(type)) {
+                // 식당 코드로 검색 (restaurant_code)
+                if (trimmedQuery.matches("\\d+")) {
+                    Long codeQuery = Long.parseLong(trimmedQuery);
+                    Optional<Restaurant> byCode = restaurantService.getRestaurantByCode(codeQuery);
+                    if (byCode.isPresent()) {
+                        restaurants.add(byCode.get());
+                    }
+                } else {
+                    log.warn("Invalid code format: {}", trimmedQuery);
+                }
+            } else if ("name".equalsIgnoreCase(type)) {
+                // 식당 이름으로 검색
+                restaurants = restaurantService.searchRestaurants(trimmedQuery);
+            } else {
+                log.warn("Invalid search type: {}", type);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // 응답 형식 변환 (가게 이름/지점/주소 포함)
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Restaurant restaurant : restaurants) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", restaurant.getId());
+                item.put("restaurantCode", restaurant.getRestaurantCode());
+                item.put("restaurantName", restaurant.getRestaurantName());
+                item.put("branchName", restaurant.getBranchName());
+                item.put("roadAddress", restaurant.getRoadAddress());
+                item.put("regionName", restaurant.getRegionName());
+                result.add(item);
+            }
+            
+            log.info("Found {} restaurants for signup (type: {})", result.size(), type);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error searching restaurants for signup: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -394,6 +551,60 @@ public class RestaurantController {
     }
     
     /**
+     * 좌표가 없는 식당들 삭제 (데이터베이스 크기 절약)
+     * DELETE /api/restaurants/cleanup/without-coordinates
+     */
+    @DeleteMapping("/cleanup/without-coordinates")
+    public ResponseEntity<Map<String, Object>> deleteRestaurantsWithoutCoordinates() {
+        log.info("Delete request received for restaurants without coordinates");
+        
+        try {
+            // 삭제 전 통계
+            Map<String, Long> beforeStats = restaurantService.getCoordinateStatistics();
+            long beforeCount = beforeStats.get("withoutCoordinates");
+            
+            // 삭제 실행
+            int deletedCount = restaurantService.deleteRestaurantsWithoutCoordinates();
+            
+            // 삭제 후 통계
+            Map<String, Long> afterStats = restaurantService.getCoordinateStatistics();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("deletedCount", deletedCount);
+            response.put("beforeStats", beforeStats);
+            response.put("afterStats", afterStats);
+            response.put("message", "Successfully deleted " + deletedCount + " restaurants without coordinates");
+            
+            log.info("Deleted {} restaurants without coordinates. Before: {}, After: {}", 
+                    deletedCount, beforeCount, afterStats.get("withoutCoordinates"));
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error deleting restaurants without coordinates: {}", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error deleting restaurants: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+    
+    /**
+     * 좌표 통계 조회
+     * GET /api/restaurants/statistics/coordinates
+     */
+    @GetMapping("/statistics/coordinates")
+    public ResponseEntity<Map<String, Long>> getCoordinateStatistics() {
+        log.info("Coordinate statistics request received");
+        
+        try {
+            Map<String, Long> stats = restaurantService.getCoordinateStatistics();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error getting coordinate statistics: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
      * 카카오 API 프록시 - 장소 검색
      * GET /api/restaurants/kakao/search?query=검색어
      */
@@ -451,6 +662,179 @@ public class RestaurantController {
         );
         
         return ResponseEntity.ok(testResponse);
+    }
+    
+    /**
+     * 배치 좌표 업데이트 - 429 에러 방지 포함
+     * POST /api/restaurants/batch-update-coordinates
+     * 
+     * 좌표가 없는 모든 식당의 좌표를 한번에 업데이트합니다.
+     * API 키 로테이션, 적절한 딜레이, 429 에러 재시도 로직이 포함되어 있습니다.
+     * 
+     * 참고: 일부 식당은 Kakao API에서 찾을 수 없을 수 있습니다 (정상).
+     */
+    @PostMapping("/batch-update-coordinates")
+    public ResponseEntity<Map<String, Object>> batchUpdateCoordinates(
+            @RequestParam(required = false, defaultValue = "1500") long delayMs) {
+        log.info("Batch coordinate update started with delay: {}ms", delayMs);
+        
+        Map<String, Object> result = new HashMap<>();
+        List<Restaurant> restaurantsWithoutCoordinates = restaurantService.findAllRestaurantsWithoutCoordinates();
+        
+        if (restaurantsWithoutCoordinates.isEmpty()) {
+            result.put("message", "좌표가 없는 식당이 없습니다. 모든 식당이 이미 좌표를 가지고 있습니다.");
+            result.put("total", 0);
+            result.put("success", 0);
+            result.put("failed", 0);
+            result.put("skipped", 0);
+            return ResponseEntity.ok(result);
+        }
+        
+        int total = restaurantsWithoutCoordinates.size();
+        int success = 0;
+        int failed = 0;
+        int skipped = 0;
+        
+        log.info("Found {} restaurants without coordinates. Starting batch update...", total);
+        
+        for (int i = 0; i < restaurantsWithoutCoordinates.size(); i++) {
+            Restaurant restaurant = restaurantsWithoutCoordinates.get(i);
+            
+            try {
+                log.info("Processing {}/{}: {}", i + 1, total, restaurant.getRestaurantName());
+                
+                // 이미 좌표가 있는 경우 스킵
+                if (restaurant.getLat() != null && restaurant.getLng() != null && 
+                    restaurant.getRoadAddress() != null && !restaurant.getRoadAddress().trim().isEmpty()) {
+                    skipped++;
+                    log.info("✅ Skipped (already has coordinates): {}", restaurant.getRestaurantName());
+                    continue;
+                }
+                
+                // 좌표 업데이트 (429 에러 재시도 포함)
+                boolean updated = updateRestaurantCoordinatesWithRetry(restaurant);
+                
+                if (updated) {
+                    success++;
+                    log.info("✅ Successfully updated {}/{}: {}", i + 1, total, restaurant.getRestaurantName());
+                } else {
+                    failed++;
+                    log.warn("❌ Failed to update {}/{}: {}", i + 1, total, restaurant.getRestaurantName());
+                }
+                
+                // 진행 상황 로깅 (10개마다)
+                if ((i + 1) % 10 == 0) {
+                    log.info("📊 Progress: {}/{} (Success: {}, Failed: {}, Skipped: {})", 
+                        i + 1, total, success, failed, skipped);
+                }
+                
+                // API 호출 제한 방지: 딜레이 (마지막 항목 제외)
+                if (i < restaurantsWithoutCoordinates.size() - 1) {
+                    Thread.sleep(delayMs); // 기본 1.5초 딜레이
+                }
+                
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Batch update interrupted");
+                break;
+            } catch (Exception e) {
+                failed++;
+                log.error("❌ Error processing {}/{} ({}): {}", 
+                    i + 1, total, restaurant.getRestaurantName(), e.getMessage());
+            }
+        }
+        
+        result.put("message", "배치 좌표 업데이트 완료");
+        result.put("total", total);
+        result.put("success", success);
+        result.put("failed", failed);
+        result.put("skipped", skipped);
+        
+        log.info("✅ Batch update completed. Total: {}, Success: {}, Failed: {}, Skipped: {}", 
+            total, success, failed, skipped);
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    /**
+     * 429 에러 재시도 로직이 포함된 좌표 업데이트
+     */
+    private boolean updateRestaurantCoordinatesWithRetry(Restaurant restaurant) {
+        int maxRetries = 3;
+        long baseDelay = 1500; // 기본 딜레이 1.5초
+        long retryDelay = 30000; // 429 에러 시 30초 대기
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                // 원래 업데이트 로직 호출
+                updateSingleRestaurantCoordinates(restaurant);
+                
+                // 업데이트 성공 확인
+                if (restaurant.getLat() != null && restaurant.getLng() != null && 
+                    restaurant.getRoadAddress() != null && !restaurant.getRoadAddress().trim().isEmpty()) {
+                    return true;
+                }
+                
+                // 결과가 없으면 다음 시도
+                if (attempt < maxRetries) {
+                    log.warn("⚠️ No coordinates found for {} (attempt {}/{})", 
+                        restaurant.getRestaurantName(), attempt, maxRetries);
+                    Thread.sleep(baseDelay * attempt); // 점진적 딜레이
+                }
+                
+            } catch (org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests e) {
+                // 429 에러: 긴 대기 시간
+                log.warn("⚠️ 429 Too Many Requests error for {} (attempt {}/{}). Waiting {} seconds...", 
+                    restaurant.getRestaurantName(), attempt, maxRetries, retryDelay / 1000);
+                
+                if (attempt < maxRetries) {
+                    try {
+                        Thread.sleep(retryDelay);
+                        // API 키 인덱스도 다음으로 이동 (로테이션)
+                        currentApiKeyIndex = (currentApiKeyIndex + 1) % KAKAO_API_KEYS.length;
+                        log.info("Switched to next API key. Retrying...");
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                } else {
+                    log.error("❌ Max retries reached for {} due to 429 error", restaurant.getRestaurantName());
+                    return false;
+                }
+                
+            } catch (Exception e) {
+                // 기타 에러
+                if (e.getMessage() != null && e.getMessage().contains("429")) {
+                    // 429 에러가 메시지에 포함된 경우
+                    log.warn("⚠️ 429 error detected in message for {} (attempt {}/{}). Waiting...", 
+                        restaurant.getRestaurantName(), attempt, maxRetries);
+                    
+                    if (attempt < maxRetries) {
+                        try {
+                            Thread.sleep(retryDelay);
+                            currentApiKeyIndex = (currentApiKeyIndex + 1) % KAKAO_API_KEYS.length;
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            return false;
+                        }
+                    }
+                } else {
+                    log.warn("⚠️ Error updating {} (attempt {}/{}): {}", 
+                        restaurant.getRestaurantName(), attempt, maxRetries, e.getMessage());
+                    
+                    if (attempt < maxRetries) {
+                        try {
+                            Thread.sleep(baseDelay * attempt);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
     
     /**

@@ -98,26 +98,78 @@ const ChatWindow = ({ chatRoom, onBack }) => {
 
   const formatTime = (dateTime) => {
     if (!dateTime) return '';
-    const date = new Date(dateTime);
+    
+    // 서버에서 LocalDateTime을 ISO 형식으로 받으면 타임존 정보가 없을 수 있음
+    // ISO 형식 문자열인 경우 (예: "2025-10-31T08:30:00")
+    let date;
+    if (typeof dateTime === 'string' && !dateTime.includes('T')) {
+      // 형식이 잘못된 경우 수정
+      dateTime = dateTime.replace(' ', 'T');
+    }
+    
+    // ISO 8601 형식 문자열인 경우 (타임존 정보 없음)
+    if (typeof dateTime === 'string' && dateTime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/)) {
+      // 한국 시간대(UTC+9)로 간주하여 처리
+      date = new Date(dateTime + '+09:00');
+    } else {
+      date = new Date(dateTime);
+    }
+    
+    // 유효한 날짜인지 확인
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateTime);
+      return '';
+    }
+    
     return date.toLocaleTimeString('ko-KR', { 
       hour: '2-digit', 
-      minute: '2-digit' 
+      minute: '2-digit',
+      timeZone: 'Asia/Seoul'
     });
   };
 
   const formatDate = (dateTime) => {
     if (!dateTime) return '';
-    const date = new Date(dateTime);
+    
+    // 서버에서 LocalDateTime을 ISO 형식으로 받으면 타임존 정보가 없을 수 있음
+    let date;
+    if (typeof dateTime === 'string' && !dateTime.includes('T')) {
+      dateTime = dateTime.replace(' ', 'T');
+    }
+    
+    // ISO 8601 형식 문자열인 경우 (타임존 정보 없음)
+    if (typeof dateTime === 'string' && dateTime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/)) {
+      // 한국 시간대(UTC+9)로 간주하여 처리
+      date = new Date(dateTime + '+09:00');
+    } else {
+      date = new Date(dateTime);
+    }
+    
+    // 유효한 날짜인지 확인
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateTime);
+      return '';
+    }
+    
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    
+    // 한국 시간대 기준으로 날짜 비교
+    const dateStr = date.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+    const todayStr = today.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
+    const yesterdayStr = yesterday.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' });
 
-    if (date.toDateString() === today.toDateString()) {
+    if (dateStr === todayStr) {
       return '오늘';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (dateStr === yesterdayStr) {
       return '어제';
     } else {
-      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('ko-KR', { 
+        month: 'short', 
+        day: 'numeric',
+        timeZone: 'Asia/Seoul'
+      });
     }
   };
 
