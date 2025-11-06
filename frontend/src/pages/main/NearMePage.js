@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
-import { restaurantAPI } from '../../demo/services/api';
 import TopNav from '../../components/navigation/TopNav';
 import MainNav from '../../components/navigation/MainNav';
 import SearchSection from '../../components/sections/SearchSection';
@@ -11,6 +10,7 @@ import RestaurantList from '../../components/sections/RestaurantList';
 import RestaurantDetailModal from '../../components/modals/RestaurantDetailModal';
 import { useRestaurantSearch } from '../../hooks/useRestaurantSearch';
 import { useMap } from '../../hooks/useMap';
+import { useAllRestaurants } from '../../hooks/useRestaurants';
 import '../../styles/common.css';
 import './NearMePage.css';
 
@@ -28,21 +28,11 @@ const NearMePage = () => {
   const isManuallyControllingMarkers = useRef(false);
 
   const { map, updateMap, showSelectedMarker, clearMarkers, isMapLoading, mapError } = useMap();
-  const [allRestaurants, setAllRestaurants] = useState([]);
   
-  // 모든 식당 데이터 미리 로드
-  useEffect(() => {
-    const fetchAllRestaurants = async () => {
-      try {
-        const response = await restaurantAPI.getAll();
-        setAllRestaurants(response.data);
-        console.log('전체 식당 로드 완료:', response.data.length);
-      } catch (error) {
-        console.error('식당 데이터 로딩 실패:', error);
-      }
-    };
-    fetchAllRestaurants();
-  }, []);
+  // React Query로 모든 식당 데이터 로드 (캐시 재사용)
+  const { data: allRestaurants = [] } = useAllRestaurants();
+  
+  // React Query가 자동으로 포커스 시 갱신 처리
   
   // 현재 위치로 이동 핸들러
   const handleCurrentLocation = () => {

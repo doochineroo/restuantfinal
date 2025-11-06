@@ -90,6 +90,12 @@
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+/* 정렬 드롭다운을 오른쪽 끝에 배치 */
+.filter-row .sort-dropdown {
+  margin-left: auto;
 }
 
 .filter-main-btn {
@@ -360,7 +366,7 @@
 
 .modal-header h3 {
   margin: 0;
-  color: #6c757d;
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 500;
   cursor: default;
@@ -423,12 +429,12 @@
 
 .modal-tab .review-count {
   font-size: 0.85rem;
-  color: #adb5bd;
+  color: #ffffff;
   font-weight: 500;
 }
 
 .modal-tab.active .review-count {
-  color: #667eea;
+  color: #000000;
 }
 
 /* 5개 탭을 위한 스타일 조정 */
@@ -901,7 +907,6 @@
 }
 
 .review-count {
-  background: #667eea;
   color: white;
   padding: 2px 6px;
   border-radius: 10px;

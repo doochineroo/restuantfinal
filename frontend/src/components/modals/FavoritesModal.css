@@ -1,0 +1,168 @@
+/* FavoritesModal.css - 찜한 맛집 팝업 모달 스타일 */
+
+.favorites-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.favorites-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.favorites-modal-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid #e9ecef;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.favorites-modal-header h2 {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.favorites-modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #f8f9fa;
+  border: none;
+  font-size: 1.8rem;
+  color: #868e96;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.favorites-modal-close-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+  transform: rotate(90deg);
+}
+
+.favorites-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* FavoritesSection이 모달 내부에서 사용될 때 스타일 조정 */
+.favorites-modal-body .favorites-section {
+  padding: 0;
+}
+
+.favorites-modal-body .favorites-header {
+  padding: 0 0 20px 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .favorites-modal-overlay {
+    padding: 10px;
+  }
+  
+  .favorites-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+  
+  .favorites-modal-header {
+    padding: 20px 20px 12px 20px;
+  }
+  
+  .favorites-modal-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .favorites-modal-close-btn {
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.6rem;
+  }
+  
+  .favorites-modal-body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .favorites-modal-overlay {
+    padding: 0;
+  }
+  
+  .favorites-modal {
+    max-height: 100vh;
+    border-radius: 0;
+    height: 100vh;
+  }
+  
+  .favorites-modal-header {
+    padding: 16px 16px 12px 16px;
+  }
+  
+  .favorites-modal-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .favorites-modal-body {
+    padding: 16px;
+  }
+}
+

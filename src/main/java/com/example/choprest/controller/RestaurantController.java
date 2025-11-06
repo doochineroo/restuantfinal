@@ -4,6 +4,7 @@ import com.example.choprest.entity.Restaurant;
 import com.example.choprest.service.RestaurantService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,6 +21,17 @@ import java.util.Optional;
 @Slf4j
 @CrossOrigin(origins = "*") // CORS 설정
 public class RestaurantController {
+    
+    /**
+     * 캐시 방지 헤더를 추가하는 헬퍼 메서드
+     */
+    private HttpHeaders getNoCacheHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.set("Pragma", "no-cache");
+        headers.set("Expires", "0");
+        return headers;
+    }
     
     private final RestaurantService restaurantService;
     private final WebClient webClient;
@@ -140,7 +152,10 @@ public class RestaurantController {
                 }
             }
             
-            // 4. 업데이트된 데이터 반환
+            // 4. 리뷰 개수와 평점 설정 (좌표 업데이트 후에도 유지)
+            restaurantService.setReviewCountsAndRatings(updatedRestaurants);
+            
+            // 5. 업데이트된 데이터 반환
             long withCoords = updatedRestaurants.stream().mapToInt(r -> (r.getLat() != null && r.getLng() != null) ? 1 : 0).sum();
             long withoutCoords = updatedRestaurants.stream().mapToInt(r -> (r.getLat() == null || r.getLng() == null) ? 1 : 0).sum();
             
@@ -153,7 +168,9 @@ public class RestaurantController {
                 log.warn("DB search result was: {} restaurants", restaurants.size());
             }
             
-            return ResponseEntity.ok(updatedRestaurants != null ? updatedRestaurants : new ArrayList<>());
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(updatedRestaurants != null ? updatedRestaurants : new ArrayList<>());
         } catch (Exception e) {
             log.error("Error searching restaurants for keyword {}: {}", keyword, e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -368,7 +385,9 @@ public class RestaurantController {
         try {
             List<Restaurant> restaurants = restaurantService.searchRestaurantsByRegion(region.trim());
             log.info("Found {} restaurants for region: {}", restaurants.size(), region);
-            return ResponseEntity.ok(restaurants);
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(restaurants);
         } catch (Exception e) {
             log.error("Error searching restaurants for region {}: {}", region, e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -390,7 +409,9 @@ public class RestaurantController {
         try {
             List<Restaurant> restaurants = restaurantService.searchRestaurantsByName(name.trim());
             log.info("Found {} restaurants for name: {}", restaurants.size(), name);
-            return ResponseEntity.ok(restaurants);
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(restaurants);
         } catch (Exception e) {
             log.error("Error searching restaurants for name {}: {}", name, e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -472,7 +493,9 @@ public class RestaurantController {
             Optional<Restaurant> restaurant = restaurantService.getRestaurantById(id);
             if (restaurant.isPresent()) {
                 log.info("Restaurant found: {}", restaurant.get().getRestaurantName());
-                return ResponseEntity.ok(restaurant.get());
+                return ResponseEntity.ok()
+                        .headers(getNoCacheHeaders())
+                        .body(restaurant.get());
             } else {
                 log.warn("Restaurant not found for id: {}", id);
                 return ResponseEntity.notFound().build();
@@ -521,7 +544,9 @@ public class RestaurantController {
         try {
             List<Restaurant> restaurants = restaurantService.getAllRestaurants();
             log.info("Retrieved {} restaurants", restaurants.size());
-            return ResponseEntity.ok(restaurants);
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(restaurants);
         } catch (Exception e) {
             log.error("Error retrieving all restaurants: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
 import { statisticsAPI } from '../../demo/services/apiService';
@@ -22,6 +22,7 @@ const SearchPage = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [activeFilterTab, setActiveFilterTab] = useState('전체');
   const [selectedServices, setSelectedServices] = useState([]);
+  const [sortOption, setSortOption] = useState('default'); // 정렬 옵션: 'default', 'rating', 'reviewCount', 'popular'
   const [modalRestaurant, setModalRestaurant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [popularKeywords, setPopularKeywords] = useState([]);
@@ -71,10 +72,13 @@ const SearchPage = () => {
     }
   }, [location.state, setFilteredRestaurants, setHasSearched]);
 
-  // 인기 검색어 가져오기
+  // 인기 검색어 가져오기 - 로딩 상태 추가
+  const [keywordsLoading, setKeywordsLoading] = useState(false);
+  
   useEffect(() => {
     const fetchPopularKeywords = async () => {
       try {
+        setKeywordsLoading(true);
         const response = await statisticsAPI.getPopularKeywords(10);
         console.log('인기 검색어 데이터:', response.data);
         setPopularKeywords(response.data.map(item => ({
@@ -84,6 +88,8 @@ const SearchPage = () => {
       } catch (err) {
         console.error('인기 검색어 로딩 오류:', err);
         setPopularKeywords([]);
+      } finally {
+        setKeywordsLoading(false);
       }
     };
     fetchPopularKeywords();
@@ -205,6 +211,54 @@ const SearchPage = () => {
     handleSearch(keyword);
   };
 
+  // 정렬된 식당 목록 계산
+  const sortedRestaurants = useMemo(() => {
+    if (!filteredRestaurants || filteredRestaurants.length === 0) {
+      return [];
+    }
+
+    const sorted = [...filteredRestaurants];
+    
+    switch (sortOption) {
+      case 'rating':
+        // 리뷰 좋은 순 (평점 높은 순)
+        return sorted.sort((a, b) => {
+          const ratingA = a.rating || 0;
+          const ratingB = b.rating || 0;
+          if (ratingB !== ratingA) {
+            return ratingB - ratingA; // 평점 높은 순
+          }
+          // 평점이 같으면 리뷰 개수 많은 순
+          return (b.reviewCount || 0) - (a.reviewCount || 0);
+        });
+      
+      case 'reviewCount':
+        // 리뷰 많은 순
+        return sorted.sort((a, b) => {
+          const countA = a.reviewCount || 0;
+          const countB = b.reviewCount || 0;
+          if (countB !== countA) {
+            return countB - countA; // 리뷰 개수 많은 순
+          }
+          // 리뷰 개수가 같으면 평점 높은 순
+          return (b.rating || 0) - (a.rating || 0);
+        });
+      
+      case 'popular':
+        // 인기순 (리뷰 개수와 평점 종합)
+        return sorted.sort((a, b) => {
+          const scoreA = ((a.rating || 0) * 0.7) + ((a.reviewCount || 0) * 0.3);
+          const scoreB = ((b.rating || 0) * 0.7) + ((b.reviewCount || 0) * 0.3);
+          return scoreB - scoreA;
+        });
+      
+      case 'default':
+      default:
+        // 기본순 (변경 없음)
+        return sorted;
+    }
+  }, [filteredRestaurants, sortOption]);
+
   return (
     <div className="search-page">
       <TopNav />
@@ -224,6 +278,8 @@ const SearchPage = () => {
           activeFilterTab={activeFilterTab}
           selectedServices={selectedServices}
           onFilterChange={handleFilterChange}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
         />
 
         {/* 인기 검색어 섹션 */}
@@ -231,19 +287,31 @@ const SearchPage = () => {
           <div className="section-header">
             <h2>인기 검색어</h2>
           </div>
-          <div className="keywords-grid">
-            {popularKeywords.map((item, index) => (
-              <button
-                key={index}
-                className="keyword-item"
-                onClick={() => handleKeywordClick(item.keyword)}
-              >
-                <span className="keyword-rank">#{index + 1}</span>
-                <span className="keyword-text">{item.keyword}</span>
-                <span className="keyword-count">{item.count}</span>
-              </button>
-            ))}
-          </div>
+          {keywordsLoading ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+              로딩 중...
+            </div>
+          ) : (
+            <div className="keywords-grid">
+              {popularKeywords.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                  인기 검색어가 없습니다
+                </div>
+              ) : (
+                popularKeywords.map((item, index) => (
+                  <button
+                    key={index}
+                    className="keyword-item"
+                    onClick={() => handleKeywordClick(item.keyword)}
+                  >
+                    <span className="keyword-rank">{index + 1}위</span>
+                    <span className="keyword-text">{item.keyword}</span>
+                    <span className="keyword-count">{item.count}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </section>
 
         {/* 에러 메시지 */}
@@ -256,7 +324,7 @@ const SearchPage = () => {
 
         <SearchRestaurantList
           hasSearched={hasSearched}
-          filteredRestaurants={filteredRestaurants}
+          filteredRestaurants={sortedRestaurants}
           activeFilterTab={activeFilterTab}
           expandedCard={expandedCard}
           onCardClick={toggleCardExpansion}

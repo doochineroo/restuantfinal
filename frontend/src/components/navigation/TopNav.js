@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../demo/context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import { chatAPI } from '../../demo/services/chatAPI';
+import { useChatUnreadCount } from '../../hooks/useChatUnreadCount';
 import './TopNav.css';
 
 const TopNav = () => {
@@ -19,26 +19,9 @@ const TopNav = () => {
   } = useNotification();
   
   const dropdownRef = useRef(null);
-  const [chatUnreadCount, setChatUnreadCount] = useState(0);
-
-  // 채팅 읽지 않은 메시지 개수 조회 (5초마다) - 일반회원만
-  useEffect(() => {
-    if (user?.userId && user?.role === 'USER') {
-      loadChatUnreadCount();
-      const interval = setInterval(loadChatUnreadCount, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const loadChatUnreadCount = async () => {
-    if (!user?.userId) return;
-    try {
-      const response = await chatAPI.getUnreadChatRoomCount(user.userId);
-      setChatUnreadCount(response.data.count || 0);
-    } catch (error) {
-      console.error('채팅 알림 개수 조회 오류:', error);
-    }
-  };
+  
+  // React Query로 채팅 읽지 않은 개수 조회
+  const { data: chatUnreadCount = 0 } = useChatUnreadCount();
 
   const handleChatClick = () => {
     navigate('/chat');
@@ -104,7 +87,7 @@ const TopNav = () => {
         {/* 로고 */}
         <div className="logo-section" onClick={handleLogoClick}>
           <span className="logo-icon">🍽️</span>
-          <span className="logo-text">Chopplan</span>
+          <span className="logo-text">CHOPLAN</span>
         </div>
 
         {/* 우측 메뉴 */}

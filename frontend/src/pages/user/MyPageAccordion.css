@@ -117,6 +117,25 @@
   transform: rotate(180deg);
 }
 
+/* 찜한 맛집 섹션 - 모달로 열기 스타일 */
+.accordion-section.favorites-section-modal .accordion-header {
+  cursor: pointer;
+}
+
+.accordion-section.favorites-section-modal .toggle-icon {
+  color: #8e8e93;
+  transform: rotate(0deg);
+}
+
+.accordion-section.favorites-section-modal .accordion-header:hover {
+  background: #f8f9fa;
+}
+
+.accordion-section.favorites-section-modal .accordion-header:hover .toggle-icon {
+  color: #007aff;
+  transform: translateX(4px);
+}
+
 .accordion-content {
   max-height: 0;
   overflow: hidden;

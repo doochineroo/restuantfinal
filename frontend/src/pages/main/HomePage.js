@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNav from '../../components/navigation/TopNav';
 import MainNav from '../../components/navigation/MainNav';
@@ -6,6 +6,8 @@ import RestaurantDetailModal from '../../components/modals/RestaurantDetailModal
 import { restaurantAPI, statisticsAPI } from '../../demo/services/api';
 import { useAuth } from '../../demo/context/AuthContext';
 import { getImageUrl } from '../../constants/config/apiConfig';
+import FavoriteHeart from '../../components/common/FavoriteHeart';
+import { useAllRestaurants, usePopularRestaurants, useRecentPopularRestaurants } from '../../hooks/useRestaurants';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -16,11 +18,18 @@ const HomePage = () => {
     return getImageUrl(url);
   };
   
-  const [featuredRestaurants, setFeaturedRestaurants] = useState([]);
-  const [popularRestaurants, setPopularRestaurants] = useState([]);
-  const [recentRestaurants, setRecentRestaurants] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // React Query로 데이터 로드 (캐시된 데이터도 즉시 표시)
+  const { data: allRestaurants = [], isLoading: restaurantsLoading, isFetching: restaurantsFetching } = useAllRestaurants();
+  const { data: popularRestaurants = [], isLoading: popularLoading, isFetching: popularFetching } = usePopularRestaurants(10);
+  const { data: recentRestaurants = [], isLoading: recentLoading, isFetching: recentFetching } = useRecentPopularRestaurants(6);
+  
+  // featuredRestaurants는 popularRestaurants에서 3개만 사용 (중복 호출 방지)
+  const featuredRestaurants = useMemo(() => {
+    return popularRestaurants.slice(0, 3);
+  }, [popularRestaurants]);
+  
+  // 초기 로딩만 체크 (캐시된 데이터가 있으면 즉시 표시)
+  const initialLoading = restaurantsLoading && allRestaurants.length === 0;
   const [error, setError] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [showScrollToTop, setShowScrollToTop] = useState(false);
@@ -45,54 +54,33 @@ const HomePage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        const featuredResponse = await statisticsAPI.getPopularRestaurantsWithCount(3);
-        setFeaturedRestaurants(featuredResponse.data);
-        
-        const popularResponse = await statisticsAPI.getPopularRestaurantsWithCount(10);
-        setPopularRestaurants(popularResponse.data);
-        
-        const recentResponse = await statisticsAPI.getRecentPopularRestaurants(6);
-        setRecentRestaurants(recentResponse.data);
-        
-        const allRestaurantsResponse = await restaurantAPI.getAll();
-        const restaurants = allRestaurantsResponse.data;
-        
-        const categoryCount = {};
-        restaurants.forEach(restaurant => {
-          const category = restaurant.category || '기타';
-          categoryCount[category] = (categoryCount[category] || 0) + 1;
-        });
-        
-        const categoryList = Object.entries(categoryCount)
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 8)
-          .map(([name, count]) => ({
-            name,
-            count
-          }));
-        
-        setCategories(categoryList);
-        setFilteredRestaurants(restaurants);
-        
-      } catch (err) {
-        console.error('데이터 로딩 오류:', err);
-        setError('데이터를 불러오는데 실패했습니다.');
-        setFeaturedRestaurants([]);
-        setPopularRestaurants([]);
-        setRecentRestaurants([]);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 카테고리 계산 (useMemo로 최적화)
+  const categories = useMemo(() => {
+    if (!allRestaurants || allRestaurants.length === 0) return [];
+    
+    const categoryCount = {};
+    allRestaurants.forEach(restaurant => {
+      const category = restaurant.category || '기타';
+      categoryCount[category] = (categoryCount[category] || 0) + 1;
+    });
+    
+    return Object.entries(categoryCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 8)
+      .map(([name, count]) => ({
+        name,
+        count
+      }));
+  }, [allRestaurants]);
 
-    fetchData();
-  }, []);
+  // 필터된 식당 목록 초기화
+  useEffect(() => {
+    if (allRestaurants.length > 0) {
+      setFilteredRestaurants(allRestaurants);
+    }
+  }, [allRestaurants]);
+
+  // React Query가 자동으로 포커스 시 갱신 처리 (refetchOnWindowFocus: true)
 
   const handleRestaurantClick = async (restaurantId) => {
     try {
@@ -132,16 +120,16 @@ const HomePage = () => {
   const handleCategoryClick = (categoryName) => {
     setSelectedCategory(categoryName);
     setCurrentPage(1); // 페이지 초기화
-    const allRestaurantsResponse = restaurantAPI.getAll().then(response => {
-      const filtered = response.data.filter(restaurant => {
-        // "기타"는 category가 null이거나 빈 문자열인 경우도 포함
-        if (categoryName === '기타') {
-          return !restaurant.category || restaurant.category === '' || restaurant.category === '기타';
-        }
-        return restaurant.category === categoryName;
-      });
-      setFilteredRestaurants(filtered);
+    
+    // 캐시된 데이터 사용
+    const filtered = allRestaurants.filter(restaurant => {
+      // "기타"는 category가 null이거나 빈 문자열인 경우도 포함
+      if (categoryName === '기타') {
+        return !restaurant.category || restaurant.category === '' || restaurant.category === '기타';
+      }
+      return restaurant.category === categoryName;
     });
+    setFilteredRestaurants(filtered);
   };
 
   // 페이지네이션 계산
@@ -150,7 +138,8 @@ const HomePage = () => {
   const endIndex = startIndex + restaurantsPerPage;
   const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
 
-  if (loading) {
+  // 초기 로딩만 표시 (캐시된 데이터가 있으면 즉시 표시)
+  if (initialLoading) {
     return (
       <div className="home-page">
         <TopNav />
@@ -256,9 +245,16 @@ const HomePage = () => {
                           e.target.src = '/image-placeholder.svg';
                         }}
                       />
+                      <FavoriteHeart restaurantId={restaurant.id} />
                     </div>
                     <div className="result-item-content">
-                      <h3>{restaurant.restaurantName}</h3>
+                      <h3>
+                        {restaurant.restaurantName}
+                        <span className="restaurant-rating-inline">
+                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
+                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
+                        </span>
+                      </h3>
                       <p className="result-location">{restaurant.roadAddress || restaurant.regionName}</p>
                       <div className="result-item-tags">
                         {restaurant.category && (
@@ -349,7 +345,13 @@ const HomePage = () => {
                       />
                     </div>
                     <div className="featured-content">
-                      <h3 className="featured-name">{restaurant.restaurantName}</h3>
+                      <h3 className="featured-name">
+                        {restaurant.restaurantName}
+                        <span className="restaurant-rating-inline">
+                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
+                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
+                        </span>
+                      </h3>
                       <div className="featured-meta">
                         <span className="views">{clickCount}명 검색</span>
                       </div>
@@ -401,7 +403,13 @@ const HomePage = () => {
                       />
                     </div>
                     <div className="trending-content">
-                      <h3>{restaurant.restaurantName}</h3>
+                      <h3>
+                        {restaurant.restaurantName}
+                        <span className="restaurant-rating-inline">
+                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
+                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
+                        </span>
+                      </h3>
                       <div className="trending-meta">
                         {restaurant.category && (
                           <span className="category">{restaurant.category}</span>
@@ -516,7 +524,7 @@ const HomePage = () => {
           <div className="footer-container">
             <div className="footer-main">
               <div className="footer-brand">
-                <span className="footer-logo">Chopplan</span>
+                <span className="footer-logo">CHOPLAN</span>
               </div>
             <div className="footer-links">
               <a href="#" className="footer-link">회사소개</a>

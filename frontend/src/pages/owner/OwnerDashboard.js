@@ -6,7 +6,7 @@ import { useAuth } from '../../demo/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { weatherAPI, freeWeatherAPI } from '../../services/weatherAPI';
 import { statisticsAPI, imageUploadAPI } from '../../demo/services/api';
-import { chatAPI } from '../../demo/services/chatAPI';
+import { useChatUnreadCount } from '../../hooks/useChatUnreadCount';
 import { API_ENDPOINTS, getImageUrl } from '../../constants/config/apiConfig';
 import axios from 'axios';
 import OwnerReservationDetailModal from '../../components/modals/OwnerReservationDetailModal';
@@ -19,7 +19,6 @@ const OwnerDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
-  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -81,6 +80,9 @@ const OwnerDashboard = () => {
     weatherDistribution: { sunny: 0, cloudy: 0, rainy: 0 }
   });
 
+  // React Query로 채팅 읽지 않은 개수 조회
+  const { data: chatUnreadCount = 0 } = useChatUnreadCount();
+
   // 매장 정보 조회
   useEffect(() => {
     if (user?.restaurantId) {
@@ -88,28 +90,8 @@ const OwnerDashboard = () => {
       loadReservations();
       loadBlacklist();
       loadReviews();
-      loadChatUnreadCount();
     }
   }, [user]);
-
-  // 채팅 읽지 않은 메시지 개수 조회 (5초마다)
-  useEffect(() => {
-    if (user?.userId) {
-      loadChatUnreadCount();
-      const interval = setInterval(loadChatUnreadCount, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const loadChatUnreadCount = async () => {
-    if (!user?.userId) return;
-    try {
-      const response = await chatAPI.getUnreadChatRoomCount(user.userId);
-      setChatUnreadCount(response.data.count || 0);
-    } catch (error) {
-      console.error('채팅 알림 개수 조회 오류:', error);
-    }
-  };
 
   const handleChatClick = () => {
     navigate('/chat');

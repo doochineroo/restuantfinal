@@ -105,7 +105,11 @@ const ProfileSection = () => {
         <div className="form-group">
           <label>가입일</label>
           <div className="form-display">
-            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '정보없음'}
+            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }) : '정보없음'}
           </div>
         </div>
       </div>

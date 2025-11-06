@@ -7,10 +7,13 @@ const FilterTabs = ({
   regions, 
   activeFilterTab, 
   selectedServices,
-  onFilterChange 
+  onFilterChange,
+  sortOption,
+  onSortChange
 }) => {
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
@@ -21,13 +24,16 @@ const FilterTabs = ({
       if (showServiceDropdown && !event.target.closest('.service-dropdown')) {
         setShowServiceDropdown(false);
       }
+      if (showSortDropdown && !event.target.closest('.sort-dropdown')) {
+        setShowSortDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showRegionDropdown, showServiceDropdown]);
+  }, [showRegionDropdown, showServiceDropdown, showSortDropdown]);
 
   if (!hasSearched) return null;
 
@@ -132,6 +138,56 @@ const FilterTabs = ({
             초기화 ✕
           </button>
         )}
+
+        {/* 정렬 드롭다운 - 오른쪽 끝에 배치 */}
+        <div className="filter-dropdown sort-dropdown">
+          <button 
+            className={`filter-dropdown-btn ${sortOption && sortOption !== 'default' ? 'active' : ''}`}
+            onClick={() => setShowSortDropdown(!showSortDropdown)}
+          >
+            정렬 {sortOption && sortOption !== 'default' ? '▼' : '▼'}
+          </button>
+          {showSortDropdown && (
+            <div className="filter-dropdown-menu">
+              <div
+                className={`filter-dropdown-item ${sortOption === 'default' ? 'active' : ''}`}
+                onClick={() => {
+                  onSortChange('default');
+                  setShowSortDropdown(false);
+                }}
+              >
+                {sortOption === 'default' && '✓ '}기본순
+              </div>
+              <div
+                className={`filter-dropdown-item ${sortOption === 'rating' ? 'active' : ''}`}
+                onClick={() => {
+                  onSortChange('rating');
+                  setShowSortDropdown(false);
+                }}
+              >
+                {sortOption === 'rating' && '✓ '}리뷰 좋은 순
+              </div>
+              <div
+                className={`filter-dropdown-item ${sortOption === 'reviewCount' ? 'active' : ''}`}
+                onClick={() => {
+                  onSortChange('reviewCount');
+                  setShowSortDropdown(false);
+                }}
+              >
+                {sortOption === 'reviewCount' && '✓ '}리뷰 많은 순
+              </div>
+              <div
+                className={`filter-dropdown-item ${sortOption === 'popular' ? 'active' : ''}`}
+                onClick={() => {
+                  onSortChange('popular');
+                  setShowSortDropdown(false);
+                }}
+              >
+                {sortOption === 'popular' && '✓ '}인기순
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

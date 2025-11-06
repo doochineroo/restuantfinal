@@ -16,6 +16,23 @@ const FAVORITES_BASE = API_ENDPOINTS.FAVORITES;
 const NOTIFICATIONS_BASE = API_ENDPOINTS.NOTIFICATIONS;
 const RESTAURANTS_BASE = API_ENDPOINTS.RESTAURANTS;
 
+// axios 기본 설정: 캐시 방지
+axios.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+axios.defaults.headers.common['Pragma'] = 'no-cache';
+axios.defaults.headers.common['Expires'] = '0';
+
+// axios 인터셉터: 모든 요청에 타임스탬프 추가하여 캐시 방지
+axios.interceptors.request.use((config) => {
+  // GET 요청에 타임스탬프 추가하여 브라우저 캐시 방지
+  if (config.method === 'get') {
+    config.params = {
+      ...config.params,
+      _t: Date.now() // 타임스탬프 추가
+    };
+  }
+  return config;
+});
+
 // ============ Statistics API ============
 export const statisticsAPI = {
   // 식당 클릭 기록

@@ -442,7 +442,7 @@ const LoginPage = () => {
     <div className="demo-login-page">
       <div className="demo-login-container">
         <div className="demo-login-header">
-          <h1>chopplan</h1>
+          <h1>CHOPLAN</h1>
         </div>
 
         <div className="demo-login-tabs">

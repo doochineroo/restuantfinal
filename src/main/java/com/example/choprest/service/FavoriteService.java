@@ -20,6 +20,7 @@ public class FavoriteService {
     
     private final UserFavoriteRepository favoriteRepository;
     private final RestaurantRepository restaurantRepository;
+    private final RestaurantService restaurantService; // 리뷰 개수/평점 설정을 위해 추가
     
     /**
      * 찜 추가
@@ -67,7 +68,14 @@ public class FavoriteService {
                 .map(UserFavorite::getRestaurantId)
                 .collect(Collectors.toList());
         
-        return restaurantRepository.findAllById(restaurantIds);
+        List<Restaurant> restaurants = restaurantRepository.findAllById(restaurantIds);
+        
+        // 리뷰 개수와 평점 설정
+        if (!restaurants.isEmpty()) {
+            restaurantService.setReviewCountsAndRatings(restaurants);
+        }
+        
+        return restaurants;
     }
     
     /**

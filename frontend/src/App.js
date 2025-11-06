@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
 import './styles/common.css';
 import ReservationPage from './ReservationPage';
@@ -29,6 +30,20 @@ import OwnerDashboard from './pages/owner/OwnerDashboard';
 import ReservationHistoryPage from './pages/user/ReservationHistoryPage';
 import MyPageAccordion from './pages/user/MyPageAccordion';
 import ChatPage from './pages/chat/ChatPage';
+
+// React Query Client 설정
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 30, // 30초 동안은 캐시된 데이터 사용 (더 빠른 갱신)
+      gcTime: 1000 * 60 * 10, // 10분 동안 캐시 유지
+      refetchOnWindowFocus: false, // 포커스 시 갱신 안 함
+      retry: 1, // 실패 시 1번만 재시도
+      refetchOnMount: true, // 첫 마운트 시에는 항상 데이터 가져오기 (즉시 표시)
+      refetchOnReconnect: false, // 재연결 시 갱신 안 함
+    },
+  },
+});
 
 // public 폴더의 커서 이미지 경로
 // JS에서 사용하려면 이렇게 참조하세요:
@@ -306,10 +321,11 @@ function MainPage() {
 // 메인 App 컴포넌트 (라우터 설정)
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <NotificationProvider>
-          <Routes>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <NotificationProvider>
+            <Routes>
           {/* 메인 페이지들 */}
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
@@ -358,6 +374,7 @@ function App() {
         </NotificationProvider>
       </AuthProvider>
     </Router>
+    </QueryClientProvider>
   );
 }
 

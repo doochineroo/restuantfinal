@@ -119,6 +119,7 @@ public class AuthService {
                 .role(user.getRole())
                 .restaurantId(user.getRestaurant() != null ? user.getRestaurant().getId() : null)
                 .token(generateToken(user))
+                .createdAt(user.getCreatedAt())
                 .build();
     }
     
@@ -145,6 +146,7 @@ public class AuthService {
                 .role(user.getRole())
                 .restaurantId(user.getRestaurant() != null ? user.getRestaurant().getId() : null)
                 .token(generateToken(user))
+                .createdAt(user.getCreatedAt())
                 .build();
     }
     

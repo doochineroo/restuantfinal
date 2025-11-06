@@ -4,6 +4,7 @@ import com.example.choprest.demo.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 /**
  * 테스트용 인증 응답 DTO - 데모 종료 시 제거 예정
@@ -20,5 +21,6 @@ public class AuthResponse {
     private User.UserRole role;
     private Long restaurantId;
     private String token; // 간단한 세션 토큰
+    private LocalDateTime createdAt; // 가입일
 }
 

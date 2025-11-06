@@ -18,10 +18,11 @@ const NotificationsTab = () => {
 
   useEffect(() => {
     if (user) {
+      // 알림 탭이 마운트될 때만 로드
       loadNotifications();
       setLoading(false);
     }
-  }, [user, loadNotifications]);
+  }, [user]); // loadNotifications 제거하여 무한 루프 방지
 
   const getNotificationIcon = (type) => {
     switch (type) {

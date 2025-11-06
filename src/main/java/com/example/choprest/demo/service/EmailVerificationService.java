@@ -24,7 +24,7 @@ public class EmailVerificationService {
     // 인증 토큰 저장 (실제 운영에서는 Redis 등 사용 권장)
     private final ConcurrentMap<String, VerificationToken> tokenStore = new ConcurrentHashMap<>();
     
-    @Value("${app.email.from:noreply@chopplan.com}")
+    @Value("${app.email.from:noreply@choplan.com}")
     private String fromEmail;
     
     @Value("${app.email.verification.expire-minutes:30}")
@@ -154,12 +154,12 @@ public class EmailVerificationService {
     private String buildEmailContent(String verificationCode) {
         return String.format(
             "안녕하세요!\n\n" +
-            "Chopplan 회원가입을 위한 이메일 인증 코드입니다.\n\n" +
+            "CHOPLAN 회원가입을 위한 이메일 인증 코드입니다.\n\n" +
             "인증 코드: %s\n\n" +
             "이 인증 코드는 %d분간 유효합니다.\n\n" +
             "본인이 요청하지 않았다면 이 이메일을 무시하셔도 됩니다.\n\n" +
             "감사합니다.\n" +
-            "Chopplan 팀",
+            "CHOPLAN 팀",
             verificationCode,
             expireMinutes
         );

@@ -3,6 +3,11 @@
   padding: 20px;
   background-color: #f8f9fa;
   min-height: 400px;
+  width: calc(100% - 40px); /* 좌우 마진을 제외한 전체 너비 */
+  max-width: 100%; /* 부모 컨테이너를 넘지 않도록 */
+  box-sizing: border-box;
+  margin: 0 20px; /* 상하 마진 제거, 좌우만 유지 */
+  overflow: visible; /* 확장된 카드 내용이 잘리지 않도록 */
 }
 
 /* 지도와 함께 사용될 때 패딩 제거 */
@@ -39,6 +44,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow: visible; /* 확장된 카드 내용이 잘리지 않도록 */
 }
 
 /* 페이지네이션 */
@@ -110,7 +116,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: hidden; /* 카드 기본은 hidden 유지 */
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
@@ -123,6 +129,9 @@
 .search-restaurant-card.selected {
   border-color: #007bff;
   box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
+  overflow: visible; /* 확장 시 내용이 잘리지 않도록 */
+  z-index: 10; /* 확장된 카드가 다른 카드 위에 표시되도록 */
+  position: relative; /* z-index가 작동하도록 */
 }
 
 .search-restaurant-card-content {
@@ -143,6 +152,55 @@
   overflow: hidden;
   background-color: #f8f9fa;
   position: relative;
+}
+
+/* 찜하기 하트 버튼 */
+.favorite-heart-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.favorite-heart-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.favorite-heart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.favorite-heart-btn.favorited {
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .restaurant-image {
@@ -286,6 +344,31 @@
   font-style: italic;
 }
 
+/* 평점 정보 (가게명 옆에 인라인 표시) */
+.restaurant-rating-inline {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 4px;
+  background: none;
+}
+
+.restaurant-rating-inline .star-icon {
+  color: #ffc107;
+  font-size: 0.9rem;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.restaurant-rating-inline .review-count {
+  color: #999;
+  font-size: 0.85rem;
+  margin-left: 2px;
+  background: none;
+  padding: 0;
+  border: none;
+}
+
 /* 편의시설 배지 */
 .facility-badges {
   display: flex;
@@ -368,13 +451,14 @@
 .search-restaurant-card-details {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height 0.5s ease;
   background-color: #f8f9fa;
   border-top: 1px solid #e9ecef;
 }
 
 .search-restaurant-card-details.expanded {
-  max-height: 300px;
+  max-height: 5000px; /* 충분히 큰 높이로 설정하여 모든 내용 표시 */
+  overflow-y: auto; /* 내용이 많을 경우에만 스크롤 표시 */
 }
 
 .search-restaurant-card-details .detail-section {

@@ -161,11 +161,13 @@ public class StatisticsService {
     
     /**
      * 인기 검색어 조회 (최근 30일 기준)
+     * 캐싱을 위해 최근 7일로 제한하여 성능 최적화
      */
     @Transactional(readOnly = true)
     public List<SearchKeyword> getPopularKeywords(int limit) {
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        return keywordRepository.findPopularKeywords(thirtyDaysAgo)
+        // 성능 최적화: 30일 대신 최근 7일로 제한하여 데이터 양 감소
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return keywordRepository.findPopularKeywords(sevenDaysAgo)
                 .stream()
                 .limit(limit)
                 .collect(Collectors.toList());

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "restaurants")
@@ -204,5 +205,13 @@ public class Restaurant {
 
     @Column(name = "break_time", columnDefinition = "TEXT")
     private String breakTime; // 브레이크 타임 (예: "15:00-17:00")
+
+    @Transient
+    @JsonProperty("reviewCount") // JSON 응답에 포함되도록 명시
+    private Long reviewCount; // 리뷰 개수 (DB 컬럼 없음, 실시간 계산)
+
+    @Transient
+    @JsonProperty("rating") // JSON 응답에 포함되도록 명시
+    private Double rating; // 평점 (DB 컬럼 없음, 실시간 계산)
 }
 

@@ -24,7 +24,7 @@ const TopNav = () => {
       <div className="top-nav-container">
         {/* 로고 */}
         <div className="logo" onClick={() => navigate('/')}>
-          <h1>🍽️ Chopplan</h1>
+          <h1>🍽️ CHOPLAN</h1>
         </div>
 
         {/* 오른쪽: 알림 + 로그인/프로필 */}

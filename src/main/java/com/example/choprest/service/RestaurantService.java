@@ -2,6 +2,7 @@ package com.example.choprest.service;
 
 import com.example.choprest.entity.Restaurant;
 import com.example.choprest.repository.RestaurantRepository;
+import com.example.choprest.demo.repository.ReviewRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +31,11 @@ import java.util.Set;
 public class RestaurantService {
     
     private final RestaurantRepository restaurantRepository;
+    private final ReviewRepository reviewRepository;
     private final WebClient webClient;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
     
     @Value("${kakao.api.key}")
     private String kakaoApiKey;
@@ -200,6 +207,8 @@ public class RestaurantService {
         
         if (!allCachedRestaurants.isEmpty()) {
             log.info("Found {} cached restaurants in database", allCachedRestaurants.size());
+            // 리뷰 개수와 평점 설정
+            setReviewCountsAndRatings(new ArrayList<>(allCachedRestaurants));
             // 좌표 유무와 상관없이 모든 식당 반환 (Controller에서 좌표 없는 식당을 카카오 API로 업데이트)
             return allCachedRestaurants;
         }
@@ -295,7 +304,14 @@ public class RestaurantService {
      * 특정 식당 상세 정보 조회
      */
     public Optional<Restaurant> getRestaurantById(Long id) {
-        return restaurantRepository.findById(id);
+        Optional<Restaurant> restaurantOpt = restaurantRepository.findById(id);
+        if (restaurantOpt.isPresent()) {
+            Restaurant restaurant = restaurantOpt.get();
+            List<Restaurant> singleList = new ArrayList<>();
+            singleList.add(restaurant);
+            setReviewCountsAndRatings(singleList);
+        }
+        return restaurantOpt;
     }
     
     /**
@@ -315,9 +331,14 @@ public class RestaurantService {
     }
     
     /**
-     * 모든 식당 조회 (데이터베이스 캐시 우선)
+     * 모든 식당 조회 (데이터베이스에서 최신 데이터 조회)
+     * JPA 1차 캐시를 클리어하여 항상 최신 데이터를 가져옴
      */
+    @Transactional(readOnly = true)
     public List<Restaurant> getAllRestaurants() {
+        // JPA 1차 캐시 클리어하여 항상 최신 데이터 조회
+        entityManager.clear();
+        
         // 데이터베이스에서 모든 식당 조회
         List<Restaurant> allRestaurants = restaurantRepository.findAll();
         
@@ -325,6 +346,8 @@ public class RestaurantService {
             log.info("Found {} restaurants in database", allRestaurants.size());
             // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
             List<Restaurant> operatingRestaurants = filterOperatingRestaurants(allRestaurants);
+            // 리뷰 개수와 평점 설정
+            setReviewCountsAndRatings(operatingRestaurants);
             log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
             return operatingRestaurants;
         }
@@ -334,8 +357,61 @@ public class RestaurantService {
         List<Restaurant> csvRestaurants = loadRestaurantsFromCsv();
         // CSV에서 로드한 데이터도 필터링
         List<Restaurant> operatingRestaurants = filterOperatingRestaurants(csvRestaurants);
+        // 리뷰 개수와 평점 설정
+        setReviewCountsAndRatings(operatingRestaurants);
         log.info("Filtered to {} operating restaurants from CSV (with location info)", operatingRestaurants.size());
         return operatingRestaurants;
+    }
+    
+    /**
+     * 식당 목록에 리뷰 개수와 평점 설정 (배치 최적화)
+     */
+    public void setReviewCountsAndRatings(List<Restaurant> restaurants) {
+        if (restaurants.isEmpty()) {
+            return;
+        }
+        
+        // 모든 식당 ID 추출
+        List<Long> restaurantIds = restaurants.stream()
+            .map(Restaurant::getId)
+            .filter(id -> id != null)
+            .collect(java.util.stream.Collectors.toList());
+        
+        if (restaurantIds.isEmpty()) {
+            // ID가 없으면 모두 0으로 설정
+            restaurants.forEach(r -> {
+                r.setReviewCount(0L);
+                r.setRating(0.0);
+            });
+            return;
+        }
+        
+        // 배치로 리뷰 개수 조회
+        List<Object[]> reviewCounts = reviewRepository.countByRestaurantIds(restaurantIds);
+        Map<Long, Long> reviewCountMap = reviewCounts.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                arr -> (Long) arr[0],
+                arr -> (Long) arr[1]
+            ));
+        
+        // 배치로 평점 조회
+        List<Object[]> avgRatings = reviewRepository.getAverageRatingsByRestaurantIds(restaurantIds);
+        Map<Long, Double> ratingMap = avgRatings.stream()
+            .collect(java.util.stream.Collectors.toMap(
+                arr -> (Long) arr[0],
+                arr -> ((Number) arr[1]).doubleValue()
+            ));
+        
+        // 각 식당에 리뷰 개수와 평점 설정
+        for (Restaurant restaurant : restaurants) {
+            Long reviewCount = reviewCountMap.getOrDefault(restaurant.getId(), 0L);
+            restaurant.setReviewCount(reviewCount);
+            
+            Double avgRating = ratingMap.get(restaurant.getId());
+            restaurant.setRating(avgRating != null ? avgRating : 0.0);
+        }
+        
+        log.debug("Set review counts and ratings for {} restaurants (batch query)", restaurants.size());
     }
     
     /**
@@ -351,6 +427,8 @@ public class RestaurantService {
             log.info("Found {} cached restaurants in database for region: {}", cachedRestaurants.size(), regionName);
             // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
             List<Restaurant> operatingRestaurants = filterOperatingRestaurants(cachedRestaurants);
+            // 리뷰 개수와 평점 설정
+            setReviewCountsAndRatings(operatingRestaurants);
             log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
             return operatingRestaurants;
         }
@@ -377,6 +455,8 @@ public class RestaurantService {
         
         // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
         List<Restaurant> operatingRestaurants = filterOperatingRestaurants(savedRestaurants);
+        // 리뷰 개수와 평점 설정
+        setReviewCountsAndRatings(operatingRestaurants);
         log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
         return operatingRestaurants;
     }
@@ -395,6 +475,8 @@ public class RestaurantService {
             log.info("Found {} cached restaurants in database", cachedRestaurants.size());
             // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
             List<Restaurant> operatingRestaurants = filterOperatingRestaurants(cachedRestaurants);
+            // 리뷰 개수와 평점 설정
+            setReviewCountsAndRatings(operatingRestaurants);
             log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
             return operatingRestaurants;
         }
@@ -423,6 +505,8 @@ public class RestaurantService {
         
         // 위치 정보가 있는 식당만 필터링 (운영중인 식당으로 간주)
         List<Restaurant> operatingRestaurants = filterOperatingRestaurants(savedRestaurants);
+        // 리뷰 개수와 평점 설정
+        setReviewCountsAndRatings(operatingRestaurants);
         log.info("Filtered to {} operating restaurants (with location info)", operatingRestaurants.size());
         return operatingRestaurants;
     }

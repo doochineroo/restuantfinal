@@ -125,6 +125,13 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     }
   }, [restaurant?.id]);
 
+  // 모달이 열릴 때 리뷰를 미리 로드 (즉시 표시를 위해)
+  useEffect(() => {
+    if (isOpen && restaurant?.id && reviews.length === 0) {
+      loadReviews();
+    }
+  }, [isOpen, restaurant?.id, reviews.length, loadReviews]);
+
   // 탭 변경 시 데이터 로딩
   useEffect(() => {
     if (isOpen && restaurant) {
@@ -138,14 +145,11 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
         case 'additional':
           if (additionalInfo.length === 0) loadAdditionalInfo();
           break;
-        case 'review':
-          if (reviews.length === 0) loadReviews();
-          break;
         default:
           break;
       }
     }
-  }, [activeTab, isOpen, restaurant, loadMenus, loadEvents, loadAdditionalInfo, loadReviews, menus.length, events.length, additionalInfo.length, reviews.length]);
+  }, [activeTab, isOpen, restaurant, loadMenus, loadEvents, loadAdditionalInfo, menus.length, events.length, additionalInfo.length]);
 
   // 조건부 렌더링을 return 문에서 처리
   if (!isOpen || !restaurant) return null;
@@ -164,8 +168,10 @@ const RestaurantDetailModal = ({ restaurant, isOpen, onClose, onReservation }) =
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
         <div className="modal-header">
-          <h2>{restaurant.restaurantName}</h2>
-          {restaurant.branchName && <h3>{restaurant.branchName}</h3>}
+          <div>
+            <h2>{restaurant.restaurantName}</h2>
+            {restaurant.branchName && <div className="branch-name">{restaurant.branchName}</div>}
+          </div>
           <button className="modal-close-btn" onClick={onClose}>
             ✕
           </button>

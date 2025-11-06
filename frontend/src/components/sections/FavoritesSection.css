@@ -1,4 +1,4 @@
-/* FavoritesSection.css - 찜한 맛집 섹션 스타일 */
+/* FavoritesSection.css - 찜한 맛집 섹션 스타일 (검색 리스트 형식 재사용) */
 
 .favorites-section {
   display: flex;
@@ -66,14 +66,14 @@
 
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: #6c757d;
+  padding: 60px 20px;
+  color: #666;
 }
 
 .empty-icon {
   font-size: 3rem;
   margin-bottom: 15px;
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .empty-state h4 {
@@ -104,157 +104,430 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
+/* 검색 리스트 형식 재사용 */
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: visible; /* 확장된 카드 내용이 잘리지 않도록 */
 }
 
-.favorite-card {
+/* SearchRestaurantCard 스타일 재사용 */
+.search-restaurant-card {
   background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
+  border: 2px solid transparent;
 }
 
-.favorite-card:hover {
+.search-restaurant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.search-restaurant-card.selected {
+  border-color: #007bff;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
+  overflow: visible; /* 확장 시 내용이 잘리지 않도록 */
+  z-index: 10; /* 확장된 카드가 다른 카드 위에 표시되도록 */
+  position: relative; /* z-index가 작동하도록 */
+}
+
+.search-restaurant-card-content {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  cursor: pointer;
+  position: relative;
+}
+
+/* 가게 사진 */
+.restaurant-image-container {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  margin-right: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  position: relative;
 }
 
 .restaurant-image {
-  position: relative;
-  height: 160px;
-  overflow: hidden;
-}
-
-.restaurant-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  background-color: #f8f9fa;
 }
 
-.favorite-card:hover .restaurant-image img {
+.restaurant-image[src*="image-placeholder"] {
+  object-fit: contain;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  padding: 20px;
+}
+
+.restaurant-image-container:hover .restaurant-image {
   transform: scale(1.05);
 }
 
-.remove-favorite {
+/* 미니 슬라이더 스타일 */
+.mini-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mini-slider img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mini-slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.mini-slider:hover .mini-slider-btn {
+  opacity: 1;
+}
+
+.mini-slider-btn:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.mini-slider-btn-prev {
+  left: 5px;
+}
+
+.mini-slider-btn-next {
+  right: 5px;
+}
+
+.mini-slider-indicators {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.mini-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mini-indicator.active {
+  background: white;
+  width: 16px;
+  border-radius: 3px;
+}
+
+/* 찜하기 하트 버튼 */
+.favorite-heart-btn {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(220, 53, 69, 0.9);
-  color: white;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.7rem;
-  transition: all 0.2s ease;
+  font-size: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 10;
+  padding: 0;
 }
 
-.remove-favorite:hover {
-  background: #dc3545;
+.favorite-heart-btn:hover {
+  background: rgba(255, 255, 255, 1);
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* 가게 정보 */
 .restaurant-info {
-  padding: 15px;
+  flex: 1;
+  min-width: 0;
 }
 
-.restaurant-info h4 {
-  margin: 0 0 6px 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: color 0.2s ease;
+.restaurant-name-container {
+  margin-bottom: 8px;
 }
 
-.restaurant-info h4:hover {
-  color: #667eea;
-}
-
-.branch-name {
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin: 0 0 6px 0;
-  font-weight: 500;
-}
-
-.address {
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin: 0 0 12px 0;
+.restaurant-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
   line-height: 1.3;
 }
 
-.restaurant-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.restaurant-region {
+  color: #666;
+  font-weight: 400;
+  font-size: 0.9rem;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.restaurant-branch {
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.restaurant-location {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.restaurant-location.no-location {
+  color: #999;
+  font-style: italic;
+}
+
+/* 평점 정보 (가게명 옆에 인라인 표시) */
+.restaurant-rating-inline {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 4px;
+  background: none;
+}
+
+.restaurant-rating-inline .star-icon {
   color: #ffc107;
-  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.restaurant-rating-inline .review-count {
+  color: #999;
   font-size: 0.85rem;
+  margin-left: 2px;
+  background: none;
+  padding: 0;
+  border: none;
 }
 
-.star {
-  font-size: 0.8rem;
+/* 편의시설 배지 */
+.facility-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
-.category {
-  background: #f8f9fa;
-  color: #6c757d;
-  padding: 3px 6px;
-  border-radius: 10px;
+.info-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.info-badge.available {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.info-badge.unavailable {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.info-badge.status-operating {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.info-badge.status-closed {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* 액션 버튼들 */
+.restaurant-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.restaurant-actions .btn {
+  min-width: 80px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.restaurant-actions .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-primary {
+  background: white;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.btn-outline-primary:hover {
+  background: #007bff;
+  color: white;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+  border: none;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+/* 확장/축소 표시 */
+.expand-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: #666;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+
+.search-restaurant-card.selected .expand-indicator {
+  transform: rotate(180deg);
+}
+
+/* 확장된 상세 정보 */
+.search-restaurant-card-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.search-restaurant-card-details.expanded {
+  max-height: 5000px; /* 충분히 큰 높이로 설정하여 모든 내용 표시 */
+  overflow-y: auto; /* 내용이 많을 경우에만 스크롤 표시 */
+}
+
+.search-restaurant-card-details .detail-section {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.search-restaurant-card-details .detail-section:last-child {
+  border-bottom: none;
+}
+
+.search-restaurant-card-details h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.search-restaurant-card-details p {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.search-restaurant-card-details strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.search-restaurant-card-details a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.search-restaurant-card-details a:hover {
+  text-decoration: underline;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .favorites-header {
+  .search-restaurant-card-content {
     flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filter-buttons {
-    justify-content: center;
-  }
-  
-  .favorites-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .restaurant-meta {
-    flex-direction: column;
-    gap: 8px;
     align-items: flex-start;
-  }
-}
-
-@media (max-width: 480px) {
-  .favorite-card {
-    margin: 0 -5px;
+    padding: 16px;
   }
   
-  .restaurant-info {
-    padding: 12px;
+  .restaurant-image-container {
+    width: 100%;
+    height: 200px;
+    margin-right: 0;
+    margin-bottom: 16px;
   }
   
-  .restaurant-info h4 {
-    font-size: 1rem;
+  .restaurant-actions {
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: 12px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .restaurant-actions .btn {
+    flex: 1;
+    margin: 0 4px;
+  }
+  
+  .expand-indicator {
+    position: static;
+    margin-top: 12px;
+    text-align: center;
   }
 }

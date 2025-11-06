@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getKoreanValue, getStatusValue } from '../../utils/restaurantUtils';
 import { getImageUrl } from '../../constants/config/apiConfig';
+import FavoriteHeart from '../common/FavoriteHeart';
 import './SearchRestaurantList.css';
 
 const RestaurantList = ({ 
@@ -192,12 +193,18 @@ const RestaurantCard = ({ restaurant, isExpanded, onCardClick, onReservation, on
               }}
             />
           )}
+          {/* 찜하기 하트 버튼 */}
+          <FavoriteHeart restaurantId={restaurant.id} />
         </div>
         
         <div className="restaurant-info">
           <div className="restaurant-name-container">
             <div className="restaurant-name">
-              {restaurant.restaurantName}
+              {restaurant.restaurantName}{' '}
+              <span className="restaurant-rating-inline">
+                <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
+                <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
+              </span>
               {restaurant.regionName && (
                 <span className="restaurant-region"> ({restaurant.regionName})</span>
               )}

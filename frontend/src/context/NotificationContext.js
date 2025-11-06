@@ -1,7 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '../demo/context/AuthContext';
-import { API_ENDPOINTS } from '../constants/config/apiConfig';
-import axios from 'axios';
+import React, { createContext, useContext, useState } from 'react';
+import { useNotifications, useUnreadNotificationCount, useMarkNotificationAsRead, useMarkAllNotificationsAsRead, useDeleteNotification } from '../hooks/useNotifications';
 
 const NotificationContext = createContext();
 
@@ -14,36 +12,36 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // React Query 훅 사용
+  const { data: notifications = [], refetch: loadNotifications } = useNotifications();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
+  const markAsReadMutation = useMarkNotificationAsRead();
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead();
+  const deleteNotificationMutation = useDeleteNotification();
 
-  // 알림 로드
-  const loadNotifications = async () => {
-    if (!user) return;
-    
-    try {
-      const response = await axios.get(`${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}`);
-      const notificationData = response.data || [];
-      setNotifications(notificationData);
-      setUnreadCount(notificationData.filter(n => !n.isRead).length);
-    } catch (error) {
-      console.error('알림 로드 오류:', error);
-    }
+  // 기존 API와 호환성을 위한 래퍼 함수들
+  const loadUnreadCount = () => {
+    // React Query가 자동으로 관리하므로 빈 함수
+  };
+  
+  const markAsRead = async (notificationId) => {
+    await markAsReadMutation.mutateAsync(notificationId);
+  };
+  
+  const markAllAsRead = async () => {
+    await markAllAsReadMutation.mutateAsync();
+  };
+  
+  const deleteNotification = async (notificationId) => {
+    await deleteNotificationMutation.mutateAsync(notificationId);
   };
 
-  // 새 알림 추가
+  // 새 알림 추가 (로컬 상태에만 추가 - 실제 서버 알림은 React Query가 관리)
   const addNotification = (notification) => {
-    const newNotification = {
-      id: Date.now(), // 임시 ID
-      ...notification,
-      createdAt: new Date().toISOString(),
-      isRead: false
-    };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
+    // 로컬 상태에만 추가하는 경우는 거의 없으므로 빈 함수로 유지
+    // 실제 알림은 서버에서 오고 React Query가 자동으로 갱신함
   };
 
   // 예약 관련 알림 추가
@@ -83,58 +81,10 @@ export const NotificationProvider = ({ children }) => {
     });
   };
 
-  // 알림 읽음 처리
-  const markAsRead = async (notificationId) => {
-    try {
-      await axios.put(`${API_ENDPOINTS.NOTIFICATIONS}/${notificationId}/read`);
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('알림 읽음 처리 오류:', error);
-    }
-  };
-
-  // 모든 알림 읽음 처리
-  const markAllAsRead = async () => {
-    try {
-      await axios.put(`${API_ENDPOINTS.NOTIFICATIONS}/${user.userId}/read-all`);
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('모든 알림 읽음 처리 오류:', error);
-    }
-  };
-
-  // 알림 삭제
-  const deleteNotification = async (notificationId) => {
-    try {
-      await axios.delete(`${API_ENDPOINTS.NOTIFICATIONS}/${notificationId}`);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      setUnreadCount(prev => {
-        const notification = notifications.find(n => n.id === notificationId);
-        return notification && !notification.isRead ? Math.max(0, prev - 1) : prev;
-      });
-    } catch (error) {
-      console.error('알림 삭제 오류:', error);
-    }
-  };
-
   // 드롭다운 토글
   const toggleDropdown = () => {
     setShowDropdown(prev => !prev);
   };
-
-  // 사용자 변경 시 알림 로드
-  useEffect(() => {
-    if (user) {
-      loadNotifications();
-    } else {
-      setNotifications([]);
-      setUnreadCount(0);
-    }
-  }, [user]);
 
   const value = {
     notifications,
@@ -142,6 +92,7 @@ export const NotificationProvider = ({ children }) => {
     showDropdown,
     setShowDropdown,
     loadNotifications,
+    loadUnreadCount,
     addNotification,
     addReservationNotification,
     markAsRead,

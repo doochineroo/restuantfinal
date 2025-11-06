@@ -231,6 +231,7 @@
   background: #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
 }
 
 .result-item-image img {
@@ -242,6 +243,55 @@
 
 .category-result-item:hover .result-item-image img {
   transform: scale(1.05);
+}
+
+/* HomePage에서 사용하는 하트 버튼 스타일 */
+.result-item-image .favorite-heart-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.result-item-image .favorite-heart-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.result-item-image .favorite-heart-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result-item-image .favorite-heart-btn.favorited {
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .result-item-content {
@@ -497,6 +547,31 @@
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
+}
+
+/* 평점 인라인 표시 스타일 */
+.restaurant-rating-inline {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 8px;
+  background: none;
+}
+
+.restaurant-rating-inline .star-icon {
+  color: #ffc107;
+  font-size: 0.9rem;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.restaurant-rating-inline .review-count {
+  color: #999;
+  font-size: 0.85rem;
+  margin-left: 2px;
+  background: none;
+  padding: 0;
+  border: none;
 }
 
 /* ========== Trending Section ========== */

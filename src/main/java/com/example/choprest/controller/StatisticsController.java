@@ -4,6 +4,7 @@ import com.example.choprest.entity.Restaurant;
 import com.example.choprest.entity.SearchKeyword;
 import com.example.choprest.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,17 @@ import java.util.Map;
 public class StatisticsController {
     
     private final StatisticsService statisticsService;
+    
+    /**
+     * 캐시 방지 헤더를 추가하는 헬퍼 메서드
+     */
+    private HttpHeaders getNoCacheHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.set("Pragma", "no-cache");
+        headers.set("Expires", "0");
+        return headers;
+    }
     
     /**
      * 식당 클릭 기록
@@ -66,7 +78,9 @@ public class StatisticsController {
     @GetMapping("/popular-restaurants")
     public ResponseEntity<List<Restaurant>> getPopularRestaurants(
             @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(statisticsService.getPopularRestaurants(limit));
+        return ResponseEntity.ok()
+                .headers(getNoCacheHeaders())
+                .body(statisticsService.getPopularRestaurants(limit));
     }
     
     /**
@@ -75,7 +89,9 @@ public class StatisticsController {
     @GetMapping("/popular-restaurants-with-count")
     public ResponseEntity<List<Map<String, Object>>> getPopularRestaurantsWithClickCount(
             @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(statisticsService.getPopularRestaurantsWithClickCount(limit));
+        return ResponseEntity.ok()
+                .headers(getNoCacheHeaders())
+                .body(statisticsService.getPopularRestaurantsWithClickCount(limit));
     }
     
     /**
@@ -84,7 +100,9 @@ public class StatisticsController {
     @GetMapping("/recent-popular-restaurants")
     public ResponseEntity<List<Restaurant>> getRecentPopularRestaurants(
             @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(statisticsService.getRecentPopularRestaurants(limit));
+        return ResponseEntity.ok()
+                .headers(getNoCacheHeaders())
+                .body(statisticsService.getRecentPopularRestaurants(limit));
     }
     
     /**
@@ -93,16 +111,24 @@ public class StatisticsController {
     @GetMapping("/today-popular-restaurants")
     public ResponseEntity<List<Restaurant>> getTodayPopularRestaurants(
             @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(statisticsService.getTodayPopularRestaurants(limit));
+        return ResponseEntity.ok()
+                .headers(getNoCacheHeaders())
+                .body(statisticsService.getTodayPopularRestaurants(limit));
     }
     
     /**
      * 인기 검색어 조회 (TOP 10)
+     * 캐시 방지 헤더 추가
      */
     @GetMapping("/popular-keywords")
     public ResponseEntity<List<SearchKeyword>> getPopularKeywords(
             @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(statisticsService.getPopularKeywords(limit));
+        List<SearchKeyword> keywords = statisticsService.getPopularKeywords(limit);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(keywords);
     }
     
     /**
