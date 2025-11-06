@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -192,6 +193,19 @@ public class StatisticsController {
     @GetMapping("/keyword-suggestions")
     public ResponseEntity<List<String>> getKeywordSuggestions(@RequestParam String keyword) {
         return ResponseEntity.ok(statisticsService.getKeywordSuggestions(keyword));
+    }
+    
+    /**
+     * 특정 식당의 이번 달 조회수 조회
+     */
+    @GetMapping("/monthly-clicks/{restaurantId}")
+    public ResponseEntity<Map<String, Long>> getMonthlyClickCount(@PathVariable Long restaurantId) {
+        Long count = statisticsService.getMonthlyClickCount(restaurantId);
+        Map<String, Long> response = new HashMap<>();
+        response.put("count", count);
+        return ResponseEntity.ok()
+                .headers(getNoCacheHeaders())
+                .body(response);
     }
 }
 

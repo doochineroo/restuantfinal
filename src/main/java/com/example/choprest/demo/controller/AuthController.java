@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * 테스트용 인증 컨트롤러 - 데모 종료 시 제거 예정
  */
@@ -118,6 +120,35 @@ public class AuthController {
             return ResponseEntity.ok().body("사용 가능한 아이디입니다.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    /**
+     * 간단한 관리자 계정 생성 (개발/테스트용)
+     * 아이디와 비밀번호만 입력하면 관리자 계정 생성
+     * POST /api/demo/auth/create-admin
+     * Body: {"username": "admin", "password": "admin123"}
+     */
+    @PostMapping("/create-admin")
+    public ResponseEntity<?> createAdmin(@RequestBody Map<String, String> request) {
+        try {
+            String username = request.get("username");
+            String password = request.get("password");
+            
+            if (username == null || username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("아이디를 입력해주세요.");
+            }
+            if (password == null || password.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("비밀번호를 입력해주세요.");
+            }
+            
+            AuthResponse response = authService.createAdminAccount(username, password);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("서버 오류가 발생했습니다: " + e.getMessage());
         }
     }
 }

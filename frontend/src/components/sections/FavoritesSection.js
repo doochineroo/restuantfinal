@@ -204,11 +204,11 @@ const FavoriteRestaurantCard = ({
                 src={imageUrl} 
                 alt={restaurant.restaurantName}
                 className="restaurant-image"
-                onError={(e) => {
-                  e.target.src = '/image-placeholder.svg';
-                }}
-              />
-              <button 
+                  onError={(e) => {
+                    e.target.src = '/image-placeholder.svg';
+                  }}
+                />
+                <button 
                 className="mini-slider-btn mini-slider-btn-prev"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -219,13 +219,13 @@ const FavoriteRestaurantCard = ({
               </button>
               <button 
                 className="mini-slider-btn mini-slider-btn-next"
-                onClick={(e) => {
-                  e.stopPropagation();
+                  onClick={(e) => {
+                    e.stopPropagation();
                   setCurrentImageIndex((prev) => prev < restaurantPhotos.length - 1 ? prev + 1 : 0);
-                }}
-              >
+                  }}
+                >
                 ›
-              </button>
+                </button>
               <div className="mini-slider-indicators">
                 {restaurantPhotos.map((_, index) => (
                   <span 
@@ -251,10 +251,10 @@ const FavoriteRestaurantCard = ({
           )}
           {/* 찜하기 하트 버튼 */}
           <FavoriteHeart restaurantId={restaurant.id} />
-        </div>
-
+              </div>
+              
         {/* 가게 정보 */}
-        <div className="restaurant-info">
+              <div className="restaurant-info">
           <div className="restaurant-name-container">
             <div className="restaurant-name">
               {restaurant.restaurantName}{' '}
@@ -298,8 +298,8 @@ const FavoriteRestaurantCard = ({
             <span className={`info-badge ${getKoreanValue(restaurant.delivery) === '가능' ? 'available' : 'unavailable'}`}>
               배달 {getKoreanValue(restaurant.delivery)}
             </span>
-          </div>
-        </div>
+                  </div>
+                </div>
 
         {/* 액션 버튼들 */}
         <div className="restaurant-actions">
@@ -323,8 +323,8 @@ const FavoriteRestaurantCard = ({
         {/* 확장/축소 표시 */}
         <div className="expand-indicator">
           {isExpanded ? '▲' : '▼'}
-        </div>
-      </div>
+              </div>
+            </div>
       
       {/* 확장된 상세 정보 */}
       <div 

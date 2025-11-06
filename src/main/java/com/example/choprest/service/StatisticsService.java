@@ -99,6 +99,20 @@ public class StatisticsService {
     }
     
     /**
+     * 특정 식당의 이번 달 조회수 조회
+     */
+    @Transactional(readOnly = true)
+    public Long getMonthlyClickCount(Long restaurantId) {
+        LocalDateTime startOfMonth = LocalDateTime.now()
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        return clickRepository.countByRestaurantIdAndClickedAtAfter(restaurantId, startOfMonth);
+    }
+    
+    /**
      * 인기 식당 조회 (클릭 수와 함께)
      */
     @Transactional(readOnly = true)

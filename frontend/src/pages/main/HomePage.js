@@ -5,40 +5,59 @@ import MainNav from '../../components/navigation/MainNav';
 import RestaurantDetailModal from '../../components/modals/RestaurantDetailModal';
 import { restaurantAPI, statisticsAPI } from '../../demo/services/api';
 import { useAuth } from '../../demo/context/AuthContext';
-import { getImageUrl } from '../../constants/config/apiConfig';
+import { getImageUrl, API_BASE_URL } from '../../constants/config/apiConfig';
 import FavoriteHeart from '../../components/common/FavoriteHeart';
-import { useAllRestaurants, usePopularRestaurants, useRecentPopularRestaurants } from '../../hooks/useRestaurants';
+import { useAllRestaurants, usePopularRestaurants } from '../../hooks/useRestaurants';
+import { useChatUnreadCount } from '../../hooks/useChatUnreadCount';
 import './HomePage.css';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: chatUnreadCount = 0 } = useChatUnreadCount();
 
   const convertToAbsoluteUrl = (url) => {
     return getImageUrl(url);
   };
   
-  // React Query로 데이터 로드 (캐시된 데이터도 즉시 표시)
+  // 카테고리 이미지 매핑 (cate_img 디렉토리 이미지 사용)
+  const getCategoryImage = (categoryName) => {
+    const categoryImages = {
+      '한식': '/images/categories/korean_food.png',
+      '중식': '/images/categories/china_food.png',
+      '일식': '/images/categories/japan_food.png',
+      '양식': '/images/categories/italia_food.png',
+      '분식': '/images/categories/dduckbbokki_food.png',
+      '치킨': '/images/categories/chicken_food.png',
+      '기타': '/images/categories/else.food.png',
+      '전체': '/images/categories/all_food.png'
+    };
+    return categoryImages[categoryName] || '/images/categories/else.food.png';
+  };
+
+  // React Query로 데이터 로드
   const { data: allRestaurants = [], isLoading: restaurantsLoading, isFetching: restaurantsFetching } = useAllRestaurants();
   const { data: popularRestaurants = [], isLoading: popularLoading, isFetching: popularFetching } = usePopularRestaurants(10);
-  const { data: recentRestaurants = [], isLoading: recentLoading, isFetching: recentFetching } = useRecentPopularRestaurants(6);
   
-  // featuredRestaurants는 popularRestaurants에서 3개만 사용 (중복 호출 방지)
-  const featuredRestaurants = useMemo(() => {
-    return popularRestaurants.slice(0, 3);
-  }, [popularRestaurants]);
-  
-  // 초기 로딩만 체크 (캐시된 데이터가 있으면 즉시 표시)
+  // 최신 식당 10개 (ID 기준으로 내림차순 정렬)
+  const latestRestaurants = useMemo(() => {
+    if (!allRestaurants || allRestaurants.length === 0) return [];
+    return [...allRestaurants]
+      .sort((a, b) => (b.id || 0) - (a.id || 0)) // ID 내림차순 (최신순)
+      .slice(0, 10);
+  }, [allRestaurants]);
+
+  // TODO: 관리자 대시보드에서 등록한 메인 배너 데이터를 가져올 API
+  // 예: const { data: mainBanners = [] } = useMainBanners();
+  const mainBanners = []; // 빈 배열로 초기화 - 나중에 API 연결
+
   const initialLoading = restaurantsLoading && allRestaurants.length === 0;
-  const [error, setError] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('');
+  const [currentPosition, setCurrentPosition] = useState(null); // { lat, lng }
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const restaurantsPerPage = 10;
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   useEffect(() => {
     if (user && user.role === 'OWNER') {
@@ -54,33 +73,182 @@ const HomePage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 카테고리 계산 (useMemo로 최적화)
+  // 거리 계산 함수 (하버사인 공식)
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371e3; // 지구 반지름 (미터)
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // 거리 (미터)
+  };
+
+  // 거리 포맷팅 (미터 또는 킬로미터)
+  const formatDistance = (distanceInMeters) => {
+    if (distanceInMeters === null) return null;
+    if (distanceInMeters < 1000) {
+      return `${Math.round(distanceInMeters)}m`;
+    }
+    return `${(distanceInMeters / 1000).toFixed(1)}km`;
+  };
+
+  // 좌표를 주소로 변환 (역지오코딩) - 백엔드를 통해 호출
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/restaurants/reverse-geocode?lat=${lat}&lng=${lng}`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('역지오코딩 API 호출 실패');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.address) {
+        return data.address;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('역지오코딩 오류:', error);
+      return null;
+    }
+  };
+
+  // 현재 위치 가져오기 및 주소 변환 (페이지 로드 시 자동 실행)
+  useEffect(() => {
+    // 위치 정보를 가져오는 함수
+    const getLocation = () => {
+      if (navigator.geolocation) {
+        // 위치 권한 요청 (자동으로 팝업 표시)
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrentPosition({ lat: latitude, lng: longitude });
+            
+            // 좌표를 주소로 변환 (구까지만)
+            const address = await reverseGeocode(latitude, longitude);
+            if (address) {
+              setCurrentLocation(address);
+            } else {
+              // 주소 변환 실패 시 기본값
+              setCurrentLocation('위치 정보 없음');
+            }
+          },
+          (error) => {
+            console.log('위치 정보를 가져올 수 없습니다:', error);
+            // 기본 위치 설정 (서울 시청)
+            setCurrentPosition({ lat: 37.5665, lng: 126.9780 });
+            // 기본 주소도 설정 (구까지만)
+            reverseGeocode(37.5665, 126.9780).then(address => {
+              setCurrentLocation(address || '서울특별시 중구');
+            });
+          },
+          {
+            enableHighAccuracy: true, // 높은 정확도 사용
+            timeout: 15000, // 타임아웃 증가
+            maximumAge: 0 // 캐시 사용 안 함 (항상 최신 위치)
+          }
+        );
+      } else {
+        // Geolocation을 지원하지 않는 경우
+        console.log('Geolocation을 지원하지 않는 브라우저입니다.');
+        // 기본 위치 설정
+        setCurrentPosition({ lat: 37.5665, lng: 126.9780 });
+        // 기본 주소도 설정
+        reverseGeocode(37.5665, 126.9780).then(address => {
+          setCurrentLocation(address || '서울특별시 중구');
+        });
+      }
+    };
+
+    // 페이지 로드 시 즉시 위치 정보 요청
+    getLocation();
+  }, []);
+
+  // 카테고리 계산 (아시아, 술집 제외하고 나머지는 기타로)
   const categories = useMemo(() => {
     if (!allRestaurants || allRestaurants.length === 0) return [];
     
+    const excludedCategories = ['아시아', '술집'];
+    const validCategories = ['한식', '중식', '일식', '양식', '분식', '치킨'];
     const categoryCount = {};
-    allRestaurants.forEach(restaurant => {
-      const category = restaurant.category || '기타';
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
-    });
     
-    return Object.entries(categoryCount)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 8)
-      .map(([name, count]) => ({
-        name,
-        count
-      }));
+    allRestaurants.forEach(restaurant => {
+      let category = restaurant.category || '기타';
+      
+      // 아시아, 술집 제외
+      if (excludedCategories.includes(category)) {
+        return; // 카운트하지 않음
+      }
+      
+      // 유효한 카테고리가 아니면 기타로 분류
+      if (!validCategories.includes(category)) {
+        category = '기타';
+      }
+      
+          categoryCount[category] = (categoryCount[category] || 0) + 1;
+        });
+        
+    // 빈도순으로 정렬하되, 기타는 항상 마지막에
+    const sortedCategories = Object.entries(categoryCount)
+      .sort(([nameA, countA], [nameB, countB]) => {
+        // 기타는 항상 마지막
+        if (nameA === '기타') return 1;
+        if (nameB === '기타') return -1;
+        // 나머지는 빈도순
+        return countB - countA;
+      });
+    
+    return sortedCategories
+          .slice(0, 8)
+          .map(([name, count]) => ({
+            name,
+            count
+          }));
   }, [allRestaurants]);
 
-  // 필터된 식당 목록 초기화
-  useEffect(() => {
-    if (allRestaurants.length > 0) {
-      setFilteredRestaurants(allRestaurants);
+  // 내 주변 추천 맛집 계산 (거리 기준 정렬)
+  const nearbyRestaurants = useMemo(() => {
+    if (!allRestaurants || allRestaurants.length === 0 || !currentPosition) {
+      return [];
     }
-  }, [allRestaurants]);
 
-  // React Query가 자동으로 포커스 시 갱신 처리 (refetchOnWindowFocus: true)
+    // 위치 정보가 있는 식당만 필터링하고 거리 계산
+    const restaurantsWithDistance = allRestaurants
+      .filter(restaurant => restaurant.lat && restaurant.lng)
+      .map(restaurant => {
+        const distance = calculateDistance(
+          currentPosition.lat,
+          currentPosition.lng,
+          restaurant.lat,
+          restaurant.lng
+        );
+        return {
+          ...restaurant,
+          distance
+        };
+      })
+      .filter(restaurant => restaurant.distance !== null) // 거리 계산이 가능한 것만
+      .sort((a, b) => a.distance - b.distance) // 거리순 정렬
+      .slice(0, 5); // 상위 5개만
+
+    return restaurantsWithDistance;
+  }, [allRestaurants, currentPosition]);
 
   const handleRestaurantClick = async (restaurantId) => {
     try {
@@ -92,8 +260,8 @@ const HomePage = () => {
 
   const handleSearch = () => {
     if (searchKeyword.trim()) {
-      statisticsAPI.recordSearch(searchKeyword);
-      navigate('/search', { state: { keyword: searchKeyword } });
+      const encodedKeyword = encodeURIComponent(searchKeyword.trim());
+      navigate(`/search/${encodedKeyword}`);
     }
   };
 
@@ -118,27 +286,10 @@ const HomePage = () => {
   };
 
   const handleCategoryClick = (categoryName) => {
-    setSelectedCategory(categoryName);
-    setCurrentPage(1); // 페이지 초기화
-    
-    // 캐시된 데이터 사용
-    const filtered = allRestaurants.filter(restaurant => {
-      // "기타"는 category가 null이거나 빈 문자열인 경우도 포함
-      if (categoryName === '기타') {
-        return !restaurant.category || restaurant.category === '' || restaurant.category === '기타';
-      }
-      return restaurant.category === categoryName;
-    });
-    setFilteredRestaurants(filtered);
+    // 카테고리는 기존 방식 유지 (state로 전달)
+    navigate('/search', { state: { category: categoryName } });
   };
 
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(filteredRestaurants.length / restaurantsPerPage);
-  const startIndex = (currentPage - 1) * restaurantsPerPage;
-  const endIndex = startIndex + restaurantsPerPage;
-  const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
-
-  // 초기 로딩만 표시 (캐시된 데이터가 있으면 즉시 표시)
   if (initialLoading) {
     return (
       <div className="home-page">
@@ -159,85 +310,147 @@ const HomePage = () => {
       <TopNav />
       <main className="home-main">
         
-        {/* Hero Section */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <div className="search-hero">
-              <div className="search-icon">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 19L13 13M15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <input 
-                type="text" 
-                placeholder="지역, 음식종류, 레스토랑명으로 검색"
-                className="search-input"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch();
-                  }
-                }}
-              />
-              <button className="search-button" onClick={handleSearch}>
-                검색
-              </button>
-            </div>
+        {/* 헤더 */}
+        <header className="home-header">
+          {/* 검색 바 */}
+          <div className="home-search-bar">
+            <div className="search-icon">🔍</div>
+            <input 
+              type="text" 
+              placeholder="맛집을 검색해보세요"
+              className="home-search-input"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
+            />
+            <button className="home-search-btn" onClick={handleSearch}>
+              검색
+            </button>
           </div>
-        </section>
+        </header>
 
-        {/* Categories Section */}
-        <section className="categories-section">
-          <div className="container">
-            <h2 className="section-header-title">카테고리별 탐색</h2>
+        {/* 메인 카테고리 */}
+        <section className="main-categories-section">
+          {(restaurantsLoading || restaurantsFetching) ? (
+            <div className="section-loading">
+              <img src="/images/loading.png" alt="로딩 중" className="loading-image" />
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          ) : (
             <div className="categories-grid">
               <button 
-                className={`category-item ${!selectedCategory ? 'active' : ''}`}
-                onClick={() => {
-                  setSelectedCategory(null);
-                  restaurantAPI.getAll().then(response => {
-                    setFilteredRestaurants(response.data);
-                  });
-                }}
+                className="category-btn"
+                onClick={() => handleCategoryClick('전체')}
               >
-                <div className="category-label">전체</div>
+                <div className="category-icon">
+                  <img 
+                    src={getCategoryImage('전체')} 
+                    alt="전체" 
+                    onError={(e) => { 
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
+                    }} 
+                  />
+                  <div className="category-icon-placeholder" style={{display: 'none'}}>전체</div>
+                </div>
+                <div className="category-name">전체</div>
               </button>
               {categories.map((category, index) => (
                 <button 
                   key={index}
-                  className={`category-item ${selectedCategory === category.name ? 'active' : ''}`}
+                  className="category-btn"
                   onClick={() => handleCategoryClick(category.name)}
                 >
-                  <div className="category-label">{category.name}</div>
-                  <div className="category-badge">{category.count}</div>
+                  <div className="category-icon">
+                    <img 
+                      src={getCategoryImage(category.name)} 
+                      alt={category.name}
+                      onError={(e) => { 
+                        e.target.style.display = 'none';
+                        const placeholder = e.target.nextSibling;
+                        if (placeholder) placeholder.style.display = 'block';
+                      }} 
+                    />
+                    <div className="category-icon-placeholder" style={{display: 'none'}}>
+                      {category.name.charAt(0)}
+                    </div>
+                  </div>
+                  <div className="category-name">{category.name}</div>
                 </button>
               ))}
             </div>
-          </div>
+          )}
         </section>
 
-        {/* Selected Category Results Section */}
-        {selectedCategory && filteredRestaurants.length > 0 && (
-          <section className="category-results-section">
-            <div className="container">
+        {/* 메인 프로모션 배너 (캐러셀) - 관리자 대시보드에서 관리 */}
+        <section className="promotion-banner-section">
+          {mainBanners.length > 0 ? (
+            <div className="promotion-banner-carousel">
+              {mainBanners.map((banner) => (
+                <div 
+                  key={banner.id} 
+                  className="promotion-banner"
+                  onClick={() => {
+                    // TODO: 배너 클릭 시 동작 (식당 상세 페이지 또는 특정 링크로 이동)
+                    if (banner.restaurantId) {
+                      // 식당 상세 페이지로 이동
+                      // navigate(`/restaurant/${banner.restaurantId}`);
+                    } else if (banner.linkUrl) {
+                      // 외부 링크로 이동
+                      // window.open(banner.linkUrl, '_blank');
+                    }
+                  }}
+                >
+                  <div className="promotion-banner-bg">
+                    <img 
+                      src={convertToAbsoluteUrl(banner.imageUrl) || '/image-placeholder.svg'} 
+                      alt={banner.title}
+                      onError={(e) => {
+                        e.target.src = '/image-placeholder.svg';
+                      }}
+                    />
+                  </div>
+                  <div className="promotion-banner-content">
+                    <div className="promotion-banner-title">{banner.title}</div>
+                    {banner.subtitle && (
+                      <div className="promotion-banner-restaurant">{banner.subtitle}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+          ) : (
+            // 배너가 없을 때는 표시하지 않음 (또는 placeholder 표시)
+            null
+          )}
+        </section>
+
+        {/* 지금 가장 HOT한 식당 */}
+        <section className="hot-restaurants-section">
               <div className="section-header">
-                <h2 className="section-title">{selectedCategory} 식당 ({filteredRestaurants.length}개)</h2>
-                <button className="clear-filter-btn" onClick={() => {
-                  navigate('/search', { state: { category: selectedCategory } });
-                }}>
-                  전체보기
-                </button>
-              </div>
-              
-              <div className="category-results-list">
-                {currentRestaurants.map((restaurant) => (
+            <h2 className="section-title">지금 가장 HOT한 식당 🔥</h2>
+          </div>
+          {(popularLoading || popularFetching) ? (
+            <div className="section-loading">
+              <img src="/images/loading.png" alt="로딩 중" className="loading-image" />
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="restaurant-carousel">
+              {popularRestaurants.length > 0 ? (
+                popularRestaurants.slice(0, 6).map((item) => {
+                  const restaurant = item.restaurant || item;
+                  return (
                   <div 
                     key={restaurant.id} 
-                    className="category-result-item"
+                      className="restaurant-card-small"
                     onClick={() => handleRestaurantCardClick(restaurant)}
                   >
-                    <div className="result-item-image">
+                      <div className="restaurant-card-image">
                       <img 
                         src={convertToAbsoluteUrl(restaurant.mainImage || restaurant.imageUrl || restaurant.thumbnailUrl) || '/image-placeholder.svg'} 
                         alt={restaurant.restaurantName}
@@ -245,97 +458,52 @@ const HomePage = () => {
                           e.target.src = '/image-placeholder.svg';
                         }}
                       />
-                      <FavoriteHeart restaurantId={restaurant.id} />
+                        <FavoriteHeart restaurantId={restaurant.id} />
+                      </div>
+                      <div className="restaurant-card-info">
+                        <div className="restaurant-card-name">{restaurant.restaurantName}</div>
+                        <div className="restaurant-card-rating">
+                          ⭐ {(restaurant.rating || 0).toFixed(1)} ({restaurant.reviewCount || 0})
                     </div>
-                    <div className="result-item-content">
-                      <h3>
-                        {restaurant.restaurantName}
-                        <span className="restaurant-rating-inline">
-                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
-                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
-                        </span>
-                      </h3>
-                      <p className="result-location">{restaurant.roadAddress || restaurant.regionName}</p>
-                      <div className="result-item-tags">
-                        {restaurant.category && (
-                          <span className="result-tag">{restaurant.category}</span>
-                        )}
-                        {restaurant.parking === 'Y' && <span className="result-tag">주차</span>}
-                        {restaurant.wifi === 'Y' && <span className="result-tag">와이파이</span>}
-                        {restaurant.delivery === 'Y' && <span className="result-tag">배달</span>}
+                        <div className="restaurant-card-category">{restaurant.category || '기타'}</div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button 
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    이전
-                  </button>
-                  <div className="pagination-numbers">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-                      return (
-                        <button
-                          key={pageNum}
-                          className={`pagination-number ${currentPage === pageNum ? 'active' : ''}`}
-                          onClick={() => setCurrentPage(pageNum)}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button 
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    다음
-                  </button>
-                </div>
+                  );
+                })
+              ) : (
+                <div className="no-data">인기 식당이 없습니다.</div>
               )}
             </div>
+          )}
           </section>
-        )}
 
-        {/* Featured Section */}
-        <section className="featured-section">
-          <div className="container">
+        {/* 내 주변 추천 맛집 */}
+        <section className="nearby-restaurants-section">
             <div className="section-header">
-              <div className="section-header-left">
-                <span className="section-badge">추천</span>
-                <h2 className="section-title">이번 주 베스트 맛집</h2>
+            <h2 className="section-title">내 주변 추천 맛집 📍</h2>
+            <button 
+              className="map-view-btn"
+              onClick={() => navigate('/nearme')}
+            >
+              🗺️ 지도로 보기
+            </button>
               </div>
+          {(restaurantsLoading || restaurantsFetching) ? (
+            <div className="section-loading">
+              <img src="/images/loading.png" alt="로딩 중" className="loading-image" />
+              <p>데이터를 불러오는 중...</p>
             </div>
-            <div className="featured-grid">
-              {featuredRestaurants.map((item, index) => {
-                const restaurant = item.restaurant || item;
-                const clickCount = item.clickCount || 0;
+          ) : nearbyRestaurants.length > 0 ? (
+            <div className="nearby-restaurants-list">
+              {nearbyRestaurants.map((restaurant) => {
+                const distanceText = formatDistance(restaurant.distance);
                 return (
                   <div 
                     key={restaurant.id} 
-                    className="featured-card"
+                    className="nearby-restaurant-item"
                     onClick={() => handleRestaurantCardClick(restaurant)}
                   >
-                    <div className="featured-badge">BEST {index + 1}</div>
-                    <div className="featured-image">
+                    <div className="nearby-restaurant-image">
                       <img 
                         src={convertToAbsoluteUrl(restaurant.mainImage || restaurant.imageUrl || restaurant.thumbnailUrl) || '/image-placeholder.svg'} 
                         alt={restaurant.restaurantName}
@@ -344,56 +512,51 @@ const HomePage = () => {
                         }}
                       />
                     </div>
-                    <div className="featured-content">
-                      <h3 className="featured-name">
-                        {restaurant.restaurantName}
-                        <span className="restaurant-rating-inline">
-                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
-                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
-                        </span>
-                      </h3>
-                      <div className="featured-meta">
-                        <span className="views">{clickCount}명 검색</span>
-                      </div>
-                      <p className="featured-location">{restaurant.roadAddress || restaurant.regionName}</p>
-                      <div className="featured-details">
-                        {restaurant.category && (
-                          <span className="featured-category">{restaurant.category}</span>
-                        )}
-                        {restaurant.openingHours && (
-                          <span className="featured-hours">🕐 {restaurant.openingHours.split('\n')[0]}</span>
+                    <div className="nearby-restaurant-info">
+                      <div className="nearby-restaurant-name">{restaurant.restaurantName}</div>
+                      <div className="nearby-restaurant-meta">
+                        <span className="rating">⭐ {(restaurant.rating || 0).toFixed(1)} ({restaurant.reviewCount || 0})</span>
+                        {distanceText && (
+                          <span className="distance">{distanceText}</span>
                         )}
                       </div>
-                      {restaurant.description && (
-                        <p className="featured-description">{restaurant.description.substring(0, 80)}...</p>
+                      <div className="nearby-restaurant-category">{restaurant.category || '기타'}</div>
+                      {restaurant.roadAddress && (
+                        <div className="nearby-restaurant-address">{restaurant.roadAddress}</div>
                       )}
                     </div>
                   </div>
                 );
               })}
             </div>
+          ) : (
+            <div className="no-nearby-restaurants">
+              <p>주변에 위치 정보가 있는 맛집이 없습니다.</p>
           </div>
+          )}
         </section>
 
-        {/* Trending Section */}
-        <section className="trending-section">
-          <div className="container">
+        {/* 새로 입점했어요! */}
+        <section className="new-restaurants-section">
             <div className="section-header">
-              <div>
-                <span className="section-badge trending">트렌딩</span>
-                <h2 className="section-title">요즘 인기 식당</h2>
+            <h2 className="section-title">새로 입점했어요! ✨</h2>
               </div>
+          {(restaurantsLoading || restaurantsFetching) ? (
+            <div className="section-loading">
+              <img src="/images/loading.png" alt="로딩 중" className="loading-image" />
+              <p>데이터를 불러오는 중...</p>
             </div>
-            <div className="trending-grid">
-              {recentRestaurants.map((item, index) => {
-                const restaurant = item.restaurant || item;
+          ) : (
+            <div className="restaurant-carousel">
+              {latestRestaurants.length > 0 ? (
+                latestRestaurants.map((restaurant) => {
                 return (
                   <div 
                     key={restaurant.id} 
-                    className="trending-card"
+                      className="restaurant-card-small"
                     onClick={() => handleRestaurantCardClick(restaurant)}
                   >
-                    <div className="trending-image">
+                      <div className="restaurant-card-image">
                       <img 
                         src={convertToAbsoluteUrl(restaurant.mainImage || restaurant.imageUrl || restaurant.thumbnailUrl) || '/image-placeholder.svg'} 
                         alt={restaurant.restaurantName}
@@ -401,144 +564,26 @@ const HomePage = () => {
                           e.target.src = '/image-placeholder.svg';
                         }}
                       />
-                    </div>
-                    <div className="trending-content">
-                      <h3>
-                        {restaurant.restaurantName}
-                        <span className="restaurant-rating-inline">
-                          <span className="star-icon">★</span> {(restaurant.rating || 0).toFixed(1)}
-                          <span className="review-count"> ({(restaurant.reviewCount || 0)})</span>
-                        </span>
-                      </h3>
-                      <div className="trending-meta">
-                        {restaurant.category && (
-                          <span className="category">{restaurant.category}</span>
-                        )}
+                        <div className="new-badge">NEW</div>
+                        <FavoriteHeart restaurantId={restaurant.id} />
                       </div>
-                      <p className="location">{restaurant.roadAddress || restaurant.regionName}</p>
-                      <div className="trending-services">
-                        {restaurant.parking === 'Y' && <span className="service-badge">주차</span>}
-                        {restaurant.wifi === 'Y' && <span className="service-badge">와이파이</span>}
-                        {restaurant.delivery === 'Y' && <span className="service-badge">배달</span>}
-                      </div>
+                      <div className="restaurant-card-info">
+                        <div className="restaurant-card-name">{restaurant.restaurantName}</div>
+                        <div className="restaurant-card-rating">
+                          ⭐ {(restaurant.rating || 0).toFixed(1)} ({restaurant.reviewCount || 0})
+                        </div>
+                        <div className="restaurant-card-category">{restaurant.category || '기타'}</div>
                     </div>
                   </div>
                 );
-              })}
+                })
+              ) : (
+                <div className="no-data">최신 식당이 없습니다.</div>
+              )}
             </div>
-          </div>
+          )}
         </section>
 
-        {/* Ranking Section */}
-        <section className="ranking-section">
-          <div className="container">
-            <div className="section-header">
-              <div>
-                <span className="section-badge">인기</span>
-                <h2 className="section-title">TOP 10 인기 맛집</h2>
-              </div>
-              <button className="view-all-button" onClick={() => navigate('/search')}>
-                전체보기 →
-              </button>
-            </div>
-            <div className="ranking-list">
-              {popularRestaurants.slice(0, 10).map((item, index) => {
-                const restaurant = item.restaurant || item;
-                const clickCount = item.clickCount || 0;
-                return (
-                  <div 
-                    key={restaurant.id} 
-                    className="ranking-item"
-                    onClick={() => handleRestaurantCardClick(restaurant)}
-                  >
-                    <div className="rank-badge">
-                      <span className={`rank ${index < 3 ? 'rank-top' : ''}`}>{index + 1}</span>
-                    </div>
-                    <div className="ranking-info">
-                      <h3>{restaurant.restaurantName}</h3>
-                      <div className="ranking-meta">
-                        <span className="location">{restaurant.roadAddress || restaurant.regionName}</span>
-                        {restaurant.category && (
-                          <span className="category">{restaurant.category}</span>
-                        )}
-                      </div>
-                      {restaurant.mainMenu && (
-                        <div className="ranking-menu">메뉴: {restaurant.mainMenu}</div>
-                      )}
-                    </div>
-                    <div className="ranking-count">{clickCount}명</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Explore More Section */}
-        <section className="explore-section">
-          <div className="container">
-            <h2 className="section-title">더 탐색하기</h2>
-            <p className="section-description">다양한 방법으로 나에게 맞는 식당을 찾아보세요</p>
-            
-            <div className="explore-grid">
-              <div className="explore-card explore-primary" onClick={() => navigate('/nearme')}>
-                <div className="explore-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 15.5C16.4853 15.5 18.5 13.4853 18.5 11C18.5 8.51472 16.4853 6.5 14 6.5C11.5147 6.5 9.5 8.51472 9.5 11C9.5 13.4853 11.5147 15.5 14 15.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M14 2C10.4101 2 7.5 4.91015 7.5 8.5C7.5 11.2188 9.125 13.5 14 18C18.875 13.5 20.5 11.2188 20.5 8.5C20.5 4.91015 17.5899 2 14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3>내 주변 맛집</h3>
-                <p>현재 위치에서 가장 가까운 식당을 찾아보세요</p>
-                <div className="explore-arrow">→</div>
-              </div>
-              
-              <div className="explore-card" onClick={() => navigate('/search')}>
-                <div className="explore-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 19L13 13M15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3>검색하기</h3>
-                <p>원하는 키워드로 직접 검색해보세요</p>
-                <div className="explore-arrow">→</div>
-              </div>
-              
-              <div className="explore-card" onClick={() => navigate('/reservation-history')}>
-                <div className="explore-icon">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 4H24V24H4V4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M19 4V24M9 4V24M4 10H24M4 18H24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h3>예약 내역</h3>
-                <p>다녀간 식당을 다시 확인하세요</p>
-                <div className="explore-arrow">→</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="app-footer">
-          <div className="footer-container">
-            <div className="footer-main">
-              <div className="footer-brand">
-                <span className="footer-logo">CHOPLAN</span>
-              </div>
-            <div className="footer-links">
-              <a href="#" className="footer-link">회사소개</a>
-              <a href="#" className="footer-link">제휴문의</a>
-              <a href="#" className="footer-link">이용약관</a>
-              <a href="#" className="footer-link">개인정보처리방침</a>
-              <a href="#" className="footer-link">고객센터</a>
-              </div>
-            </div>
-            <div className="footer-bottom">
-              <p>© 2024 찹플랜. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
       </main>
       
       <MainNav />
@@ -551,7 +596,6 @@ const HomePage = () => {
         </button>
       )}
 
-      {/* Restaurant Detail Modal */}
       <RestaurantDetailModal
         restaurant={selectedRestaurant}
         isOpen={isModalOpen}

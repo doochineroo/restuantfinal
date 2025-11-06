@@ -78,6 +78,7 @@ export const statisticsAPI = {
   getTodayPopularRestaurants: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/today-popular-restaurants`, { params: { limit } }),
   getPopularKeywords: (limit = 10) => axios.get(`${API_ENDPOINTS.STATISTICS}/popular-keywords`, { params: { limit } }),
   getKeywordSuggestions: (keyword) => axios.get(`${API_ENDPOINTS.STATISTICS}/keyword-suggestions`, { params: { keyword } }),
+  getMonthlyClickCount: (restaurantId) => axios.get(`${API_ENDPOINTS.STATISTICS}/monthly-clicks/${restaurantId}`),
 };
 
 // Admin API

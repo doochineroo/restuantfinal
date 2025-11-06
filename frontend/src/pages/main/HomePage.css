@@ -1,8 +1,8 @@
-/* Modern Restaurant Booking App Design */
+/* HomePage - 음식 예약 앱 홈 화면 */
 
 .home-page {
   min-height: 100vh;
-  background: #fafbfc;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
 }
@@ -19,901 +19,597 @@
   padding: 0 20px;
 }
 
-/* ========== Hero Section ========== */
-.hero-section {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  padding: 120px 20px 80px;
-  text-align: center;
+/* ========== 위치 기반 헤더 ========== */
+.home-header {
+  background: white;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.notification-btn {
   position: relative;
-}
-
-.hero-content {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.hero-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  color: white;
-  margin-bottom: 20px;
-  line-height: 1.2;
-}
-
-.hero-gradient {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-bold {
-  color: white;
-}
-
-.hero-description {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   font-size: 1.3rem;
-  color: rgba(255, 255, 255, 0.95);
-  margin-bottom: 50px;
 }
 
-/* Search Hero */
-.search-hero {
+.notification-btn:hover {
+  background: #f1f5f9;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ========== 검색 바 ========== */
+.home-search-bar {
   display: flex;
   align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.home-search-bar:focus-within {
+  border-color: #3b82f6;
   background: white;
-  border-radius: 16px;
-  padding: 8px 8px 8px 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  max-width: 700px;
-  margin: 0 auto;
 }
 
 .search-icon {
+  font-size: 1.2rem;
   color: #64748b;
-  display: flex;
-  align-items: center;
-  margin-right: 12px;
 }
 
-.search-input {
+.home-search-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 14px 0;
-  font-size: 1.1rem;
-  color: #1e293b;
   outline: none;
+  font-size: 0.95rem;
+  color: #1e293b;
 }
 
-.search-input::placeholder {
+.home-search-input::placeholder {
   color: #94a3b8;
 }
 
-.search-button {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+.home-search-btn {
+  background: #3b82f6;
   color: white;
   border: none;
-  padding: 14px 36px;
-  border-radius: 12px;
-  font-size: 1rem;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.search-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+.home-search-btn:hover {
+  background: #2563eb;
 }
 
-/* ========== Categories Section ========== */
-.categories-section {
+/* ========== 메인 카테고리 ========== */
+.main-categories-section {
   background: white;
-  padding: 60px 0;
-}
-
-.section-header-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 30px;
-  text-align: center;
+  padding: 24px 20px;
+  margin-top: 8px;
 }
 
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }
 
-.category-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.category-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-}
-
-.category-item:hover {
-  background: #1e3a8a;
-  border-color: #1e3a8a;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(30, 58, 138, 0.2);
-}
-
-.category-item:hover .category-label,
-.category-item:hover .category-badge {
-  color: white;
-}
-
-.category-item.active {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  border-color: transparent;
-}
-
-.category-item.active .category-label,
-.category-item.active .category-badge {
-  color: white;
-}
-
-.category-label {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-  transition: color 0.3s ease;
-}
-
-.category-badge {
-  font-size: 0.85rem;
-  color: #64748b;
-  transition: color 0.3s ease;
-}
-
-/* ========== Category Results Section ========== */
-.category-results-section {
-  background: white;
-  padding: 60px 0;
-}
-
-.clear-filter-btn {
   background: transparent;
-  color: #3b82f6;
-  border: 2px solid #3b82f6;
-  padding: 10px 24px;
-  border-radius: 25px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.clear-filter-btn:hover {
-  background: #3b82f6;
-  color: white;
-}
-
-.category-results-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.category-result-item {
-  display: flex;
-  background: white;
+  padding: 12px;
   border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-  padding: 16px;
-  gap: 20px;
+  transition: all 0.2s ease;
 }
 
-.category-result-item:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
-  transform: translateX(4px);
+.category-btn:hover {
+  background: #f8f9fa;
 }
 
-.result-item-image {
-  width: 150px;
-  height: 120px;
-  flex-shrink: 0;
-  background: #e2e8f0;
-  border-radius: 8px;
+.category-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
-.result-item-image img {
+.category-icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
-.category-result-item:hover .result-item-image img {
+.category-icon-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.category-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* ========== 프로모션 배너 ========== */
+.promotion-banner-section {
+  background: white;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.promotion-banner-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.promotion-banner-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.promotion-banner {
+  position: relative;
+  min-width: 100%;
+  height: 180px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.promotion-banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.promotion-banner-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.promotion-banner-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.promotion-banner:hover .promotion-banner-bg img {
   transform: scale(1.05);
 }
 
-/* HomePage에서 사용하는 하트 버튼 스타일 */
-.result-item-image .favorite-heart-btn {
+.promotion-banner-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
+}
+
+.promotion-banner-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  color: white;
+}
+
+.promotion-banner-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.promotion-banner-restaurant {
+  font-size: 1rem;
+  opacity: 0.95;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== 섹션 공통 스타일 ========== */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* ========== HOT한 식당 섹션 ========== */
+.hot-restaurants-section {
+  background: white;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.restaurant-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  padding-bottom: 8px;
+}
+
+.restaurant-carousel::-webkit-scrollbar {
+  height: 4px;
+}
+
+.restaurant-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.restaurant-carousel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.restaurant-card-small {
+  flex-shrink: 0;
+  width: 160px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.restaurant-card-small:hover {
+  transform: translateY(-4px);
+}
+
+.restaurant-card-image {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.restaurant-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.restaurant-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.restaurant-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.restaurant-card-rating {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.restaurant-card-category {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ========== 내 주변 추천 맛집 ========== */
+.nearby-restaurants-section {
+  background: white;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.map-view-btn {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-view-btn:hover {
+  background: #e0e7ff;
+  border-color: #3b82f6;
+}
+
+.nearby-restaurants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nearby-restaurant-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #f1f5f9;
+}
+
+.nearby-restaurant-item:hover {
+  background: #f8f9fa;
+  border-color: #e2e8f0;
+}
+
+.nearby-restaurant-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.nearby-restaurant-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nearby-restaurant-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nearby-restaurant-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.nearby-restaurant-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.nearby-restaurant-category {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.nearby-restaurant-address {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.no-nearby-restaurants {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+.no-nearby-restaurants p {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ========== 테마 추천 ========== */
+.theme-restaurants-section {
+  background: white;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.theme-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.theme-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-card {
+  flex-shrink: 0;
+  width: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.theme-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.theme-card-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.theme-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.theme-card:hover .theme-card-image img {
+  transform: scale(1.05);
+}
+
+.theme-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-card-content {
+  padding: 16px;
+  background: white;
+}
+
+.theme-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.theme-restaurant {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ========== 새로 오픈 ========== */
+.new-restaurants-section {
+  background: white;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.new-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #ef4444;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 2;
+}
+
+/* ========== 찜하기 하트 버튼 (카드 내) ========== */
+.restaurant-card-image .favorite-heart-btn {
   position: absolute;
   top: 8px;
   right: 8px;
   background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
   z-index: 10;
   padding: 0;
 }
 
-.result-item-image .favorite-heart-btn:hover {
+.restaurant-card-image .favorite-heart-btn:hover {
   background: rgba(255, 255, 255, 1);
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.result-item-image .favorite-heart-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.result-item-image .favorite-heart-btn.favorited {
-  animation: heartBeat 0.3s ease;
-}
-
-@keyframes heartBeat {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.result-item-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.result-item-content h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.result-location {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 12px;
-  line-height: 1.4;
-}
-
-.result-item-tags {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.result-tag {
-  display: inline-block;
-  background: #f1f5f9;
-  color: #3b82f6;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 40px;
-}
-
-.pagination-btn {
-  background: white;
-  color: #3b82f6;
-  border: 1px solid #e2e8f0;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-numbers {
-  display: flex;
-  gap: 8px;
-}
-
-.pagination-number {
-  background: white;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 40px;
-}
-
-.pagination-number:hover {
-  background: #f8fafc;
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.pagination-number.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-}
-
-/* ========== Featured Section ========== */
-.featured-section {
-  background: #f8fafc;
-  padding: 80px 0;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 40px;
-}
-
-.section-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-badge {
-  display: inline-block;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  color: white;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  width: fit-content;
-}
-
-.section-badge.trending {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-}
-
-.section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-
-.featured-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-}
-
-.featured-card {
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.featured-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
-}
-
-.featured-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  z-index: 2;
-}
-
-.featured-image {
-  width: 100%;
-  height: 220px;
-  overflow: hidden;
-  background: #f1f5f9;
-}
-
-.featured-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.featured-card:hover .featured-image img {
-  transform: scale(1.1);
-}
-
-.featured-content {
-  padding: 24px;
-}
-
-.featured-name {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 12px;
-}
-
-.featured-meta {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-size: 0.95rem;
-}
-
-.views {
-  color: #64748b;
-}
-
-.featured-location {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
-.featured-details {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.featured-category {
-  display: inline-block;
-  background: #f1f5f9;
-  color: #3b82f6;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.featured-hours {
-  display: inline-block;
-  background: #fef3c7;
-  color: #92400e;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.featured-description {
-  color: #64748b;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* 평점 인라인 표시 스타일 */
-.restaurant-rating-inline {
-  color: #666;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-left: 8px;
-  background: none;
-}
-
-.restaurant-rating-inline .star-icon {
-  color: #ffc107;
-  font-size: 0.9rem;
-  display: inline-block;
-  margin-right: 2px;
-}
-
-.restaurant-rating-inline .review-count {
-  color: #999;
-  font-size: 0.85rem;
-  margin-left: 2px;
-  background: none;
-  padding: 0;
-  border: none;
-}
-
-/* ========== Trending Section ========== */
-.trending-section {
-  background: white;
-  padding: 80px 0;
-}
-
-.trending-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-
-.trending-card {
-  background: #f8fafc;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.trending-card:hover {
-  background: white;
-  border-color: #3b82f6;
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.12);
-}
-
-.trending-image {
-  width: 100%;
-  height: 160px;
-  background: #e2e8f0;
-  overflow: hidden;
-}
-
-.trending-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.trending-card:hover .trending-image img {
-  transform: scale(1.1);
-}
-
-.trending-content {
-  padding: 20px;
-}
-
-.trending-content h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 10px;
-}
-
-.trending-meta {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-
-.trending-meta .category {
-  color: #3b82f6;
-  font-weight: 500;
-}
-
-.trending-content p.location {
-  color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.ranking-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-.ranking-meta .category {
-  color: #3b82f6;
-  font-weight: 500;
-}
-
-.ranking-meta .location {
-  color: #64748b;
-}
-
-.ranking-menu {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin-top: 4px;
-  line-height: 1.4;
-}
-
-/* ========== Ranking Section ========== */
-.ranking-section {
-  background: #f8fafc;
-  padding: 80px 0;
-}
-
-.ranking-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ranking-item {
-  display: flex;
-  align-items: center;
-  padding: 20px 24px;
-  background: white;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
-}
-
-.ranking-item:hover {
-  border-color: #3b82f6;
-  transform: translateX(8px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
-}
-
-.rank-badge {
-  margin-right: 20px;
-  flex-shrink: 0;
-}
-
-.rank {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f1f5f9;
-  color: #64748b;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  border: 1px solid #e2e8f0;
-}
-
-.rank-top {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  color: white;
-  border-color: transparent;
-}
-
-.ranking-info {
-  flex: 1;
-}
-
-.ranking-info h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.ranking-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-.ranking-count {
-  font-size: 0.95rem;
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-/* ========== Explore Section ========== */
-.explore-section {
-  background: white;
-  padding: 80px 0;
-  text-align: center;
-}
-
-.section-description {
-  font-size: 1.1rem;
-  color: #64748b;
-  margin-bottom: 40px;
-}
-
-.explore-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-
-.explore-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 40px 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.explore-card:hover {
-  border-color: #3b82f6;
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
-}
-
-.explore-primary {
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-  border-color: transparent;
-  color: white;
-}
-
-.explore-card:hover .explore-arrow {
-  transform: translate(8px, -8px);
-}
-
-.explore-icon {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-  color: #3b82f6;
-}
-
-.explore-primary .explore-icon {
-  color: white;
-}
-
-.explore-card h3 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 12px;
-}
-
-.explore-primary h3 {
-  color: white;
-}
-
-.explore-card p {
-  font-size: 1rem;
-  color: #64748b;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.explore-primary p {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.explore-arrow {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #3b82f6;
-  transition: all 0.3s ease;
-}
-
-.explore-primary .explore-arrow {
-  color: white;
-}
-
-/* ========== Footer ========== */
-.app-footer {
-  background: #1e293b;
-  color: white;
-  padding: 50px 0 30px;
-}
-
-.footer-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.footer-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 30px;
-  border-bottom: 1px solid #334155;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-logo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: white;
-}
-
-.footer-links {
-  display: flex;
-  gap: 30px;
-  flex-wrap: wrap;
-}
-
-.footer-link {
-  color: #94a3b8;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: color 0.3s ease;
-}
-
-.footer-link:hover {
-  color: white;
-}
-
-.footer-bottom {
-  text-align: center;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-/* ========== Scroll to Top Button ========== */
+/* ========== 스크롤 to Top ========== */
 .scroll-to-top {
   position: fixed;
   bottom: 100px;
-  right: 30px;
-  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  right: 20px;
+  background: #3b82f6;
   color: white;
   border: none;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -921,15 +617,11 @@
 }
 
 .scroll-to-top:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
-.scroll-to-top svg {
-  stroke-width: 2.5;
-}
-
-/* ========== Loading Spinner ========== */
+/* ========== 로딩 ========== */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -959,104 +651,125 @@
   font-weight: 500;
 }
 
-/* ========== Responsive Design ========== */
-@media (max-width: 1024px) {
-  .hero-title {
-    font-size: 2.8rem;
-  }
-  
-  .featured-grid,
-  .trending-grid,
-  .explore-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-  }
+/* 섹션별 로딩 스타일 */
+.section-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 200px;
 }
 
+.spinner-small {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f1f5f9;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+/* 로딩 이미지 회전 애니메이션 */
+.loading-image {
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.section-loading p {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.no-data {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+/* ========== 반응형 디자인 ========== */
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 80px 20px 60px;
-  }
-  
-  .hero-title {
-    font-size: 2.2rem;
-  }
-  
-  .hero-description {
-    font-size: 1.1rem;
-  }
-  
-  .search-hero {
-    flex-direction: column;
-    padding: 16px;
+  .categories-grid {
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
-    max-width: 90%;
   }
-  
-  .search-input {
-    width: 100%;
-  }
-  
-  .search-button {
-    width: 100%;
-  }
-  
-  .section-title {
-    font-size: 1.6rem;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .category-item {
-    padding: 20px 12px;
-  }
-  
-  .ranking-item {
-    padding: 16px;
-  }
-  
-  .rank {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-  
-  .footer-main {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-  }
-  
-  .footer-links {
-    justify-content: center;
-  }
-  
-  .scroll-to-top {
+
+  .category-icon {
     width: 48px;
     height: 48px;
-    bottom: 90px;
-    right: 20px;
+  }
+
+  .category-name {
+    font-size: 0.75rem;
+  }
+
+  .promotion-banner {
+    height: 160px;
+  }
+
+  .restaurant-card-small {
+    width: 140px;
+  }
+
+  .restaurant-card-image {
+    width: 140px;
+    height: 140px;
+  }
+
+  .theme-card {
+    width: 240px;
+  }
+
+  .theme-card-image {
+    height: 160px;
+  }
+
+  .nearby-restaurant-image {
+    width: 80px;
+    height: 80px;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 1.8rem;
-  }
-  
   .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
   }
-  
-  .featured-grid,
-  .trending-grid {
-    grid-template-columns: 1fr;
+
+  .category-icon {
+    width: 44px;
+    height: 44px;
   }
-  
-  .explore-grid {
-    grid-template-columns: 1fr;
+
+  .category-name {
+    font-size: 0.7rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .promotion-banner {
+    height: 140px;
+  }
+
+  .restaurant-card-small {
+    width: 120px;
+  }
+
+  .restaurant-card-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .theme-card {
+    width: 200px;
   }
 }

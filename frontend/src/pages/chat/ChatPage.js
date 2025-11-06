@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../demo/context/AuthContext';
+import TopNav from '../../components/navigation/TopNav';
+import MainNav from '../../components/navigation/MainNav';
 import ChatRoomList from '../../components/chat/ChatRoomList';
 import ChatWindow from '../../components/chat/ChatWindow';
 import './ChatPage.css';
@@ -26,12 +28,16 @@ const ChatPage = () => {
           onBack={() => setSelectedChatRoom(null)}
         />
       ) : (
-        <div className="chat-page-content">
-          <div className="chat-page-header">
-            <h2>채팅</h2>
+        <>
+          <TopNav />
+          <div className="chat-page-content">
+            <div className="chat-page-header">
+              <h2>채팅</h2>
+            </div>
+            <ChatRoomList onSelectChatRoom={setSelectedChatRoom} />
           </div>
-          <ChatRoomList onSelectChatRoom={setSelectedChatRoom} />
-        </div>
+          {user.role !== 'OWNER' && <MainNav />}
+        </>
       )}
     </div>
   );

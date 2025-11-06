@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { authAPI, restaurantAPI } from '../../../services/api';
-import SimpleAddressSearch from '../../../../components/SimpleAddressSearch';
 import NotificationModal from '../../../../components/common/NotificationModal';
 import './LoginPage.css';
 
@@ -28,6 +27,7 @@ const LoginPage = () => {
     restaurantName: '',
     branchName: '',
     roadAddress: '',
+    detailAddress: '', // 상세 주소 (동/호수, 건물명 등)
     category: '한식',
     // 주소 검색으로 자동 설정되는 필드들
     lat: null,
@@ -313,18 +313,6 @@ const LoginPage = () => {
     }
   };
 
-  // 주소 선택 핸들러
-  const handleAddressSelect = (addressData) => {
-    setFormData(prev => ({
-      ...prev,
-      roadAddress: addressData.roadAddress,
-      lat: addressData.lat,
-      lng: addressData.lng,
-      regionName: addressData.region
-    }));
-    console.log('주소 선택됨:', addressData);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(isSignup ? '회원가입 버튼 클릭됨' : '로그인 버튼 클릭됨'); // 디버깅용
@@ -393,7 +381,11 @@ const LoginPage = () => {
             }
             signupData.restaurantName = formData.restaurantName;
             signupData.branchName = formData.branchName || null;
-            signupData.roadAddress = formData.roadAddress;
+            // 도로명 주소와 상세 주소를 합쳐서 저장 (지도에 정확하게 표시하기 위해)
+            const fullAddress = formData.detailAddress 
+              ? `${formData.roadAddress} ${formData.detailAddress}`.trim()
+              : formData.roadAddress;
+            signupData.roadAddress = fullAddress;
             signupData.category = formData.category;
           }
         }
@@ -655,7 +647,6 @@ const LoginPage = () => {
                 <select name="role" value={formData.role} onChange={handleChange} className="common-select">
                   <option value="USER">일반 회원</option>
                   <option value="OWNER">가게 주인</option>
-                  <option value="ADMIN">관리자</option>
                 </select>
               </div>
 
@@ -858,17 +849,83 @@ const LoginPage = () => {
 
                       <div className="demo-form-group">
                         <label>도로명 주소</label>
-                        <SimpleAddressSearch
-                          onAddressSelect={handleAddressSelect}
-                          placeholder="예: 서울 중구 명동길 14"
+                        <div className="input-with-button">
+                          <input
+                            type="text"
+                            name="roadAddress"
+                            value={formData.roadAddress || ''}
+                            onChange={handleChange}
+                            placeholder="서울 중구 명동길 14"
+                          />
+                          <button 
+                            type="button"
+                            className="check-btn"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              // 카카오 주소 검색 팝업 열기
+                              const openAddressSearch = () => {
+                                if (window.daum && window.daum.Postcode) {
+                                  new window.daum.Postcode({
+                                    oncomplete: (data) => {
+                                      const address = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
+                                      if (address) {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          roadAddress: address
+                                        }));
+                                      }
+                                    }
+                                  }).open();
+                                } else {
+                                  alert('주소 검색 서비스를 불러올 수 없습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+                                }
+                              };
+                              
+                              // 스크립트가 이미 로드되어 있으면 바로 열기
+                              if (window.daum && window.daum.Postcode) {
+                                openAddressSearch();
+                                return;
+                              }
+                              
+                              // 스크립트 로드
+                              const existingScript = document.querySelector('script[src*="postcode.v2.js"]');
+                              if (existingScript) {
+                                // 이미 로딩 중이면 완료 대기
+                                if (window.daum && window.daum.Postcode) {
+                                  openAddressSearch();
+                                } else {
+                                  existingScript.addEventListener('load', openAddressSearch, { once: true });
+                                }
+                              } else {
+                                const script = document.createElement('script');
+                                script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+                                script.onload = () => {
+                                  setTimeout(openAddressSearch, 50);
+                                };
+                                script.onerror = () => {
+                                  alert('주소 검색 서비스를 불러올 수 없습니다.');
+                                };
+                                document.head.appendChild(script);
+                              }
+                            }}
+                          >
+                            주소 검색
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="demo-form-group">
+                        <label>상세 주소</label>
+                        <input
+                          type="text"
+                          name="detailAddress"
+                          value={formData.detailAddress || ''}
+                          onChange={handleChange}
+                          placeholder="예: 2층, 101호, 건물명 등 (선택사항)"
                         />
-                        <small>📍 주소를 검색하면 자동으로 위경도와 지역이 설정됩니다</small>
-                        {formData.lat && formData.lng && (
-                          <div className="address-info">
-                            <span className="address-coords">📍 좌표: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}</span>
-                            {formData.regionName && <span className="address-region">🏘️ 지역: {formData.regionName}</span>}
-                          </div>
-                        )}
+                        <small>상세 주소를 입력하면 지도에 더 정확하게 표시됩니다</small>
                       </div>
 
                       <div className="demo-form-group">

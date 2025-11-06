@@ -4020,3 +4020,189 @@
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 166, 153, 0.3);
 }
+
+/* 토글 스위치 스타일 */
+.owner-dashboard .switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+}
+
+.owner-dashboard .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.owner-dashboard .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.owner-dashboard .slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.owner-dashboard input:checked + .slider {
+  background-color: #00a699;
+}
+
+.owner-dashboard input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+.owner-dashboard .setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.owner-dashboard .setting-info {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.owner-dashboard .setting-info label {
+  display: block;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.owner-dashboard .setting-info p {
+  color: #b0b0b0;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 일반 설정 폼 스타일 */
+.owner-dashboard .profile-settings-form {
+  padding: 20px;
+}
+
+.owner-dashboard .profile-settings-form .form-group {
+  margin-bottom: 20px;
+}
+
+.owner-dashboard .profile-settings-form label {
+  display: block;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.owner-dashboard .profile-settings-form .form-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.owner-dashboard .profile-settings-form .form-input:focus {
+  outline: none;
+  border-color: #00a699;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.owner-dashboard .profile-settings-form .form-input:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #888;
+  cursor: not-allowed;
+}
+
+.owner-dashboard .profile-settings-form small {
+  display: block;
+  color: #888;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.owner-dashboard .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+/* 문의 및 배너 섹션 스타일 */
+.owner-dashboard .inquiry-section,
+.owner-dashboard .banner-section {
+  padding: 20px;
+}
+
+.owner-dashboard .add-inquiry-btn,
+.owner-dashboard .add-banner-btn {
+  padding: 10px 18px;
+  background: #00a699;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-dashboard .add-inquiry-btn:hover,
+.owner-dashboard .add-banner-btn:hover {
+  background: #008b80;
+}
+
+.owner-dashboard .status-badge.answered {
+  background: rgba(0, 166, 153, 0.2);
+  color: #00a699;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.owner-dashboard .status-badge.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.owner-dashboard .status-badge.approved {
+  background: rgba(0, 166, 153, 0.2);
+  color: #00a699;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.owner-dashboard .status-badge.rejected {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}

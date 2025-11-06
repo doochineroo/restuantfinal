@@ -96,15 +96,31 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
       const isSelected = date.toDateString() === selectedDate.toDateString();
       const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 일요일(0) 또는 토요일(6)
       
+      // 현재 달인지 확인
+      const currentMonth = selectedDate.getMonth();
+      const currentYear = selectedDate.getFullYear();
+      const isCurrentMonth = date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      
       let classes = [];
       if (isToday) classes.push('today');
       if (isSelected) classes.push('selected');
       if (totalCount > 0) classes.push('has-reservations');
       if (isWeekend) classes.push('weekend');
+      if (!isCurrentMonth) classes.push('other-month'); // 다른 달 날짜 표시
       
       return classes.join(' ');
     }
     return '';
+  };
+
+  // 다른 달의 날짜를 비활성화 (클릭 불가)
+  const tileDisabled = ({ date, view }) => {
+    if (view === 'month') {
+      const currentMonth = selectedDate.getMonth();
+      const currentYear = selectedDate.getFullYear();
+      return date.getMonth() !== currentMonth || date.getFullYear() !== currentYear;
+    }
+    return false;
   };
 
   return (
@@ -135,6 +151,7 @@ const ReservationCalendar = ({ reservations, onDateClick, onReservationClick }) 
               value={selectedDate}
               tileContent={tileContent}
               tileClassName={tileClassName}
+              tileDisabled={tileDisabled}
               calendarType="gregory"
               formatShortWeekday={(locale, date) => {
                 const days = ['일', '월', '화', '수', '목', '금', '토'];

@@ -15,16 +15,36 @@ const ChatWindow = ({ chatRoom, onBack }) => {
   useEffect(() => {
     if (chatRoom && user) {
       loadMessages();
-      markAsRead();
       
-      // 3초마다 메시지 갱신
+      // 채팅방 열 때 읽음 처리
+      const markRead = async () => {
+        try {
+          await markAsRead();
+          // 읽음 처리 후 메시지 다시 로드하여 읽음 상태 업데이트
+          setTimeout(() => {
+            loadMessages();
+          }, 300);
+        } catch (error) {
+          console.error('읽음 처리 오류:', error);
+        }
+      };
+      
+      // 약간의 딜레이 후 읽음 처리 (메시지 로드 완료 후)
+      const markReadTimeout = setTimeout(markRead, 500);
+      
+      // 3초마다 메시지 갱신 및 읽음 처리
       intervalRef.current = setInterval(() => {
         loadMessages();
+        // 새 메시지가 있으면 읽음 처리
+        markAsRead().catch(err => console.error('읽음 처리 오류:', err));
       }, 3000);
       
       return () => {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
+        }
+        if (markReadTimeout) {
+          clearTimeout(markReadTimeout);
         }
       };
     }
@@ -41,7 +61,12 @@ const ChatWindow = ({ chatRoom, onBack }) => {
       const response = await chatAPI.getChatMessages(chatRoom.id, user.userId);
       const messageList = response.data || [];
       // 최신순으로 정렬 (가장 오래된 메시지가 위에)
-      setMessages(messageList.reverse());
+      // isRead 필드 정규화 (백엔드에서 isRead로 오지만 read로도 접근 가능하도록)
+      const normalizedMessages = messageList.map(msg => ({
+        ...msg,
+        read: msg.isRead !== undefined ? msg.isRead : msg.read
+      }));
+      setMessages(normalizedMessages.reverse());
     } catch (error) {
       console.error('메시지 조회 오류:', error);
     } finally {
@@ -82,7 +107,9 @@ const ChatWindow = ({ chatRoom, onBack }) => {
       await chatAPI.sendMessage(messageRequest);
       
       // 메시지 전송 후 즉시 갱신
-      setTimeout(loadMessages, 500);
+      setTimeout(() => {
+        loadMessages();
+      }, 500);
     } catch (error) {
       console.error('메시지 전송 오류:', error);
       alert('메시지 전송에 실패했습니다.');
@@ -214,7 +241,14 @@ const ChatWindow = ({ chatRoom, onBack }) => {
                   )}
                   <div className="message-bubble">
                     <p>{message.message}</p>
-                    <span className="message-time">{formatTime(message.createdAt)}</span>
+                    <div className="message-footer">
+                      <span className="message-time">{formatTime(message.createdAt)}</span>
+                      {message.isMine && (
+                        <span className={`message-read-status ${(message.isRead !== undefined ? message.isRead : message.read) ? 'read' : 'unread'}`}>
+                          {(message.isRead !== undefined ? message.isRead : message.read) ? '✓✓' : '✓'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

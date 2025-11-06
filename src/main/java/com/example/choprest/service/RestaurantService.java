@@ -322,6 +322,38 @@ public class RestaurantService {
     }
     
     /**
+     * 식당 설정 조회
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getRestaurantSettings(Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("식당을 찾을 수 없습니다."));
+        
+        Map<String, Object> settings = new HashMap<>();
+        settings.put("autoApprove", restaurant.getAutoApprove() != null ? restaurant.getAutoApprove() : false);
+        settings.put("regularCustomerThreshold", restaurant.getRegularCustomerThreshold() != null ? restaurant.getRegularCustomerThreshold() : 3);
+        return settings;
+    }
+    
+    /**
+     * 식당 설정 업데이트
+     */
+    @Transactional
+    public Restaurant updateRestaurantSettings(Long restaurantId, Boolean autoApprove, Integer regularCustomerThreshold) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new RuntimeException("식당을 찾을 수 없습니다."));
+        
+        if (autoApprove != null) {
+            restaurant.setAutoApprove(autoApprove);
+        }
+        if (regularCustomerThreshold != null) {
+            restaurant.setRegularCustomerThreshold(regularCustomerThreshold);
+        }
+        
+        return restaurantRepository.save(restaurant);
+    }
+    
+    /**
      * 다음 식당 코드 생성 (최대값 + 1)
      * 새 식당 등록 시 사용
      */

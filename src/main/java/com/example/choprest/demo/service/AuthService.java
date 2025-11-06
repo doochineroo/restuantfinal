@@ -163,6 +163,47 @@ public class AuthService {
         return userRepository.existsByUsername(username);
     }
     
+    /**
+     * 간단한 관리자 계정 생성 (개발/테스트용)
+     * 아이디와 비밀번호만 입력하면 관리자 계정 생성
+     */
+    @Transactional
+    public AuthResponse createAdminAccount(String username, String password) {
+        // 중복 체크
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("이미 존재하는 사용자명입니다.");
+        }
+        
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoderService.encode(password);
+        
+        // 관리자 계정 생성
+        User admin = User.builder()
+                .username(username)
+                .password(encodedPassword)
+                .name("관리자")
+                .email(username + "@admin.local") // 임시 이메일
+                .emailVerified(true) // 이메일 인증 완료로 설정
+                .phone("010-0000-0000") // 임시 전화번호
+                .role(User.UserRole.ADMIN)
+                .status(User.UserStatus.ACTIVE)
+                .build();
+        
+        admin = userRepository.save(admin);
+        
+        return AuthResponse.builder()
+                .userId(admin.getId())
+                .username(admin.getUsername())
+                .name(admin.getName())
+                .email(admin.getEmail())
+                .phone(admin.getPhone())
+                .role(admin.getRole())
+                .restaurantId(null)
+                .token(generateToken(admin))
+                .createdAt(admin.getCreatedAt())
+                .build();
+    }
+    
     private String generateToken(User user) {
         // 실제로는 JWT 사용
         return "DEMO_TOKEN_" + UUID.randomUUID().toString();

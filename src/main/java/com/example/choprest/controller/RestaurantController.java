@@ -613,6 +613,107 @@ public class RestaurantController {
     }
     
     /**
+     * 좌표를 주소로 변환 (역지오코딩)
+     * GET /api/restaurants/reverse-geocode?lat=위도&lng=경도
+     */
+    @GetMapping("/reverse-geocode")
+    public ResponseEntity<Map<String, Object>> reverseGeocode(
+            @RequestParam(required = true) String lat,
+            @RequestParam(required = true) String lng) {
+        log.info("Reverse geocode request received for lat: {}, lng: {}", lat, lng);
+        
+        if (lat == null || lng == null || lat.trim().isEmpty() || lng.trim().isEmpty()) {
+            log.warn("Invalid parameters: lat={}, lng={}", lat, lng);
+            return ResponseEntity.badRequest().build();
+        }
+        
+        Double latDouble;
+        Double lngDouble;
+        
+        try {
+            latDouble = Double.parseDouble(lat.trim());
+            lngDouble = Double.parseDouble(lng.trim());
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse lat/lng: lat={}, lng={}, error: {}", lat, lng, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            String apiKey = getNextApiKey();
+            
+            String response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host("dapi.kakao.com")
+                            .path("/v2/local/geo/coord2address.json")
+                            .queryParam("x", lngDouble)
+                            .queryParam("y", latDouble)
+                            .build())
+                    .header("Authorization", apiKey)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            
+            if (response == null || response.isEmpty()) {
+                log.warn("Empty response from Kakao API for lat: {}, lng: {}", latDouble, lngDouble);
+                return ResponseEntity.ok()
+                        .headers(getNoCacheHeaders())
+                        .body(Map.of("address", "위치 정보 없음"));
+            }
+            
+            // JSON 파싱
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode jsonNode = mapper.readTree(response);
+            
+            if (jsonNode.has("documents") && jsonNode.get("documents").isArray() && 
+                jsonNode.get("documents").size() > 0) {
+                com.fasterxml.jackson.databind.JsonNode address = jsonNode.get("documents").get(0);
+                
+                // 시/도 + 시/군/구까지만 추출 (구까지만)
+                String region1 = address.has("region_1depth_name") ? 
+                    address.get("region_1depth_name").asText() : "";
+                String region2 = address.has("region_2depth_name") ? 
+                    address.get("region_2depth_name").asText() : "";
+                
+                String addressText = "";
+                if (!region1.isEmpty() && !region2.isEmpty()) {
+                    addressText = region1 + " " + region2;
+                } else if (address.has("address_name")) {
+                    // 폴백: 전체 주소에서 시/도 + 시/군/구만 추출
+                    String fullAddress = address.get("address_name").asText();
+                    String[] parts = fullAddress.split(" ");
+                    if (parts.length >= 2) {
+                        addressText = parts[0] + " " + parts[1];
+                    } else {
+                        addressText = fullAddress;
+                    }
+                } else {
+                    addressText = "위치 정보 없음";
+                }
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("address", addressText);
+                result.put("region1", region1);
+                result.put("region2", region2);
+                
+                return ResponseEntity.ok()
+                        .headers(getNoCacheHeaders())
+                        .body(result);
+            } else {
+                log.warn("No documents found in Kakao API response for lat: {}, lng: {}", latDouble, lngDouble);
+                return ResponseEntity.ok()
+                        .headers(getNoCacheHeaders())
+                        .body(Map.of("address", "위치 정보 없음"));
+            }
+        } catch (Exception e) {
+            log.error("Error reverse geocoding for lat: {}, lng: {}: {}", latDouble, lngDouble, e.getMessage());
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(Map.of("address", "위치 정보 없음"));
+        }
+    }
+    
+    /**
      * 좌표 통계 조회
      * GET /api/restaurants/statistics/coordinates
      */
@@ -895,6 +996,47 @@ public class RestaurantController {
         }
     }
     
+    /**
+     * 식당 설정 조회
+     */
+    @GetMapping("/{restaurantId}/settings")
+    public ResponseEntity<Map<String, Object>> getRestaurantSettings(@PathVariable Long restaurantId) {
+        try {
+            Map<String, Object> settings = restaurantService.getRestaurantSettings(restaurantId);
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(settings);
+        } catch (Exception e) {
+            log.error("Error getting restaurant settings for id {}: {}", restaurantId, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * 식당 설정 업데이트
+     */
+    @PutMapping("/{restaurantId}/settings")
+    public ResponseEntity<Map<String, Object>> updateRestaurantSettings(
+            @PathVariable Long restaurantId,
+            @RequestBody Map<String, Object> request) {
+        try {
+            Boolean autoApprove = request.get("autoApprove") != null 
+                ? Boolean.valueOf(request.get("autoApprove").toString()) 
+                : null;
+            Integer regularCustomerThreshold = request.get("regularCustomerThreshold") != null 
+                ? Integer.valueOf(request.get("regularCustomerThreshold").toString()) 
+                : null;
+            
+            restaurantService.updateRestaurantSettings(restaurantId, autoApprove, regularCustomerThreshold);
+            Map<String, Object> settings = restaurantService.getRestaurantSettings(restaurantId);
+            return ResponseEntity.ok()
+                    .headers(getNoCacheHeaders())
+                    .body(settings);
+        } catch (Exception e) {
+            log.error("Error updating restaurant settings for id {}: {}", restaurantId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
     
 }
 

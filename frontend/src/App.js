@@ -328,7 +328,7 @@ function App() {
             <Routes>
           {/* 메인 페이지들 */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
+          <Route path="/search/:keyword?" element={<SearchPage />} />
           <Route path="/nearme" element={<NearMePage />} />
           <Route path="/reservation" element={<ReservationPage />} />
           <Route path="/reservation-history" element={

@@ -16,7 +16,7 @@ import BlacklistReasonModal from '../../components/modals/BlacklistReasonModal';
 import './OwnerDashboard.css'; // 캘린더 CSS보다 먼저 로드
 
 const OwnerDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -63,6 +63,19 @@ const OwnerDashboard = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [processingReservation, setProcessingReservation] = useState(null); // 처리 중인 예약 ID
   
+  // 설정 관련 상태
+  const [autoApproveEnabled, setAutoApproveEnabled] = useState(false); // 자동 승인 설정
+  const [inquiries, setInquiries] = useState([]); // 1:1 문의 목록
+  const [showInquiryModal, setShowInquiryModal] = useState(false); // 문의 작성/상세 모달
+  const [isInquiryWriting, setIsInquiryWriting] = useState(true); // 문의 작성 모드인지 상세 보기 모드인지
+  const [selectedInquiry, setSelectedInquiry] = useState(null); // 선택된 문의
+  const [bannerApplications, setBannerApplications] = useState([]); // 배너 신청 목록
+  const [showBannerModal, setShowBannerModal] = useState(false); // 배너 신청 모달
+  const [inquiryForm, setInquiryForm] = useState({ title: '', content: '' }); // 문의 폼
+  const [bannerForm, setBannerForm] = useState({ title: '', description: '', image: null, imagePreview: null }); // 배너 폼
+  const [monthlyReservationData, setMonthlyReservationData] = useState([]); // 월별 예약 데이터
+  const [regularCustomerThreshold, setRegularCustomerThreshold] = useState(3); // 단골 고객 기준 (기본 3회)
+  
   // 통계 데이터 상태
   const [statistics, setStatistics] = useState({
     totalReservations: 0,
@@ -72,7 +85,6 @@ const OwnerDashboard = () => {
     monthlyReservations: 0,
     monthlyVisits: 0,
     conversionRate: 0,
-    popularKeywords: [],
     timeDistribution: [],
     dayDistribution: [],
     ageDistribution: [],
@@ -90,8 +102,42 @@ const OwnerDashboard = () => {
       loadReservations();
       loadBlacklist();
       loadReviews();
+      loadInquiries();
+      loadBannerApplications();
+      loadAutoApproveSetting();
     }
   }, [user]);
+
+  // 1:1 문의 목록 조회
+  const loadInquiries = async () => {
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/inquiries/owner/${user.userId}`);
+      setInquiries(response.data || []);
+    } catch (error) {
+      console.error('문의 목록 조회 오류:', error);
+    }
+  };
+
+  // 배너 신청 목록 조회
+  const loadBannerApplications = async () => {
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.DEMO}/banner-applications/restaurant/${user.restaurantId}`);
+      setBannerApplications(response.data || []);
+    } catch (error) {
+      console.error('배너 신청 목록 조회 오류:', error);
+    }
+  };
+
+  // 자동 승인 설정 조회
+  const loadAutoApproveSetting = async () => {
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.RESTAURANTS}/${user.restaurantId}/settings`);
+      setAutoApproveEnabled(response.data?.autoApprove || false);
+      setRegularCustomerThreshold(response.data?.regularCustomerThreshold || 3);
+    } catch (error) {
+      console.error('설정 조회 오류:', error);
+    }
+  };
 
   const handleChatClick = () => {
     navigate('/chat');
@@ -266,12 +312,18 @@ const OwnerDashboard = () => {
         return reservationDate.getMonth() === currentMonth && r.visitStatus === 'VISITED';
       }).length;
 
-      // 전환율 계산 (조회수 대비 예약수 - 실제로는 조회수 API 필요)
-      const conversionRate = totalReservations > 0 ? (totalReservations / (totalReservations * 10)) * 100 : 0;
+      // 이번 달 조회수 조회 (실제 데이터)
+      let monthlyViews = 0;
+      try {
+        const viewsResponse = await statisticsAPI.getMonthlyClickCount(user.restaurantId);
+        monthlyViews = viewsResponse.data?.count || 0;
+      } catch (error) {
+        console.error('조회수 조회 오류:', error);
+        monthlyViews = 0;
+      }
 
-      // 인기 키워드 로드
-      const keywordsResponse = await statisticsAPI.getPopularKeywords(10);
-      const popularKeywords = keywordsResponse.data || [];
+      // 전환율 계산 (조회수 대비 예약수)
+      const conversionRate = monthlyViews > 0 ? (monthlyReservations / monthlyViews) * 100 : 0;
 
       // 시간대별 분포 (실제 데이터 기반)
       const timeDistribution = [
@@ -308,6 +360,27 @@ const OwnerDashboard = () => {
         item.percent = maxDayValue > 0 ? (item.value / maxDayValue) * 100 : 0;
       });
 
+      // 월별 예약 추이 계산 (최근 6개월)
+      const monthlyData = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthReservations = reservations.filter(r => {
+          const reservationDate = new Date(r.reservationDate);
+          return reservationDate.getFullYear() === targetDate.getFullYear() &&
+                 reservationDate.getMonth() === targetDate.getMonth();
+        }).length;
+        monthlyData.push({
+          month: `${targetDate.getMonth() + 1}월`,
+          value: monthReservations
+        });
+      }
+      const maxMonthlyValue = Math.max(...monthlyData.map(m => m.value), 1);
+      monthlyData.forEach(item => {
+        item.percent = (item.value / maxMonthlyValue) * 100;
+      });
+      setMonthlyReservationData(monthlyData);
+
       // 연령대 분포 (실제로는 사용자 데이터 필요)
       const ageDistribution = [
         { age: '10대', count: 0, percent: 0, color: '#ff6b6b' },
@@ -321,11 +394,10 @@ const OwnerDashboard = () => {
         totalReservations,
         totalVisits,
         averageRating: Math.round(averageRating * 10) / 10,
-        monthlyViews: monthlyReservations * 10, // 추정값
+        monthlyViews,
         monthlyReservations,
         monthlyVisits,
         conversionRate: Math.round(conversionRate * 10) / 10,
-        popularKeywords,
         timeDistribution,
         dayDistribution,
         ageDistribution,
@@ -1168,6 +1240,12 @@ const OwnerDashboard = () => {
                 단골 고객
               </div>
               <div 
+                className={`sub-menu-item ${activeSubMenu === 'regulars-settings' ? 'active' : ''}`}
+                onClick={() => setActiveSubMenu('regulars-settings')}
+              >
+                단골 고객 설정
+              </div>
+              <div 
                 className={`sub-menu-item ${activeSubMenu === 'visits' ? 'active' : ''}`}
                 onClick={() => setActiveSubMenu('visits')}
               >
@@ -1212,6 +1290,18 @@ const OwnerDashboard = () => {
                 onClick={() => setActiveSubMenu('general')}
               >
                 일반 설정
+              </div>
+              <div 
+                className={`sub-menu-item ${activeSubMenu === 'inquiry' ? 'active' : ''}`}
+                onClick={() => setActiveSubMenu('inquiry')}
+              >
+                1:1 문의
+              </div>
+              <div 
+                className={`sub-menu-item ${activeSubMenu === 'banner' ? 'active' : ''}`}
+                onClick={() => setActiveSubMenu('banner')}
+              >
+                배너 신청
               </div>
             </>
           )}
@@ -2514,7 +2604,7 @@ const OwnerDashboard = () => {
                           <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                           <td>
                             <button 
-                              className="btn-remove"
+                              className="delete-btn"
                               onClick={() => {
                                 if (window.confirm('블랙리스트에서 제거하시겠습니까?')) {
                                   // 블랙리스트 제거 API 호출
@@ -2558,11 +2648,97 @@ const OwnerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td colSpan="5" className="empty-row">단골 고객 데이터가 없습니다</td>
-                    </tr>
+                    {reservations.length > 0 ? (() => {
+                      // 고객별 방문 횟수 계산
+                      const customerVisits = {};
+                      reservations.forEach(r => {
+                        if (r.visitStatus === 'VISITED' && r.userId) {
+                          if (!customerVisits[r.userId]) {
+                            customerVisits[r.userId] = {
+                              userName: r.userName,
+                              userPhone: r.userPhone,
+                              visits: [],
+                              lastVisit: null
+                            };
+                          }
+                          customerVisits[r.userId].visits.push(r);
+                          const visitDate = new Date(r.reservationDate);
+                          if (!customerVisits[r.userId].lastVisit || visitDate > customerVisits[r.userId].lastVisit) {
+                            customerVisits[r.userId].lastVisit = visitDate;
+                          }
+                        }
+                      });
+
+                      // 단골 고객 기준 이상인 고객만 필터링
+                      const regularCustomers = Object.values(customerVisits)
+                        .filter(customer => customer.visits.length >= regularCustomerThreshold)
+                        .sort((a, b) => b.visits.length - a.visits.length);
+
+                      if (regularCustomers.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan="5" className="empty-row">
+                              단골 고객이 없습니다. (기준: {regularCustomerThreshold}회 이상 방문)
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return regularCustomers.map((customer, index) => (
+                        <tr key={customer.userName + index}>
+                          <td>{index + 1}</td>
+                          <td>{customer.userName}</td>
+                          <td>{customer.visits.length}회</td>
+                          <td>{customer.lastVisit ? customer.lastVisit.toLocaleDateString('ko-KR') : '-'}</td>
+                          <td>-</td>
+                        </tr>
+                      ));
+                    })() : (
+                      <tr>
+                        <td colSpan="5" className="empty-row">단골 고객 데이터가 없습니다</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* 방문자 관리 - 단골 고객 설정 */}
+          {activeMenu === 'visitors' && activeSubMenu === 'regulars-settings' && (
+            <div className="regulars-settings-section">
+              <h2>단골 고객 설정</h2>
+              <div className="settings-form">
+                <div className="setting-item">
+                  <div className="setting-info">
+                    <label>단골 고객 기준</label>
+                    <p>몇 번 이상 방문한 고객을 단골 고객으로 분류할지 설정합니다</p>
+                  </div>
+                  <div className="setting-input">
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={regularCustomerThreshold}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1;
+                        setRegularCustomerThreshold(value);
+                        // 설정 저장
+                        axios.put(`${API_ENDPOINTS.RESTAURANTS}/${user.restaurantId}/settings`, {
+                          regularCustomerThreshold: value
+                        }).catch(err => console.error('설정 저장 오류:', err));
+                      }}
+                      className="form-input"
+                      style={{ width: '100px', textAlign: 'center' }}
+                    />
+                    <span style={{ marginLeft: '10px', color: '#ffffff' }}>회 이상</span>
+                  </div>
+                </div>
+                <div className="setting-description">
+                  <p style={{ color: '#b0b0b0', fontSize: '14px', marginTop: '20px' }}>
+                    현재 설정: <strong style={{ color: '#00a699' }}>{regularCustomerThreshold}회</strong> 이상 방문한 고객이 단골 고객으로 분류됩니다.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -2683,22 +2859,6 @@ const OwnerDashboard = () => {
                 </div>
               </div>
 
-              <div className="keywords-section">
-                <h3>인기 검색 키워드</h3>
-                <div className="keywords-list">
-                  {statistics.popularKeywords.length > 0 ? (
-                    statistics.popularKeywords.map((keyword, index) => (
-                      <div key={index} className="keyword-item">
-                        <span className="keyword-rank">#{index + 1}</span>
-                        <span className="keyword-text">{keyword.keyword}</span>
-                        <span className="keyword-count">{keyword.count}회</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="empty-state">검색 키워드 데이터가 없습니다.</p>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 
@@ -2827,15 +2987,23 @@ const OwnerDashboard = () => {
               <h2>자동 예약 설정</h2>
               <div className="settings-form">
                 <div className="setting-item">
-                  <label>
-                    <input type="checkbox" />
-                    예약 자동 승인
-                  </label>
-                </div>
-                <div className="setting-item">
-                  <label>
-                    <input type="checkbox" />
-                    예약 알림 받기
+                  <div className="setting-info">
+                    <label>예약 자동 승인</label>
+                    <p>날짜가 겹치지 않으면 예약을 자동으로 승인합니다</p>
+                  </div>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={autoApproveEnabled}
+                      onChange={(e) => {
+                        setAutoApproveEnabled(e.target.checked);
+                        // 설정 저장
+                        axios.put(`${API_ENDPOINTS.RESTAURANTS}/${user.restaurantId}/settings`, {
+                          autoApprove: e.target.checked
+                        }).catch(err => console.error('설정 저장 오류:', err));
+                      }}
+                    />
+                    <span className="slider"></span>
                   </label>
                 </div>
               </div>
@@ -2846,8 +3014,188 @@ const OwnerDashboard = () => {
           {activeMenu === 'settings' && activeSubMenu === 'general' && (
             <div className="general-settings-section">
               <h2>일반 설정</h2>
-              <div className="empty-state">
-                <p>일반 설정 준비 중...</p>
+              <div className="profile-settings-form">
+                <div className="form-group">
+                  <label>이름</label>
+                  <input
+                    type="text"
+                    value={formData.name || user?.name || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, name: e.target.value }));
+                    }}
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>이메일</label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="form-input"
+                  />
+                  <small>이메일은 변경할 수 없습니다</small>
+                </div>
+                <div className="form-group">
+                  <label>전화번호</label>
+                  <input
+                    type="tel"
+                    value={formData.phone || user?.phone || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, phone: e.target.value }));
+                    }}
+                    className="form-input"
+                    placeholder="전화번호를 입력하세요"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button 
+                    className="save-btn"
+                    onClick={async () => {
+                      try {
+                        await axios.put(`${API_ENDPOINTS.DEMO}/users/${user.userId}`, {
+                          name: formData.name || user.name,
+                          phone: formData.phone || user.phone
+                        });
+                        alert('정보가 수정되었습니다.');
+                        // 사용자 정보 갱신
+                        const updatedUser = { ...user, name: formData.name || user.name, phone: formData.phone || user.phone };
+                        localStorage.setItem('demoUser', JSON.stringify(updatedUser));
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('정보 수정 오류:', error);
+                        alert('정보 수정에 실패했습니다.');
+                      }
+                    }}
+                  >
+                    정보 저장
+                  </button>
+                  <button 
+                    className="cancel-btn"
+                    onClick={() => {
+                      if (window.confirm('로그아웃 하시겠습니까?')) {
+                        logout();
+                        navigate('/login');
+                      }
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 설정 - 1:1 문의 */}
+          {activeMenu === 'settings' && activeSubMenu === 'inquiry' && (
+            <div className="inquiry-section">
+              <div className="section-header-with-button">
+                <h2>1:1 문의</h2>
+                <button className="add-inquiry-btn" onClick={() => {
+                  setIsInquiryWriting(true);
+                  setSelectedInquiry(null);
+                  setShowInquiryModal(true);
+                }}>
+                  + 문의하기
+                </button>
+              </div>
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>제목</th>
+                      <th>상태</th>
+                      <th>작성일</th>
+                      <th>관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inquiries.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="empty-row">문의 내역이 없습니다</td>
+                      </tr>
+                    ) : (
+                      inquiries.map((inquiry, index) => (
+                        <tr key={inquiry.id}>
+                          <td>{index + 1}</td>
+                          <td>{inquiry.title}</td>
+                          <td>
+                            <span className={`status-badge ${inquiry.status === 'ANSWERED' ? 'answered' : 'pending'}`}>
+                              {inquiry.status === 'ANSWERED' ? '답변 완료' : '대기 중'}
+                            </span>
+                          </td>
+                          <td>{new Date(inquiry.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <button 
+                              className="reply-btn"
+                              onClick={() => {
+                                setSelectedInquiry(inquiry);
+                                setIsInquiryWriting(false);
+                                setShowInquiryModal(true);
+                              }}
+                            >
+                              {inquiry.status === 'ANSWERED' ? '답변 보기' : '상세 보기'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 설정 - 배너 신청 */}
+          {activeMenu === 'settings' && activeSubMenu === 'banner' && (
+            <div className="banner-section">
+              <div className="section-header-with-button">
+                <h2>배너 신청</h2>
+                <button className="add-banner-btn" onClick={() => setShowBannerModal(true)}>
+                  + 배너 신청하기
+                </button>
+              </div>
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>No</th>
+                      <th>제목</th>
+                      <th>상태</th>
+                      <th>신청일</th>
+                      <th>관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bannerApplications.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="empty-row">배너 신청 내역이 없습니다</td>
+                      </tr>
+                    ) : (
+                      bannerApplications.map((banner, index) => (
+                        <tr key={banner.id}>
+                          <td>{index + 1}</td>
+                          <td>{banner.title}</td>
+                          <td>
+                            <span className={`status-badge ${banner.status === 'APPROVED' ? 'approved' : banner.status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                              {banner.status === 'APPROVED' ? '승인됨' : banner.status === 'REJECTED' ? '거절됨' : '대기 중'}
+                            </span>
+                          </td>
+                          <td>{new Date(banner.createdAt).toLocaleDateString()}</td>
+                          <td>
+                            <button 
+                              className="reply-btn"
+                              onClick={() => setSelectedInquiry(banner)}
+                            >
+                              상세 보기
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -2897,20 +3245,44 @@ const OwnerDashboard = () => {
                   </select>
                 </div>
                 <div className="chart-placeholder">
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
-                  <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                  {monthlyReservationData.length > 0 ? (
+                    monthlyReservationData.map((item, index) => (
+                      <div 
+                        key={index} 
+                        className="chart-bar" 
+                        style={{
+                          height: `${item.percent}%`, 
+                          '--color': '#00a699'
+                        }}
+                        title={`${item.month}: ${item.value}건`}
+                      ></div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                      <div className="chart-bar" style={{height: '10%', '--color': '#ff5a5f'}}></div>
+                    </>
+                  )}
                 </div>
                 <div className="chart-labels">
-                  <span>5월</span>
-                  <span>6월</span>
-                  <span>7월</span>
-                  <span>8월</span>
-                  <span>9월</span>
-                  <span>10월</span>
+                  {monthlyReservationData.length > 0 ? (
+                    monthlyReservationData.map((item, index) => (
+                      <span key={index}>{item.month}</span>
+                    ))
+                  ) : (
+                    <>
+                      <span>5월</span>
+                      <span>6월</span>
+                      <span>7월</span>
+                      <span>8월</span>
+                      <span>9월</span>
+                      <span>10월</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -3250,6 +3622,61 @@ const OwnerDashboard = () => {
         reservation={selectedReservation}
         onConfirm={handleBlacklistConfirm}
       />
+
+      {/* 1:1 문의 모달 */}
+      {showInquiryModal && (
+        <InquiryModal
+          onClose={() => {
+            setShowInquiryModal(false);
+            setSelectedInquiry(null);
+            setIsInquiryWriting(true);
+          }}
+          onSubmit={async (formData) => {
+            try {
+              const response = await axios.post(`${API_ENDPOINTS.DEMO}/inquiries`, {
+                title: formData.title,
+                content: formData.content,
+                ownerId: user.userId,
+                restaurantId: user.restaurantId
+              });
+              alert('문의가 등록되었습니다.');
+              loadInquiries();
+            } catch (error) {
+              console.error('문의 등록 오류:', error);
+              alert('문의 등록에 실패했습니다.');
+            }
+          }}
+          inquiry={selectedInquiry}
+          isWriting={isInquiryWriting}
+        />
+      )}
+
+      {/* 배너 신청 모달 */}
+      {showBannerModal && (
+        <BannerApplicationModal
+          onClose={() => setShowBannerModal(false)}
+          onSubmit={async (formData) => {
+            try {
+              // 이미지 업로드
+              const formDataToSend = new FormData();
+              formDataToSend.append('title', formData.title);
+              formDataToSend.append('description', formData.description);
+              formDataToSend.append('image', formData.image);
+              formDataToSend.append('restaurantId', user.restaurantId);
+
+              const response = await axios.post(`${API_ENDPOINTS.DEMO}/banner-applications`, formDataToSend, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              alert('배너 신청이 완료되었습니다. 관리자 승인 후 표시됩니다.');
+              loadBannerApplications();
+            } catch (error) {
+              console.error('배너 신청 오류:', error);
+              alert('배너 신청에 실패했습니다.');
+              throw error;
+            }
+          }}
+        />
+      )}
 
     </div>
   );
@@ -3624,5 +4051,201 @@ const VisitStatusModal = ({ reservation, onClose, onSave }) => {
   );
 };
 
+// 1:1 문의 작성/상세 보기 모달
+const InquiryModal = ({ onClose, onSubmit, inquiry, isWriting }) => {
+  const [formData, setFormData] = useState({ title: '', content: '' });
+
+  useEffect(() => {
+    if (inquiry && !isWriting) {
+      // 상세 보기 모드
+      setFormData({ title: inquiry.title, content: inquiry.content });
+    } else {
+      // 작성 모드
+      setFormData({ title: '', content: '' });
+    }
+  }, [inquiry, isWriting]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.title || !formData.content) {
+      alert('제목과 내용을 입력해주세요.');
+      return;
+    }
+    await onSubmit(formData);
+    setFormData({ title: '', content: '' });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-custom">
+          <h3>{isWriting ? '1:1 문의 작성' : '문의 상세 보기'}</h3>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        {isWriting ? (
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body-custom">
+              <div className="form-group">
+                <label>제목 *</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                  placeholder="문의 제목을 입력하세요"
+                />
+              </div>
+              <div className="form-group">
+                <label>내용 *</label>
+                <textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  required
+                  placeholder="문의 내용을 입력하세요"
+                  rows="8"
+                />
+              </div>
+            </div>
+            <div className="modal-footer-custom">
+              <button type="button" className="btn-cancel" onClick={onClose}>취소</button>
+              <button type="submit" className="btn-submit">문의하기</button>
+            </div>
+          </form>
+        ) : (
+          <div className="modal-body-custom">
+            <div className="inquiry-detail">
+              <div className="form-group">
+                <label>제목</label>
+                <div className="inquiry-display">{inquiry?.title}</div>
+              </div>
+              <div className="form-group">
+                <label>내용</label>
+                <div className="inquiry-display">{inquiry?.content}</div>
+              </div>
+              <div className="form-group">
+                <label>작성일</label>
+                <div className="inquiry-display">
+                  {inquiry?.createdAt ? new Date(inquiry.createdAt).toLocaleString('ko-KR') : ''}
+                </div>
+              </div>
+              {inquiry?.adminReply && (
+                <div className="form-group">
+                  <label>관리자 답변</label>
+                  <div className="inquiry-reply">
+                    <div className="reply-content">{inquiry.adminReply}</div>
+                    <div className="reply-date">
+                      {inquiry.repliedAt ? new Date(inquiry.repliedAt).toLocaleString('ko-KR') : ''}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer-custom">
+              <button type="button" className="btn-cancel" onClick={onClose}>닫기</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// 배너 신청 모달
+const BannerApplicationModal = ({ onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    description: '', 
+    image: null, 
+    imagePreview: null 
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, image: file, imagePreview: URL.createObjectURL(file) }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.title || !formData.description || !formData.image) {
+      alert('제목, 설명, 배너 이미지를 모두 입력해주세요.');
+      return;
+    }
+    setUploading(true);
+    try {
+      await onSubmit(formData);
+      setFormData({ title: '', description: '', image: null, imagePreview: null });
+      onClose();
+    } catch (error) {
+      console.error('배너 신청 오류:', error);
+      alert('배너 신청에 실패했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header-custom">
+          <h3>배너 신청</h3>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body-custom">
+            <div className="form-group">
+              <label>배너 제목 *</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                placeholder="배너 제목을 입력하세요"
+              />
+            </div>
+            <div className="form-group">
+              <label>이벤트 설명 *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                required
+                placeholder="이벤트 상세 설명을 입력하세요 (팝업에 표시됩니다)"
+                rows="6"
+              />
+            </div>
+            <div className="form-group">
+              <label>배너 이미지 *</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                required
+                disabled={uploading}
+              />
+              {formData.imagePreview && (
+                <div className="image-preview" style={{ marginTop: '12px', width: '100%', maxWidth: '400px' }}>
+                  <img 
+                    src={formData.imagePreview} 
+                    alt="배너 미리보기" 
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="modal-footer-custom">
+            <button type="button" className="btn-cancel" onClick={onClose}>취소</button>
+            <button type="submit" className="btn-submit" disabled={uploading}>
+              {uploading ? '신청 중...' : '신청하기'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default OwnerDashboard;

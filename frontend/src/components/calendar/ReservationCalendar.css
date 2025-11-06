@@ -268,7 +268,9 @@
 }
 
 /* 다른 달 날짜 투명하게 숨기기 (공간은 유지) */
-.react-calendar__month-view__days__day--neighboringMonth .react-calendar__tile {
+.react-calendar__month-view__days__day--neighboringMonth .react-calendar__tile,
+.react-calendar__tile--disabled,
+.react-calendar__tile.other-month {
   color: transparent !important;
   background: transparent !important;
   opacity: 0 !important;
@@ -277,16 +279,8 @@
   border: none !important;
 }
 
-.react-calendar__tile--disabled {
-  color: transparent !important;
-  background: transparent !important;
-  opacity: 0 !important;
-  cursor: default !important;
-  pointer-events: none !important;
-  border: none !important;
-}
-
-.react-calendar__tile--disabled:hover {
+.react-calendar__tile--disabled:hover,
+.react-calendar__tile.other-month:hover {
   background: transparent !important;
   transform: none !important;
   box-shadow: none !important;

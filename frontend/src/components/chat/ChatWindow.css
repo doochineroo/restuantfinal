@@ -133,7 +133,35 @@
 .message-time {
   font-size: 11px;
   opacity: 0.7;
-  align-self: flex-end;
+}
+
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+
+.message-read-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message-read-status.read {
+  color: #4CAF50;
+}
+
+.message-read-status.unread {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.message.other .message-footer {
+  justify-content: flex-start;
+}
+
+.message.other .message-read-status {
+  display: none;
 }
 
 .chat-input-form {

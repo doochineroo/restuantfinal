@@ -213,5 +213,12 @@ public class Restaurant {
     @Transient
     @JsonProperty("rating") // JSON 응답에 포함되도록 명시
     private Double rating; // 평점 (DB 컬럼 없음, 실시간 계산)
+
+    // 가게 설정
+    @Column(name = "auto_approve")
+    private Boolean autoApprove; // 자동 예약 승인 여부
+
+    @Column(name = "regular_customer_threshold")
+    private Integer regularCustomerThreshold; // 단골 고객 기준 (방문 횟수)
 }
 

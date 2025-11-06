@@ -35,7 +35,7 @@ const MainNav = () => {
 
   const handleLogin = () => {
     setShowLoginModal(false);
-    navigate('/demo/login');
+    navigate('/login');
   };
 
   const handleCloseModal = () => {

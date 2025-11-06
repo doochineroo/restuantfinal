@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../demo/context/AuthContext';
 import LoginRequiredModal from './modals/LoginRequiredModal';
 
-const ProtectedRoute = ({ children, fallbackPath = '/demo/login' }) => {
+const ProtectedRoute = ({ children, fallbackPath = '/login' }) => {
   const { user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
